@@ -1,0 +1,58 @@
+en:
+  lato_cms:
+    cta_show: Show
+    cta_edit: Edit
+    cta_update: Update
+    cta_delete: Delete
+    cta_confirm: Confirm
+    cta_delete_confirm: Are you sure you want to delete this page?
+    page_created: Page created successfully
+    page_updated: Page updated successfully
+    fields_saved: Fields saved successfully
+    page_deleted: Page deleted successfully
+    unauthorized_section: You do not have access to this section.
+    page_delete_failed: Failed to delete page
+    api_page_not_found: Page not found
+    pages_index_title: Pages
+    pages_filter_all: All
+    page_create_title: New page
+    page_create_cta: Create
+    page_update_title: Edit page
+    form_frontend_url: Frontend URL
+    form_template: Template
+    form_no_template_option: "-- No template --"
+    form_template_unavailable: "The template \"%{template_id}\" is no longer available. Please select a different template."
+    action_view_frontend: View
+    show_no_preview_title: No preview available
+    show_no_preview_description: Set the <strong>Frontend URL</strong> to see the page preview.
+    show_edit_settings_cta: Edit page settings
+    show_editor_title: Editor
+    show_advanced_editor_tooltip: Advanced editor
+    show_hide_panel_tooltip: Hide panel
+    show_show_editor_panel_tooltip: Show editor panel
+    show_no_template_title: No template assigned
+    show_no_template_description: Assign a template to start editing fields.
+    show_template_unavailable: "The template <strong>%{template_id}</strong> is no longer available. Please assign a different template."
+    show_previously_saved_fields: "Previously saved fields:"
+    fields_component_not_found_badge: Component not found
+    fields_save_component: Save
+    fields_component_missing_alert_html: "Component <strong>%{component_id}</strong> not found. The component configuration may have been removed."
+    fields_previously_saved_data: "Previously saved data:"
+    field_file_remove: Remove
+    field_gallery_empty: No images yet. Add images below.
+    field_gallery_add_images: Add images
+    field_gallery_drag_to_reorder: Drag to reorder
+    field_image_remove: Remove
+    field_image_new_badge: New
+    field_multiselect_hint: Hold Ctrl/Cmd to select multiple
+    field_select_placeholder: "-- Select --"
+    field_text_toolbar_bold: Bold
+    field_text_toolbar_italic: Italic
+    field_text_toolbar_underline: Underline
+    field_text_toolbar_strikethrough: Strikethrough
+    field_text_toolbar_align_left: Align left
+    field_text_toolbar_align_center: Align center
+    field_text_toolbar_align_right: Align right
+    field_text_toolbar_unordered_list: Unordered list
+    field_text_toolbar_ordered_list: Ordered list
+    field_text_toolbar_toggle_html_source: Toggle HTML source

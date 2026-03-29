@@ -1,0 +1,25 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% settings = field_config['settings'] || {} %>
+<% options = settings['options'] || [] %>
+<% current_values = begin; page_field&.value.present? ? JSON.parse(page_field.value) : []; rescue; []; end %>
+
+<label class="form-label" for="fields_<%= field_id %>_value">
+  <%= label %><%= ' *' if required %>
+</label>
+<select
+  class="form-select"
+  name="fields[<%= field_id %>][value][]"
+  id="fields_<%= field_id %>_value"
+  multiple
+  size="<%= [options.length, 6].min %>"
+  <%= 'required' if required %>>
+  <% options.each do |option| %>
+    <% if option.is_a?(Hash) %>
+      <option value="<%= option['value'] %>" <%= 'selected' if current_values.include?(option['value'].to_s) %>><%= option['label'] %></option>
+    <% else %>
+      <option value="<%= option %>" <%= 'selected' if current_values.include?(option.to_s) %>><%= option %></option>
+    <% end %>
+  <% end %>
+</select>
+<small class="form-text text-muted"><%= t('lato_cms.field_multiselect_hint') %></small>

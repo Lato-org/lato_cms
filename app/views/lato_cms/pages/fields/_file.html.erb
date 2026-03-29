@@ -1,0 +1,29 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% settings = field_config['settings'] || {} %>
+<% multiple = settings['multiple'] != false %>
+<% accept = settings['accept'] %>
+
+<label class="form-label">
+  <%= label %><%= ' *' if required %>
+</label>
+
+<% if page_field&.files&.attached? %>
+  <div class="mb-2">
+    <% page_field.files.each do |file| %>
+      <div class="form-check mb-1 p-2 ps-4 bg-light rounded">
+        <input type="checkbox" class="form-check-input" name="fields[<%= field_id %>][remove_file_ids][]" value="<%= file.id %>" id="remove_file_<%= file.id %>">
+        <label class="form-check-label small" for="remove_file_<%= file.id %>">
+          <i class="bi bi-paperclip me-1"></i><%= file.blob.filename %> (<%= number_to_human_size(file.blob.byte_size) %>) — <span class="text-danger"><%= t('lato_cms.field_file_remove') %></span>
+        </label>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<input type="file"
+  class="form-control"
+  name="fields[<%= field_id %>][files][]"
+  id="fields_<%= field_id %>_files"
+  <%= 'multiple' if multiple %>
+  <% if accept %>accept="<%= accept %>"<% end %>>

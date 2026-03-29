@@ -1,0 +1,102 @@
+module LatoCms
+  class Page < ApplicationRecord
+    include LatoSpaces::Associable
+    include LatoSpaces::AssociableRequired
+    include LatoSpaces::AssociableUnique
+
+    attr_accessor :actions
+
+    validates :title, presence: true
+    validates :locale, presence: true, inclusion: { in: ->(page) { LatoCms.config.locales.map(&:to_s) } }
+    validates :permalink, presence: true, uniqueness: true, format: { with: /\A\/([a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]+)*)?\z/, message: 'must start with / and contain only letters, numbers, hyphens, and underscores' }
+
+    before_validation :generate_permalink, on: :create
+
+    has_many :fields, class_name: 'LatoCms::PageField', dependent: :destroy
+
+    def template
+      LatoCms::TemplateManager.find_template(template_id)
+    end
+
+    def template_name
+      template&.dig('name') || template_id
+    end
+
+    def template_available?
+      template_id.blank? || template.present?
+    end
+
+    def template_components
+      return [] unless template
+      LatoCms::TemplateManager.resolve_template_components(template)
+    end
+
+    def as_json(options = {})
+      data = {
+        id: id,
+        title: title,
+        permalink: permalink,
+        locale: locale,
+        template_id: template_id,
+        template_name: template_name,
+        frontend_url: frontend_url,
+        created_at: created_at,
+        updated_at: updated_at
+      }
+
+      if options[:include_fields]
+        fields.load unless fields.loaded?
+        data[:fields] = build_fields_json(template_components)
+      end
+
+      data
+    end
+
+    private
+
+    def build_fields_json(comps)
+      fields_by_component = fields.group_by(&:template_component_id)
+
+      comps.each_with_object({}) do |tc, hash|
+        component_fields = (fields_by_component[tc[:template_component_id]] || []).index_by(&:field_id)
+
+        hash[tc[:template_component_id]] = {
+          component_id: tc[:component_id],
+          name: tc[:name],
+          fields: (tc[:fields] || {}).each_with_object({}) do |(fid, fconfig), fhash|
+            field = component_fields[fid.to_s]
+            fhash[fid] = field ? field.as_json : empty_field_json(fid.to_s, fconfig)
+          end
+        }
+      end
+    end
+
+    def empty_field_json(fid, fconfig)
+      {
+        id: nil,
+        field_id: fid,
+        field_type: fconfig['type'] || 'string',
+        field_name: fconfig['name'] || fid.humanize,
+        required: fconfig['required'] == true,
+        value: nil,
+        attachments: []
+      }
+    end
+
+    def generate_permalink
+      return if title.blank?
+      return if permalink.present?
+
+      base = "/#{title.parameterize}"
+      candidate = base
+      counter = 1
+
+      while self.class.exists?(permalink: candidate)
+        candidate = "#{base}-#{counter}"
+        counter += 1
+      end
+
+      self.permalink = candidate
+    end
+  end
+end

@@ -1,0 +1,18 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% settings = field_config['settings'] || {} %>
+<% current_value = page_field&.value || '' %>
+
+<label class="form-label" for="fields_<%= field_id %>_value">
+  <%= label %><%= ' *' if required %>
+</label>
+<input type="number"
+  class="form-control"
+  name="fields[<%= field_id %>][value]"
+  id="fields_<%= field_id %>_value"
+  value="<%= current_value %>"
+  <%= 'required' if required %>
+  <% if settings['min'] %>min="<%= settings['min'] %>"<% end %>
+  <% if settings['max'] %>max="<%= settings['max'] %>"<% end %>
+  <% if settings['step'] %>step="<%= settings['step'] %>"<% end %>
+  <% if settings['placeholder'] %>placeholder="<%= settings['placeholder'] %>"<% end %>>

@@ -1,0 +1,80 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% current_value = page_field&.value || '' %>
+
+<label class="form-label" for="fields_<%= field_id %>_value">
+  <%= label %><%= ' *' if required %>
+</label>
+
+<div data-controller="lato-cms-text-field">
+
+  <%# ── Toolbar ──────────────────────────────────────────────────────────── %>
+  <div class="lato-cms-wysiwyg-toolbar border border-bottom-0 rounded-top bg-light px-2 py-1 d-flex flex-wrap gap-1 align-items-center"
+       data-lato-cms-text-field-target="toolbar">
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_bold') %>"
+            data-action="click->lato-cms-text-field#bold">
+      <i class="bi bi-type-bold"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_italic') %>"
+            data-action="click->lato-cms-text-field#italic">
+      <i class="bi bi-type-italic"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_underline') %>"
+            data-action="click->lato-cms-text-field#underline">
+      <i class="bi bi-type-underline"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_strikethrough') %>"
+            data-action="click->lato-cms-text-field#strikethrough">
+      <i class="bi bi-type-strikethrough"></i>
+    </button>
+    <span class="vr mx-1"></span>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_left') %>"
+            data-action="click->lato-cms-text-field#alignLeft">
+      <i class="bi bi-text-left"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_center') %>"
+            data-action="click->lato-cms-text-field#alignCenter">
+      <i class="bi bi-text-center"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_right') %>"
+            data-action="click->lato-cms-text-field#alignRight">
+      <i class="bi bi-text-right"></i>
+    </button>
+    <span class="vr mx-1"></span>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_unordered_list') %>"
+            data-action="click->lato-cms-text-field#insertUnorderedList">
+      <i class="bi bi-list-ul"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_ordered_list') %>"
+            data-action="click->lato-cms-text-field#insertOrderedList">
+      <i class="bi bi-list-ol"></i>
+    </button>
+
+    <%# ── Source toggle ────────────────────────────────────────────────── %>
+    <span class="vr mx-1 ms-auto"></span>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_toggle_html_source') %>"
+            data-action="click->lato-cms-text-field#toggleSource"
+            data-lato-cms-text-field-target="sourceBtn">
+      <i class="bi bi-code-slash"></i>
+    </button>
+  </div>
+
+  <%# ── Editable area (WYSIWYG) ─────────────────────────────────────────── %>
+  <div class="form-control lato-cms-wysiwyg-editor rounded-0 rounded-bottom"
+       contenteditable="true"
+       style="min-height: 150px; overflow-y: auto; line-height: 1.6;"
+       data-lato-cms-text-field-target="editor"><%= current_value.html_safe %></div>
+
+  <%# ── Source view (raw HTML) ──────────────────────────────────────────── %>
+  <textarea class="form-control lato-cms-wysiwyg-source rounded-0 rounded-bottom font-monospace d-none"
+            style="min-height: 150px; font-size: 0.8rem; resize: vertical; white-space: pre;"
+            spellcheck="false"
+            data-lato-cms-text-field-target="source"></textarea>
+
+  <%# ── Hidden input submitted with the form ───────────────────────────── %>
+  <input type="hidden"
+         name="fields[<%= field_id %>][value]"
+         id="fields_<%= field_id %>_value"
+         data-lato-cms-text-field-target="input"
+         value="<%= CGI.escapeHTML(current_value) %>">
+</div>

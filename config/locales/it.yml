@@ -1,0 +1,58 @@
+it:
+  lato_cms:
+    cta_show: Visualizza
+    cta_edit: Modifica
+    cta_update: Aggiorna
+    cta_delete: Elimina
+    cta_confirm: Conferma
+    cta_delete_confirm: Sei sicuro di voler eliminare questa pagina?
+    page_created: Pagina creata con successo
+    page_updated: Pagina aggiornata con successo
+    fields_saved: Campi salvati con successo
+    page_deleted: Pagina eliminata con successo
+    unauthorized_section: Non hai accesso a questa sezione.
+    page_delete_failed: Impossibile eliminare la pagina
+    api_page_not_found: Pagina non trovata
+    pages_index_title: Pagine
+    pages_filter_all: Tutte
+    page_create_title: Nuova pagina
+    page_create_cta: Crea
+    page_update_title: Modifica pagina
+    form_frontend_url: URL Frontend
+    form_template: Template
+    form_no_template_option: "-- Nessun template --"
+    form_template_unavailable: "Il template \"%{template_id}\" non e piu disponibile. Seleziona un template diverso."
+    action_view_frontend: Anteprima
+    show_no_preview_title: Anteprima non disponibile
+    show_no_preview_description: Imposta il <strong>URL Frontend</strong> per visualizzare l'anteprima della pagina.
+    show_edit_settings_cta: Modifica impostazioni pagina
+    show_editor_title: Editor
+    show_advanced_editor_tooltip: Editor avanzato
+    show_hide_panel_tooltip: Nascondi pannello
+    show_show_editor_panel_tooltip: Mostra pannello editor
+    show_no_template_title: Nessun template assegnato
+    show_no_template_description: Assegna un template per iniziare a modificare i campi.
+    show_template_unavailable: "Il template <strong>%{template_id}</strong> non e piu disponibile. Assegna un template diverso."
+    show_previously_saved_fields: "Campi salvati in precedenza:"
+    fields_component_not_found_badge: Componente non trovato
+    fields_save_component: Salva
+    fields_component_missing_alert_html: "Componente <strong>%{component_id}</strong> non trovato. La configurazione del componente potrebbe essere stata rimossa."
+    fields_previously_saved_data: "Dati salvati in precedenza:"
+    field_file_remove: Rimuovi
+    field_gallery_empty: Nessuna immagine presente. Aggiungi immagini qui sotto.
+    field_gallery_add_images: Aggiungi immagini
+    field_gallery_drag_to_reorder: Trascina per riordinare
+    field_image_remove: Rimuovi
+    field_image_new_badge: Nuovo
+    field_multiselect_hint: Tieni premuto Ctrl/Cmd per selezionare piu opzioni
+    field_select_placeholder: "-- Seleziona --"
+    field_text_toolbar_bold: Grassetto
+    field_text_toolbar_italic: Corsivo
+    field_text_toolbar_underline: Sottolineato
+    field_text_toolbar_strikethrough: Barrato
+    field_text_toolbar_align_left: Allinea a sinistra
+    field_text_toolbar_align_center: Allinea al centro
+    field_text_toolbar_align_right: Allinea a destra
+    field_text_toolbar_unordered_list: Elenco puntato
+    field_text_toolbar_ordered_list: Elenco numerato
+    field_text_toolbar_toggle_html_source: Mostra/nascondi sorgente HTML

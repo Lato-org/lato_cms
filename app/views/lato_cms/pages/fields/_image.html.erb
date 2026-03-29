@@ -1,0 +1,39 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% settings = field_config['settings'] || {} %>
+<% accept = settings['accept'] || 'image/*' %>
+<% current_file = page_field&.files&.attached? ? page_field.files.first : nil %>
+
+<label class="form-label">
+  <%= label %><%= ' *' if required %>
+</label>
+
+<div data-controller="lato-cms-image-field">
+  <% if current_file %>
+    <div class="mb-2" data-lato-cms-image-field-target="currentContainer">
+      <div class="position-relative d-inline-block">
+        <img src="<%= lato_cms_attachment_path(current_file) %>" class="img-thumbnail lato-cms-image-field__thumb" data-lato-cms-image-field-target="currentImage" alt="<%= current_file.filename %>">
+        <label class="lato-cms-image-field__remove-btn" title="<%= t('lato_cms.field_image_remove') %>">
+          <input type="checkbox" class="d-none" name="fields[<%= field_id %>][remove_file_ids][]" value="<%= current_file.id %>" data-lato-cms-image-field-target="removeCheck" data-action="change->lato-cms-image-field#toggleRemove">
+          <i class="bi bi-x-lg"></i>
+        </label>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mb-2 d-none" data-lato-cms-image-field-target="newPreviewContainer">
+    <div class="position-relative d-inline-block">
+      <img src="" class="img-thumbnail lato-cms-image-field__thumb" data-lato-cms-image-field-target="newPreview" alt="">
+      <span class="badge bg-success lato-cms-image-field__new-badge"><%= t('lato_cms.field_image_new_badge') %></span>
+    </div>
+  </div>
+
+  <input type="file"
+    class="form-control"
+    name="fields[<%= field_id %>][files][]"
+    id="fields_<%= field_id %>_files"
+    accept="<%= accept %>"
+    data-lato-cms-image-field-target="input"
+    data-action="change->lato-cms-image-field#preview"
+    <%= 'required' if required && !current_file %>>
+</div>

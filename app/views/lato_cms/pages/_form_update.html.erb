@@ -1,0 +1,39 @@
+<% page ||= LatoCms::Page.new %>
+
+<%= turbo_frame_tag dom_id(page, 'form') do %>
+  <%= form_with model: page, url: lato_cms.pages_update_action_path(page), method: :patch, data: { turbo_frame: '_self', controller: 'lato-form' } do |form| %>
+    <%= lato_form_notices class: %w[mb-3] %>
+    <%= lato_form_errors page, class: %w[mb-3] %>
+
+    <div class="mb-3">
+      <%= lato_form_item_label form, :title %>
+      <%= lato_form_item_input_text form, :title, required: true %>
+    </div>
+
+    <div class="mb-3">
+      <%= lato_form_item_label form, :permalink %>
+      <%= lato_form_item_input_text form, :permalink, required: true %>
+    </div>
+
+    <div class="mb-3">
+      <%= lato_form_item_label form, :frontend_url, t('lato_cms.form_frontend_url') %>
+      <%= lato_form_item_input_text form, :frontend_url %>
+    </div>
+
+    <div class="mb-3">
+      <% template_options = [[t('lato_cms.form_no_template_option'), '']] + LatoCms::TemplateManager.template_options %>
+      <%= lato_form_item_label form, :template_id, t('lato_cms.form_template') %>
+      <%= lato_form_item_input_select form, :template_id, template_options %>
+      <% if page.template_id.present? && !page.template_available? %>
+        <div class="form-text text-danger">
+          <i class="bi bi-exclamation-triangle me-1"></i>
+          <%= t('lato_cms.form_template_unavailable', template_id: page.template_id) %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="d-flex justify-content-end">
+      <%= lato_form_submit form, t('lato_cms.cta_update'), class: %w[btn-success] %>
+    </div>
+  <% end %>
+<% end %>

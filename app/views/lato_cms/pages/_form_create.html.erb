@@ -1,0 +1,26 @@
+<% page ||= LatoCms::Page.new %>
+
+<%= turbo_frame_tag dom_id(page, 'form') do %>
+  <%= form_with model: page, url: lato_cms.pages_create_action_path, data: { turbo_frame: '_self', controller: 'lato-form' } do |form| %>
+    <%= lato_form_notices class: %w[mb-3] %>
+    <%= lato_form_errors page, class: %w[mb-3] %>
+
+    <div class="mb-3">
+      <%= lato_form_item_label form, :title %>
+      <%= lato_form_item_input_text form, :title, required: true %>
+    </div>
+
+    <% if LatoCms.config.locales.length > 1 %>
+      <div class="mb-3">
+        <%= lato_form_item_label form, :locale %>
+        <%= lato_form_item_input_select form, :locale, LatoCms.config.locales.map { |l| [l.to_s.upcase, l.to_s] }, required: true %>
+      </div>
+    <% else %>
+      <%= form.hidden_field :locale, value: LatoCms.config.locales.first.to_s %>
+    <% end %>
+
+    <div class="d-flex justify-content-end">
+      <%= lato_form_submit form, t('lato_cms.page_create_cta'), class: %w[btn-success] %>
+    </div>
+  <% end %>
+<% end %>

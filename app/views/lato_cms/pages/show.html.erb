@@ -1,0 +1,105 @@
+<%= lato_page_head @page.title, [
+  { label: t('lato_cms.pages_index_title'), path: lato_cms.pages_path },
+  { label: @page.title }
+] %>
+
+<div data-controller="lato-cms-advanced-editor">
+  <div class="row align-items-stretch lato-cms-advanced-editor__row" data-lato-cms-advanced-editor-target="row">
+
+    <%# ── Preview column ─────────────────────────────────────────────────── %>
+    <div class="col-12 col-lg-6 mb-4 lato-cms-advanced-editor__preview-col" data-lato-cms-advanced-editor-target="previewCol">
+      <% if @page.frontend_url.present? %>
+        <div class="card h-100" style="overflow: hidden;" data-controller="lato-cms-page-preview">
+          <div class="card-body p-0">
+            <iframe src="<%= @page.frontend_url %>" data-lato-cms-page-preview-target="iframe" style="width: 100%; height: calc(100dvh - 180px); border: none; display: block;"></iframe>
+          </div>
+        </div>
+      <% else %>
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column align-items-center justify-content-center text-muted" style="height: calc(100dvh - 180px);">
+            <i class="bi bi-globe fs-1 mb-3"></i>
+            <p class="mb-1"><%= t('lato_cms.show_no_preview_title') %></p>
+            <p class="small"><%= t('lato_cms.show_no_preview_description').html_safe %></p>
+            <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-primary mt-2',
+              data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# ── Editor column ──────────────────────────────────────────────────── %>
+    <div class="col-12 col-lg-6 mb-4 lato-cms-advanced-editor__editor-col" data-lato-cms-advanced-editor-target="editorCol">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h2 class="fs-5 mb-0"><%= t('lato_cms.show_editor_title') %></h2>
+          <div class="d-flex align-items-center gap-2">
+            <%= lato_cms_page_locale(@page) %>
+            <span class="vr"></span>
+            <%= lato_cms_page_actions(@page, show_edit: true, show_delete: true, hide_show: true) %>
+            <span class="vr"></span>
+            <button class="btn btn-sm btn-outline-secondary"
+                    title="<%= t('lato_cms.show_advanced_editor_tooltip') %>"
+                    data-controller="lato-tooltip"
+                    data-action="click->lato-cms-advanced-editor#toggle"
+                    data-lato-cms-advanced-editor-target="toggleBtn">
+              <i class="bi bi-fullscreen"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary d-none"
+                    title="<%= t('lato_cms.show_hide_panel_tooltip') %>"
+                    data-controller="lato-tooltip"
+                    data-action="click->lato-cms-advanced-editor#toggleSidebar"
+                    data-lato-cms-advanced-editor-target="collapseBtn">
+              <i class="bi bi-layout-sidebar-reverse"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body" style="overflow-y: auto; max-height: calc(100dvh - 230px);">
+          <% if @page.template_id.blank? %>
+            <div class="text-center text-muted py-5">
+              <i class="bi bi-file-earmark-code fs-1 mb-3 d-block"></i>
+              <p class="mb-1"><%= t('lato_cms.show_no_template_title') %></p>
+              <p class="small"><%= t('lato_cms.show_no_template_description') %></p>
+              <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-primary mt-2',
+                data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+            </div>
+          <% elsif !@page.template_available? %>
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              <%= t('lato_cms.show_template_unavailable', template_id: @page.template_id) %>
+              <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-warning ms-2',
+                data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+            </div>
+            <% existing_fields = @page.fields.group_by(&:template_component_id) %>
+            <% if existing_fields.any? %>
+              <p class="text-muted small"><%= t('lato_cms.show_previously_saved_fields') %></p>
+              <% existing_fields.each do |tc_id, fields| %>
+                <div class="mb-3">
+                  <h6 class="text-muted"><%= tc_id %></h6>
+                  <% fields.each do |field| %>
+                    <div class="mb-2 ps-3">
+                      <small class="text-muted"><%= field.field_id %>:</small>
+                      <span><%= field.value.present? ? field.value.truncate(100) : '-' %></span>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+          <% else %>
+            <%= render 'lato_cms/pages/fields_editor', page: @page, template_components: @template_components %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <%# ── Re-open sidebar tab (visible only in advanced mode + sidebar closed) %>
+  <button class="lato-cms-advanced-editor__reopen-btn"
+          hidden
+          title="<%= t('lato_cms.show_show_editor_panel_tooltip') %>"
+          data-controller="lato-tooltip"
+          data-action="click->lato-cms-advanced-editor#toggleSidebar"
+          data-lato-cms-advanced-editor-target="reopenBtn">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+</div>

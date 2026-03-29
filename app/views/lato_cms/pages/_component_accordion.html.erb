@@ -1,0 +1,62 @@
+<% accordion_id = "component-#{tc[:template_component_id]}" %>
+<% component_fields = page.fields.select { |f| f.template_component_id == tc[:template_component_id] } %>
+
+<div class="accordion-item">
+  <h2 class="accordion-header" id="heading-<%= accordion_id %>">
+    <button class="accordion-button <%= 'collapsed' unless expanded %>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= accordion_id %>" aria-expanded="<%= expanded %>" aria-controls="collapse-<%= accordion_id %>">
+      <%= tc[:name] %>
+      <% unless tc[:component] %>
+        <span class="badge bg-warning ms-2"><%= t('lato_cms.fields_component_not_found_badge') %></span>
+      <% end %>
+    </button>
+  </h2>
+  <div id="collapse-<%= accordion_id %>" class="accordion-collapse collapse <%= 'show' if expanded %>" aria-labelledby="heading-<%= accordion_id %>" data-bs-parent="#components-accordion">
+    <div class="accordion-body">
+      <% if tc[:component] %>
+        <% valid_types = %w[string textarea text number date datetime boolean select multiselect color json file image gallery] %>
+
+        <%= form_with url: lato_cms.pages_save_fields_action_path(page), method: :post, multipart: true,
+            data: { turbo: false, controller: 'lato-cms-component-form' } do |form| %>
+          <%= hidden_field_tag :template_component_id, tc[:template_component_id] %>
+          <%= hidden_field_tag :component_id, tc[:component_id] %>
+
+          <% tc[:fields].each do |field_id, field_config| %>
+            <% page_field = component_fields.find { |f| f.field_id == field_id } %>
+            <% field_type = field_config['type'] || 'string' %>
+            <% field_type = 'string' unless valid_types.include?(field_type) %>
+
+            <div class="mb-3">
+              <%= render "lato_cms/pages/fields/#{field_type}",
+                  field_id: field_id,
+                  field_config: field_config,
+                  page_field: page_field %>
+            </div>
+          <% end %>
+
+          <div class="d-flex justify-content-end align-items-center gap-3 mt-1">
+            <span data-lato-cms-component-form-target="status"></span>
+            <button type="submit" class="btn btn-sm btn-success" data-lato-cms-component-form-target="submitBtn">
+              <i class="bi bi-check-lg me-1"></i><%= t('lato_cms.fields_save_component') %>
+            </button>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="alert alert-warning mb-0">
+          <i class="bi bi-exclamation-triangle me-1"></i>
+          <%= t('lato_cms.fields_component_missing_alert_html', component_id: tc[:component_id]).html_safe %>
+        </div>
+        <% if component_fields.any? %>
+          <div class="mt-3">
+            <p class="text-muted small mb-2"><%= t('lato_cms.fields_previously_saved_data') %></p>
+            <% component_fields.each do |field| %>
+              <div class="mb-2">
+                <small class="text-muted"><%= field.field_id %>:</small>
+                <span><%= field.value.present? ? field.value.truncate(100) : '-' %></span>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

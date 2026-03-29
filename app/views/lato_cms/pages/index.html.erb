@@ -1,0 +1,32 @@
+<%= lato_page_head t('lato_cms.pages_index_title'), [{ label: t('lato_cms.pages_index_title') }] %>
+
+<div class="card">
+  <div class="card-header d-flex gap-2">
+    <%= link_to lato_cms.pages_path, class: "btn btn-sm #{params[:locale].blank? ? 'btn-primary' : 'btn-outline-secondary'}" do %>
+      <i class="bi bi-globe me-1"></i><%= t('lato_cms.pages_filter_all') %>
+    <% end %>
+    <% LatoCms.config.locales.each do |locale| %>
+      <%= link_to lato_cms.pages_path(locale: locale), class: "btn btn-sm #{params[:locale] == locale.to_s ? 'btn-primary' : 'btn-outline-secondary'}" do %>
+        <%= locale_to_flag(locale) %> <%= locale.to_s.upcase %>
+      <% end %>
+    <% end %>
+  </div>
+  <div class="card-body">
+    <%= lato_index @pages,
+      custom_actions: {
+        create: {
+          path: lato_cms.pages_create_path,
+          icon: 'bi bi-plus',
+          title: t('lato_cms.page_create_cta'),
+          data: {
+            controller: 'lato-tooltip',
+            lato_action_target: 'trigger',
+            turbo_frame: dom_id(LatoCms::Page.new, 'form'),
+            action_title: t('lato_cms.page_create_title')
+          }
+        }
+      },
+      pagination_options: [10, 20, 50, 100]
+    %>
+  </div>
+</div>

@@ -1,0 +1,16 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% current_value = page_field&.value %>
+<% checked = current_value == 'true' %>
+
+<div class="form-check form-switch">
+  <input type="hidden" name="fields[<%= field_id %>][value]" value="false">
+  <input type="checkbox"
+    class="form-check-input"
+    name="fields[<%= field_id %>][value]"
+    id="fields_<%= field_id %>_value"
+    value="true"
+    <%= 'checked' if checked %>>
+  <label class="form-check-label" for="fields_<%= field_id %>_value">
+    <%= label %>
+  </label>
+</div>

@@ -1,0 +1,92 @@
+id: all_fields_example
+name: All Field Types Example
+fields:
+  example_string:
+    name: String Field
+    type: string
+    required: true
+    settings:
+      placeholder: "Enter text"
+      maxlength: 255
+  example_textarea:
+    name: Textarea Field
+    type: textarea
+    required: false
+    settings:
+      rows: 4
+      placeholder: "Enter multi-line text"
+  example_text:
+    name: Rich Text Field
+    type: text
+    required: false
+    settings:
+      rows: 8
+      placeholder: "Enter HTML content"
+  example_number:
+    name: Number Field
+    type: number
+    required: false
+    settings:
+      min: 0
+      max: 100
+      step: 1
+      placeholder: "Enter a number"
+  example_date:
+    name: Date Field
+    type: date
+    required: false
+    settings:
+      min: "2024-01-01"
+      max: "2030-12-31"
+  example_datetime:
+    name: DateTime Field
+    type: datetime
+    required: false
+  example_boolean:
+    name: Boolean Field
+    type: boolean
+    required: false
+  example_select:
+    name: Select Field
+    type: select
+    required: false
+    settings:
+      options:
+        - value: option_1
+          label: Option 1
+        - value: option_2
+          label: Option 2
+        - value: option_3
+          label: Option 3
+  example_multiselect:
+    name: Multi-Select Field
+    type: multiselect
+    required: false
+    settings:
+      options:
+        - value: tag_1
+          label: Tag 1
+        - value: tag_2
+          label: Tag 2
+        - value: tag_3
+          label: Tag 3
+        - value: tag_4
+          label: Tag 4
+  example_color:
+    name: Color Field
+    type: color
+    required: false
+  example_json:
+    name: JSON Field
+    type: json
+    required: false
+    settings:
+      rows: 6
+      placeholder: '{"key": "value"}'
+  example_file:
+    name: File Upload Field
+    type: file
+    required: false
+    settings:
+      accept: "image/*,.pdf"
+      multiple: true

@@ -1,0 +1,343 @@
+<%= lato_page_head 'Documentation', [{ label: 'Documentation' }] %>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="fs-4 mb-0">Lato CMS - Templates &amp; Components</h2>
+  </div>
+  <div class="card-body">
+    <p>Lato CMS uses YAML configuration files to define <strong>templates</strong> and <strong>components</strong>. Templates define the structure of a page, while components define groups of fields.</p>
+
+    <h3 class="fs-5 mt-4">Directory Structure</h3>
+    <pre class="bg-light p-3 rounded"><code>config/lato_cms/
+  templates/
+    homepage.yml
+    blog_post.yml
+  components/
+    hero.yml
+    content.yml
+    sidebar.yml</code></pre>
+
+    <h3 class="fs-5 mt-4">Installation</h3>
+    <p>Run the install task to create the directory structure with example files:</p>
+    <pre class="bg-light p-3 rounded"><code>rails lato_cms:install:application</code></pre>
+
+    <h3 class="fs-5 mt-4">Generating Templates &amp; Components</h3>
+    <pre class="bg-light p-3 rounded"><code># Generate an empty template
+rails "lato_cms:generate:template[blog_post]"
+
+# Generate a component with fields
+rails "lato_cms:generate:component[hero,title:string,subtitle:textarea,image:file]"</code></pre>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="fs-4 mb-0">Template Configuration</h2>
+  </div>
+  <div class="card-body">
+    <p>A template defines which components a page uses and in what order.</p>
+    <pre class="bg-light p-3 rounded"><code># config/lato_cms/templates/homepage.yml
+id: homepage
+name: Homepage
+components:
+  hero_section:                  # template_component_id (unique within template)
+    component_id: hero           # references a component YAML file
+    name: Hero Section           # optional, overrides the component name
+  content_section:
+    component_id: content
+  sidebar:
+    component_id: sidebar
+    name: Page Sidebar</code></pre>
+
+    <div class="alert alert-info mt-3">
+      <strong>Note:</strong> The <code>template_component_id</code> (the key under <code>components</code>) must be unique within the template. It identifies the specific instance of a component on the page.
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="fs-4 mb-0">Component Configuration</h2>
+  </div>
+  <div class="card-body">
+    <p>A component defines a group of fields. Below is an example showing <strong>all available field types</strong>:</p>
+    <pre class="bg-light p-3 rounded"><code># config/lato_cms/components/all_fields_example.yml
+id: all_fields_example
+name: All Field Types Example
+fields:
+  # ─── STRING ───────────────────────────────────────────
+  # Single-line text input
+  example_string:
+    name: String Field
+    type: string
+    required: true
+    settings:
+      placeholder: "Enter text"
+      maxlength: 255
+      minlength: 3
+      pattern: "[A-Za-z0-9 ]+"    # HTML5 pattern validation
+
+  # ─── TEXTAREA ─────────────────────────────────────────
+  # Multi-line plain text
+  example_textarea:
+    name: Textarea Field
+    type: textarea
+    required: false
+    settings:
+      rows: 4                     # number of visible rows
+      placeholder: "Enter multi-line text"
+      maxlength: 2000
+
+  # ─── TEXT ─────────────────────────────────────────────
+  # Rich text / HTML content
+  example_text:
+    name: Rich Text Field
+    type: text
+    required: false
+    settings:
+      rows: 8
+      placeholder: "Enter HTML content"
+
+  # ─── NUMBER ───────────────────────────────────────────
+  # Numeric input
+  example_number:
+    name: Number Field
+    type: number
+    required: false
+    settings:
+      min: 0
+      max: 100
+      step: 1                     # use 0.01 for decimals
+      placeholder: "Enter a number"
+
+  # ─── DATE ─────────────────────────────────────────────
+  # Date picker (YYYY-MM-DD)
+  example_date:
+    name: Date Field
+    type: date
+    required: false
+    settings:
+      min: "2024-01-01"
+      max: "2030-12-31"
+
+  # ─── DATETIME ─────────────────────────────────────────
+  # Date and time picker
+  example_datetime:
+    name: DateTime Field
+    type: datetime
+    required: false
+    settings:
+      min: "2024-01-01T00:00"
+      max: "2030-12-31T23:59"
+
+  # ─── BOOLEAN ──────────────────────────────────────────
+  # Toggle switch (true/false)
+  example_boolean:
+    name: Boolean Field
+    type: boolean
+    required: false
+
+  # ─── SELECT ───────────────────────────────────────────
+  # Single-value dropdown
+  example_select:
+    name: Select Field
+    type: select
+    required: false
+    settings:
+      options:
+        # Option format with label and value:
+        - value: option_1
+          label: Option 1
+        - value: option_2
+          label: Option 2
+        - value: option_3
+          label: Option 3
+        # Simple string format also works:
+        # - option_1
+        # - option_2
+
+  # ─── MULTISELECT ──────────────────────────────────────
+  # Multiple-value select (stored as JSON array)
+  example_multiselect:
+    name: Multi-Select Field
+    type: multiselect
+    required: false
+    settings:
+      options:
+        - value: tag_1
+          label: Tag 1
+        - value: tag_2
+          label: Tag 2
+        - value: tag_3
+          label: Tag 3
+        - value: tag_4
+          label: Tag 4
+
+  # ─── COLOR ────────────────────────────────────────────
+  # Color picker (hex value)
+  example_color:
+    name: Color Field
+    type: color
+    required: false
+
+  # ─── JSON ─────────────────────────────────────────────
+  # Structured JSON data (validated on save)
+  example_json:
+    name: JSON Field
+    type: json
+    required: false
+    settings:
+      rows: 6
+      placeholder: '{"key": "value"}'
+
+  # ─── FILE ─────────────────────────────────────────────
+  # File upload (uses Active Storage)
+  example_file:
+    name: File Upload Field
+    type: file
+    required: false
+    settings:
+      accept: "image/*,.pdf"     # MIME types or extensions
+      multiple: true             # allow multiple files (default: true)</code></pre>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="fs-4 mb-0">Field Types Reference</h2>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Stored Value</th>
+            <th>Available Settings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>string</code></td>
+            <td>Single-line text input</td>
+            <td>String</td>
+            <td><code>placeholder</code>, <code>maxlength</code>, <code>minlength</code>, <code>pattern</code></td>
+          </tr>
+          <tr>
+            <td><code>textarea</code></td>
+            <td>Multi-line plain text</td>
+            <td>String</td>
+            <td><code>placeholder</code>, <code>rows</code>, <code>maxlength</code></td>
+          </tr>
+          <tr>
+            <td><code>text</code></td>
+            <td>Rich text / HTML content</td>
+            <td>String (HTML)</td>
+            <td><code>placeholder</code>, <code>rows</code></td>
+          </tr>
+          <tr>
+            <td><code>number</code></td>
+            <td>Numeric input</td>
+            <td>String (numeric)</td>
+            <td><code>min</code>, <code>max</code>, <code>step</code>, <code>placeholder</code></td>
+          </tr>
+          <tr>
+            <td><code>date</code></td>
+            <td>Date picker</td>
+            <td>String (YYYY-MM-DD)</td>
+            <td><code>min</code>, <code>max</code></td>
+          </tr>
+          <tr>
+            <td><code>datetime</code></td>
+            <td>Date and time picker</td>
+            <td>String (ISO 8601)</td>
+            <td><code>min</code>, <code>max</code></td>
+          </tr>
+          <tr>
+            <td><code>boolean</code></td>
+            <td>Toggle switch</td>
+            <td>"true" / "false"</td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><code>select</code></td>
+            <td>Single-value dropdown</td>
+            <td>String</td>
+            <td><code>options</code> (array of strings or {value, label} hashes)</td>
+          </tr>
+          <tr>
+            <td><code>multiselect</code></td>
+            <td>Multiple-value select</td>
+            <td>JSON array string</td>
+            <td><code>options</code> (array of strings or {value, label} hashes)</td>
+          </tr>
+          <tr>
+            <td><code>color</code></td>
+            <td>Color picker</td>
+            <td>String (hex, e.g. #ff0000)</td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><code>json</code></td>
+            <td>Structured JSON data</td>
+            <td>JSON string (validated)</td>
+            <td><code>rows</code>, <code>placeholder</code></td>
+          </tr>
+          <tr>
+            <td><code>file</code></td>
+            <td>File upload</td>
+            <td>Active Storage attachments</td>
+            <td><code>accept</code> (MIME types), <code>multiple</code> (boolean)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="fs-4 mb-0">Configuration</h2>
+  </div>
+  <div class="card-body">
+    <p>Configure the templates path in your initializer:</p>
+    <pre class="bg-light p-3 rounded"><code># config/initializers/lato_cms.rb
+LatoCms.configure do |config|
+  config.locales = [:en, :it]
+  config.templates_path = 'config/lato_cms'  # default
+end</code></pre>
+
+    <h3 class="fs-5 mt-4">Accessing Field Values</h3>
+    <p>In your frontend application, you can access page fields programmatically:</p>
+    <pre class="bg-light p-3 rounded"><code># Find a page
+page = LatoCms::Page.find_by(permalink: '/homepage')
+
+# Access fields
+page.fields.each do |field|
+  puts "#{field.field_id}: #{field.parsed_value}"
+end
+
+# Find a specific field
+hero_title = page.fields.find_by(
+  template_component_id: 'hero_section',
+  field_id: 'title'
+)
+puts hero_title.parsed_value  # => "Welcome to our site"
+
+# parsed_value returns typed values:
+# - number fields return Integer or Float
+# - boolean fields return true/false
+# - json fields return parsed Hash/Array
+# - date fields return Date objects
+# - datetime fields return DateTime objects
+# - multiselect fields return Array
+# - file fields use .files attachment (Active Storage)
+
+# Access file attachments
+file_field = page.fields.find_by(field_id: 'background_image')
+file_field.files.each do |file|
+  puts file.url  # Active Storage URL
+end</code></pre>
+  </div>
+</div>

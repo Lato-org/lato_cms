@@ -1,0 +1,252 @@
+// ── Advanced editor mode ───────────────────────────────────────────────────────
+
+body.lato-cms-advanced-editor--open {
+  overflow: hidden;
+}
+
+.lato-cms-advanced-editor__row--active {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+
+  > .lato-cms-advanced-editor__preview-col {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+
+    .card {
+      height: 100dvh !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+
+    iframe {
+      height: 100dvh !important;
+    }
+
+    // No-preview placeholder fills full screen
+    .card-body {
+      height: 100dvh;
+    }
+  }
+
+  > .lato-cms-advanced-editor__editor-col {
+    flex: 0 0 500px;
+    width: 500px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    transition: flex-basis 0.25s ease, width 0.25s ease;
+
+    .card {
+      height: 100dvh !important;
+      border-radius: 0 !important;
+      border-top: none !important;
+      border-bottom: none !important;
+      border-right: none !important;
+    }
+
+    .card-body {
+      max-height: calc(100dvh - 57px) !important;
+    }
+
+    &.lato-cms-advanced-editor__editor-col--collapsed {
+      flex-basis: 0 !important;
+      width: 0 !important;
+    }
+  }
+}
+
+// Tab to re-open the sidebar when collapsed
+.lato-cms-advanced-editor__reopen-btn {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1041;
+  width: 24px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid var(--bs-border-color);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.08);
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--bs-light, #f8f9fa);
+  }
+
+  i {
+    font-size: 11px;
+    color: var(--bs-secondary);
+  }
+}
+
+// ── Component form status ──────────────────────────────────────────────────────
+
+.lato-cms-component-form__status {
+  transition: opacity 0.4s ease;
+}
+
+.lato-cms-component-form__status--fade {
+  opacity: 0;
+}
+
+.controller-pages {
+  .lato-index-desk-col-label-actions {
+    width: 1px;
+
+    > div {
+      display: none !important;
+    }
+  }
+
+  .lato-index-desk-col-value-actions {
+    width: 1px;
+  }
+}
+
+// ── WYSIWYG text field ─────────────────────────────────────────────────────────
+
+.lato-cms-wysiwyg-editor {
+  height: auto;
+  cursor: text;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+    border-color: #86b7fe;
+  }
+
+  // Basic prose spacing inside the editor
+  p, div { margin-bottom: 0.5em; }
+  ul, ol { padding-left: 1.5em; margin-bottom: 0.5em; }
+  li { margin-bottom: 0.1em; }
+
+  // Avoid empty-editor collapse
+  &:empty::before {
+    content: attr(data-placeholder);
+    color: var(--bs-secondary);
+    pointer-events: none;
+  }
+}
+
+// ── Image field ────────────────────────────────────────────────────────────────
+.lato-cms-image-field__thumb {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.15s, outline 0.15s;
+}
+
+.lato-cms-image-field__remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(220, 53, 69, 0.85);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgb(220, 53, 69);
+  }
+}
+
+.lato-cms-image-field__new-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  font-size: 10px;
+}
+
+// ── Gallery field ──────────────────────────────────────────────────────────────
+.lato-cms-gallery-field__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.lato-cms-gallery-field__item {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  transition: opacity 0.15s, box-shadow 0.15s;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &--dragging {
+    opacity: 0.35;
+    box-shadow: 0 0 0 2px var(--bs-primary);
+  }
+}
+
+.lato-cms-gallery-field__thumb {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  display: block;
+}
+
+.lato-cms-gallery-field__remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(220, 53, 69, 0.85);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgb(220, 53, 69);
+  }
+}
+
+.controller-pages-show {
+  .accordion-button {
+    font-weight: 500;
+
+    &:not(.collapsed) {
+      background-color: rgba(var(--bs-primary-rgb), 0.05);
+    }
+  }
+
+  .accordion-body .form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+}

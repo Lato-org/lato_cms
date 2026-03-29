@@ -1,0 +1,55 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% settings = field_config['settings'] || {} %>
+<% accept = settings['accept'] || 'image/*' %>
+
+<%# Build ordered file list from value JSON or default order %>
+<% ordered_files = begin
+  if page_field&.files&.attached?
+    order = JSON.parse(page_field.value || '[]') rescue []
+    files = page_field.files.to_a
+    order.filter_map { |id| files.find { |f| f.id.to_s == id.to_s } } +
+      files.reject { |f| order.include?(f.id.to_s) }
+  else
+    []
+  end
+end %>
+
+<label class="form-label">
+  <%= label %><%= ' *' if required %>
+</label>
+
+<div data-controller="lato-cms-gallery-field" data-lato-cms-gallery-field-field-id-value="<%= field_id %>">
+  <div class="lato-cms-gallery-field__grid mb-2"
+       data-lato-cms-gallery-field-target="grid"
+       data-action="dragover->lato-cms-gallery-field#onGridDragOver drop->lato-cms-gallery-field#onGridDrop">
+    <% ordered_files.each do |file| %>
+      <div class="lato-cms-gallery-field__item"
+           data-gallery-item
+           data-attachment-id="<%= file.id %>"
+           draggable="true"
+           data-action="dragstart->lato-cms-gallery-field#onDragStart dragend->lato-cms-gallery-field#onDragEnd">
+        <img src="<%= lato_cms_attachment_path(file) %>" class="lato-cms-gallery-field__thumb" alt="<%= file.filename %>">
+        <button type="button" class="lato-cms-gallery-field__remove" data-action="click->lato-cms-gallery-field#remove">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    <% end %>
+  </div>
+
+  <% if ordered_files.empty? %>
+    <p class="text-muted small mb-2" data-lato-cms-gallery-field-target="emptyMsg"><%= t('lato_cms.field_gallery_empty') %></p>
+  <% end %>
+
+  <label class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-plus-lg me-1"></i><%= t('lato_cms.field_gallery_add_images') %>
+    <input type="file"
+      class="d-none"
+      name="fields[<%= field_id %>][files][]"
+      accept="<%= accept %>"
+      multiple
+      data-lato-cms-gallery-field-target="fileInput"
+      data-action="change->lato-cms-gallery-field#addFiles">
+  </label>
+  <small class="text-muted ms-2"><%= t('lato_cms.field_gallery_drag_to_reorder') %></small>
+</div>
