@@ -8,7 +8,8 @@ module LatoCms
 
     validates :title, presence: true
     validates :locale, presence: true, inclusion: { in: ->(page) { LatoCms.config.locales.map(&:to_s) } }
-    validates :permalink, presence: true, uniqueness: true, format: { with: /\A\/([a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]+)*)?\z/, message: 'must start with / and contain only letters, numbers, hyphens, and underscores' }
+    validates :permalink, presence: true, format: { with: /\A\/([a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]+)*)?\z/, message: 'must start with / and contain only letters, numbers, hyphens, and underscores' }
+    validate :permalink_unique_within_lato_spaces_group
 
     before_validation :generate_permalink, on: :create
 
@@ -91,12 +92,19 @@ module LatoCms
       candidate = base
       counter = 1
 
-      while self.class.exists?(permalink: candidate)
+      while permalink_taken_in_group?(candidate)
         candidate = "#{base}-#{counter}"
         counter += 1
       end
 
       self.permalink = candidate
+    end
+
+    def permalink_unique_within_lato_spaces_group
+      other_pages_with_same_permalink = LatoCms::Page.for_lato_spaces_group(self.lato_spaces_group_id).where(permalink: permalink).where.not(id: id)
+      if other_pages_with_same_permalink.count.positive?
+        errors.add(:permalink, :taken)
+      end
     end
   end
 end
