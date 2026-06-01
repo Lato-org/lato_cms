@@ -69,7 +69,7 @@ module LatoCms
       case field_type
       when 'file', 'image'
         attached = files.first
-        result[:attachments] = attached&.attached? ? [attachment_as_json(attached)] : []
+        result[:attachments] = attached ? [attachment_as_json(attached)] : []
       when 'gallery'
         order = value ? (JSON.parse(value) rescue []) : []
         all_files = files.to_a
