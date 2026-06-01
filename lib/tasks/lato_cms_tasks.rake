@@ -141,5 +141,43 @@ namespace :lato_cms do
       File.write(file, yaml_content.to_yaml)
       puts "Created component: #{file}"
     end
+
+    desc 'Generate custom field partial in host app'
+    # Usage: rails "lato_cms:generate:custom_field[field_name]"
+    task :custom_field, [:name] => :environment do |_t, args|
+      name = args[:name]
+      abort "Usage: rails \"lato_cms:generate:custom_field[field_name]\"" if name.blank?
+
+      field_id = name.parameterize(separator: '_')
+      views_path = Rails.root.join('app', 'views', 'lato_cms', 'custom_fields')
+      FileUtils.mkdir_p(views_path)
+
+      file = views_path.join("_#{field_id}.html.erb")
+      abort "Custom field partial already exists: #{file}" if File.exist?(file)
+
+      File.write(file, <<~ERB)
+        <% label = field_config['name'] || field_id.humanize %>
+        <% required = field_config['required'] == true %>
+        <% settings = field_config['settings'] || {} %>
+        <% current_value = page_field&.value.to_s %>
+
+        <label class="form-label" for="fields_<%= field_id %>_value">
+          <%= label %><%= ' *' if required %>
+        </label>
+
+        <input type="text"
+          class="form-control"
+          name="fields[<%= field_id %>][value]"
+          id="fields_<%= field_id %>_value"
+          value="<%= current_value %>"
+          <%= 'required' if required %>
+          placeholder="<%= settings['placeholder'] %>">
+      ERB
+
+      puts "Created custom field partial: #{file}"
+      puts "Use in component YAML:"
+      puts "  type: custom"
+      puts "  render: lato_cms/custom_fields/#{field_id}"
+    end
   end
 end
