@@ -69,6 +69,14 @@ module LatoCms
       component = LatoCms::TemplateManager.find_component(component_id)
       errors = []
 
+      unless @page.component_effectively_enabled?(template_component_id)
+        respond_to do |format|
+          format.html { redirect_to lato_cms.pages_show_path(@page), alert: t('lato_cms.component_disabled_cannot_save') }
+          format.json { render json: { error: t('lato_cms.component_disabled_cannot_save') }, status: :unprocessable_entity }
+        end
+        return
+      end
+
       fields_data.each do |field_id, field_data|
         field = @page.fields.find_or_initialize_by(
           template_id: @page.template_id,
@@ -129,6 +137,32 @@ module LatoCms
           error_messages = errors.map { |e| "#{e[:field_id]}: #{e[:errors].join(', ')}" }.join('; ')
           format.html { redirect_to lato_cms.pages_show_path(@page), alert: error_messages }
           format.json { render json: { errors: errors }, status: :unprocessable_entity }
+        end
+      end
+    end
+
+    def toggle_component_action
+      @page = query_pages.find(params[:id])
+      template_component_id = params[:template_component_id].to_s
+      enabled = ActiveModel::Type::Boolean.new.cast(params[:enabled])
+
+      if @page.component_required?(template_component_id)
+        respond_to do |format|
+          format.html { redirect_to lato_cms.pages_show_path(@page), alert: t('lato_cms.component_required_cannot_disable') }
+          format.json { render json: { error: t('lato_cms.component_required_cannot_disable') }, status: :unprocessable_entity }
+        end
+        return
+      end
+
+      @page.set_component_enabled(template_component_id, enabled)
+
+      respond_to do |format|
+        if @page.save
+          format.html { redirect_to lato_cms.pages_show_path(@page), notice: t('lato_cms.component_state_updated') }
+          format.json { render json: { message: t('lato_cms.component_state_updated') } }
+        else
+          format.html { redirect_to lato_cms.pages_show_path(@page), alert: @page.errors.full_messages.to_sentence }
+          format.json { render json: { errors: @page.errors.full_messages }, status: :unprocessable_entity }
         end
       end
     end

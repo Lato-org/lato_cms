@@ -32,6 +32,29 @@ module LatoCms
       LatoCms::TemplateManager.resolve_template_components(template)
     end
 
+    def component_enabled?(template_component_id, default: true)
+      value = (component_states || {})[template_component_id.to_s]
+      return default if value.nil?
+
+      value == true
+    end
+
+    def component_required?(template_component_id)
+      tc = template_components.find { |component| component[:template_component_id] == template_component_id.to_s }
+      tc && tc[:required] == true
+    end
+
+    def component_effectively_enabled?(template_component_id, default: true)
+      return true if component_required?(template_component_id)
+
+      component_enabled?(template_component_id, default: default)
+    end
+
+    def set_component_enabled(template_component_id, enabled)
+      key = template_component_id.to_s
+      self.component_states = (component_states || {}).merge(key => ActiveModel::Type::Boolean.new.cast(enabled))
+    end
+
     def as_json(options = {})
       data = {
         id: id,
@@ -47,7 +70,7 @@ module LatoCms
 
       if options[:include_fields]
         fields.load unless fields.loaded?
-        data[:fields] = build_fields_json(template_components)
+        data[:fields] = build_fields_json(template_components.select { |tc| component_effectively_enabled?(tc[:template_component_id]) })
       end
 
       data
@@ -92,7 +115,7 @@ module LatoCms
       candidate = base
       counter = 1
 
-      while permalink_taken_in_group?(candidate)
+      while LatoCms::Page.for_lato_spaces_group(self.lato_spaces_group_id).where(permalink: candidate).where.not(id: id).exists?
         candidate = "#{base}-#{counter}"
         counter += 1
       end

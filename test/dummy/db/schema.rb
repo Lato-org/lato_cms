@@ -52,6 +52,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_24_100123) do
   end
 
   create_table "lato_cms_pages", force: :cascade do |t|
+    t.json "component_states", default: {}, null: false
     t.datetime "created_at", null: false
     t.string "frontend_url"
     t.string "locale", null: false

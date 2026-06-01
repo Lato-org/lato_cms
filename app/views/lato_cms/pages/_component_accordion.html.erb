@@ -1,10 +1,17 @@
 <% accordion_id = "component-#{tc[:template_component_id]}" %>
 <% component_fields = page.fields.select { |f| f.template_component_id == tc[:template_component_id] } %>
+<% required_component = tc[:required] == true %>
+<% enabled_component = page.component_effectively_enabled?(tc[:template_component_id]) %>
 
 <div class="accordion-item">
   <h2 class="accordion-header" id="heading-<%= accordion_id %>">
     <button class="accordion-button <%= 'collapsed' unless expanded %>" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<%= accordion_id %>" aria-expanded="<%= expanded %>" aria-controls="collapse-<%= accordion_id %>">
       <%= tc[:name] %>
+      <% if required_component %>
+        <span class="badge bg-secondary ms-2"><%= t('lato_cms.component_required_badge') %></span>
+      <% elsif !enabled_component %>
+        <span class="badge bg-light text-dark border ms-2"><%= t('lato_cms.component_disabled_badge') %></span>
+      <% end %>
       <% unless tc[:component] %>
         <span class="badge bg-warning ms-2"><%= t('lato_cms.fields_component_not_found_badge') %></span>
       <% end %>
@@ -12,32 +19,49 @@
   </h2>
   <div id="collapse-<%= accordion_id %>" class="accordion-collapse collapse <%= 'show' if expanded %>" aria-labelledby="heading-<%= accordion_id %>" data-bs-parent="#components-accordion">
     <div class="accordion-body">
+      <% unless required_component %>
+        <div class="d-flex justify-content-end mb-3">
+          <%= form_with url: lato_cms.pages_toggle_component_action_path(page, tc[:template_component_id]), method: :patch, data: { turbo: false }, class: 'form-check form-switch' do %>
+            <%= hidden_field_tag :enabled, '0' %>
+            <%= check_box_tag :enabled, '1', enabled_component, class: 'form-check-input', id: "toggle-#{accordion_id}", onchange: 'this.form.requestSubmit()' %>
+            <%= label_tag "toggle-#{accordion_id}", t('lato_cms.component_enabled_label'), class: 'form-check-label' %>
+          <% end %>
+        </div>
+      <% end %>
+
       <% if tc[:component] %>
         <% valid_types = %w[string textarea text number date datetime boolean select multiselect color json file image gallery] %>
 
-        <%= form_with url: lato_cms.pages_save_fields_action_path(page), method: :post, multipart: true,
-            data: { turbo: false, controller: 'lato-cms-component-form' } do |form| %>
-          <%= hidden_field_tag :template_component_id, tc[:template_component_id] %>
-          <%= hidden_field_tag :component_id, tc[:component_id] %>
+        <% if enabled_component %>
+          <%= form_with url: lato_cms.pages_save_fields_action_path(page), method: :post, multipart: true,
+              data: { turbo: false, controller: 'lato-cms-component-form' } do |form| %>
+            <%= hidden_field_tag :template_component_id, tc[:template_component_id] %>
+            <%= hidden_field_tag :component_id, tc[:component_id] %>
 
-          <% tc[:fields].each do |field_id, field_config| %>
-            <% page_field = component_fields.find { |f| f.field_id == field_id } %>
-            <% field_type = field_config['type'] || 'string' %>
-            <% field_type = 'string' unless valid_types.include?(field_type) %>
+            <% tc[:fields].each do |field_id, field_config| %>
+              <% page_field = component_fields.find { |f| f.field_id == field_id } %>
+              <% field_type = field_config['type'] || 'string' %>
+              <% field_type = 'string' unless valid_types.include?(field_type) %>
 
-            <div class="mb-3">
-              <%= render "lato_cms/pages/fields/#{field_type}",
-                  field_id: field_id,
-                  field_config: field_config,
-                  page_field: page_field %>
+              <div class="mb-3">
+                <%= render "lato_cms/pages/fields/#{field_type}",
+                    field_id: field_id,
+                    field_config: field_config,
+                    page_field: page_field %>
+              </div>
+            <% end %>
+
+            <div class="d-flex justify-content-end align-items-center gap-3 mt-1">
+              <span data-lato-cms-component-form-target="status"></span>
+              <button type="submit" class="btn btn-sm btn-success" data-lato-cms-component-form-target="submitBtn">
+                <i class="bi bi-check-lg me-1"></i><%= t('lato_cms.fields_save_component') %>
+              </button>
             </div>
           <% end %>
-
-          <div class="d-flex justify-content-end align-items-center gap-3 mt-1">
-            <span data-lato-cms-component-form-target="status"></span>
-            <button type="submit" class="btn btn-sm btn-success" data-lato-cms-component-form-target="submitBtn">
-              <i class="bi bi-check-lg me-1"></i><%= t('lato_cms.fields_save_component') %>
-            </button>
+        <% else %>
+          <div class="alert alert-light border mb-0">
+            <i class="bi bi-eye-slash me-1"></i>
+            <%= t('lato_cms.component_disabled_alert') %>
           </div>
         <% end %>
       <% else %>

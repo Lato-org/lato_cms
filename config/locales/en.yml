@@ -35,6 +35,13 @@ en:
     show_template_unavailable: "The template <strong>%{template_id}</strong> is no longer available. Please assign a different template."
     show_previously_saved_fields: "Previously saved fields:"
     fields_component_not_found_badge: Component not found
+    component_required_badge: Required
+    component_disabled_badge: Disabled
+    component_enabled_label: Enabled
+    component_disabled_alert: This component is disabled and will not be exposed by API.
+    component_state_updated: Component state updated
+    component_required_cannot_disable: Required component cannot be disabled
+    component_disabled_cannot_save: Disabled component cannot be saved
     fields_save_component: Save
     fields_component_missing_alert_html: "Component <strong>%{component_id}</strong> not found. The component configuration may have been removed."
     fields_previously_saved_data: "Previously saved data:"

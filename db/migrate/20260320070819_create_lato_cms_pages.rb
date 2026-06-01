@@ -6,6 +6,7 @@ class CreateLatoCmsPages < ActiveRecord::Migration[8.1]
       t.string :title, null: false
       t.string :frontend_url
       t.string :template_id
+      t.json :component_states, default: {}, null: false
       t.timestamps
     end
   end

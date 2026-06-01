@@ -40,6 +40,7 @@ module LatoCms
             template_component_id: tc_id.to_s,
             component_id: tc_config['component_id'].to_s,
             name: tc_config['name'].presence || component&.dig('name') || tc_config['component_id'].to_s.humanize,
+            required: tc_config['required'] == true,
             component: component,
             fields: component ? (component['fields'] || {}) : {}
           }
