@@ -38,8 +38,13 @@ it:
     component_required_badge: Obbligatoria
     component_disabled_badge: Disattivata
     component_enabled_label: Attiva
+    component_active_label: Questa componente e attiva
+    component_inactive_label: Questa componente non e attiva
     component_disabled_alert: Questa componente e disattivata e non verra esposta dalle API.
     component_state_updated: Stato componente aggiornato
+    component_state_saving: Aggiornamento in corso...
+    component_state_saved: Stato aggiornato
+    component_state_save_error: Errore durante aggiornamento stato
     component_required_cannot_disable: Una componente obbligatoria non puo essere disattivata
     component_disabled_cannot_save: Una componente disattivata non puo essere salvata
     fields_save_component: Salva

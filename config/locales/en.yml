@@ -38,8 +38,13 @@ en:
     component_required_badge: Required
     component_disabled_badge: Disabled
     component_enabled_label: Enabled
+    component_active_label: This component is active
+    component_inactive_label: This component is not active
     component_disabled_alert: This component is disabled and will not be exposed by API.
     component_state_updated: Component state updated
+    component_state_saving: Updating...
+    component_state_saved: State updated
+    component_state_save_error: Failed to update state
     component_required_cannot_disable: Required component cannot be disabled
     component_disabled_cannot_save: Disabled component cannot be saved
     fields_save_component: Save

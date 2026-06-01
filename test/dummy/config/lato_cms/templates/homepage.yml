@@ -4,6 +4,7 @@ components:
   hero_section:
     component_id: hero
     name: Hero Section
+    required: true
   all_fields:
     component_id: all_fields_example
     name: All Field Types Demo
