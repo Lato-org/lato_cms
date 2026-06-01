@@ -90,3 +90,10 @@ fields:
     settings:
       accept: "image/*,.pdf"
       multiple: true
+  example_custom:
+    name: Custom Field (Icon + Note)
+    type: custom
+    render: lato_cms/custom_fields/icon_note
+    required: false
+    settings:
+      placeholder: "Example: rocket|Hero launch section"

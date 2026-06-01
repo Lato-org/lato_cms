@@ -1,0 +1,20 @@
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% settings = field_config['settings'] || {} %>
+<% current_value = page_field&.value.to_s %>
+
+<label class="form-label" for="fields_<%= field_id %>_value">
+  <%= label %><%= ' *' if required %>
+</label>
+
+<input type="text"
+  class="form-control"
+  name="fields[<%= field_id %>][value]"
+  id="fields_<%= field_id %>_value"
+  value="<%= current_value %>"
+  <%= 'required' if required %>
+  placeholder="<%= settings['placeholder'].presence || 'icon|note' %>">
+
+<small class="form-text text-muted">
+  Format: <code>icon|note</code>. Example: <code>rocket|Hero launch section</code>
+</small>

@@ -1,5 +1,7 @@
 module LatoCms
   module PagesHelper
+    BUILTIN_FIELD_TYPES = %w[string textarea text number date datetime boolean select multiselect color json file image gallery].freeze
+
     # Returns the path for an Active Storage attachment.
     # Using main_app avoids the missing `attachment_path` error inside the engine.
     def lato_cms_attachment_path(attachment)
@@ -38,6 +40,30 @@ module LatoCms
         end
         concat btn_group
       end
+    end
+
+    def lato_cms_render_field(field_id:, field_config:, page_field:)
+      render resolve_lato_cms_field_partial(field_config),
+        field_id: field_id,
+        field_config: field_config,
+        page_field: page_field
+    rescue ActionView::MissingTemplate => e
+      content_tag(:div, class: 'alert alert-danger mb-0') do
+        "Field '#{field_id}' render error: #{e.message}"
+      end
+    end
+
+    private
+
+    def resolve_lato_cms_field_partial(field_config)
+      type = (field_config['type'] || 'string').to_s
+      return "lato_cms/pages/fields/#{type}" if BUILTIN_FIELD_TYPES.include?(type)
+      return 'lato_cms/pages/fields/string' unless type == 'custom'
+
+      render_path = field_config['render'].to_s.strip
+      return 'lato_cms/pages/fields/string' if render_path.blank?
+
+      render_path
     end
   end
 end

@@ -44,8 +44,6 @@
       <% end %>
 
       <% if tc[:component] %>
-        <% valid_types = %w[string textarea text number date datetime boolean select multiselect color json file image gallery] %>
-
         <% if required_component %>
           <div>
         <% else %>
@@ -58,14 +56,13 @@
 
             <% tc[:fields].each do |field_id, field_config| %>
               <% page_field = component_fields.find { |f| f.field_id == field_id } %>
-              <% field_type = field_config['type'] || 'string' %>
-              <% field_type = 'string' unless valid_types.include?(field_type) %>
 
               <div class="mb-3">
-                <%= render "lato_cms/pages/fields/#{field_type}",
+                <%= lato_cms_render_field(
                     field_id: field_id,
                     field_config: field_config,
-                    page_field: page_field %>
+                    page_field: page_field
+                  ) %>
               </div>
             <% end %>
 
