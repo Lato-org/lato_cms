@@ -51,7 +51,24 @@ export default class extends Controller {
       const url = new URL(iframe.src)
       url.searchParams.set('_t', Date.now())
       iframe.src = url.toString()
+      this.broadcastOpenComponent()
     }
+  }
+
+  broadcastOpenComponent() {
+    const openCollapse = document.querySelector('#components-accordion .accordion-collapse.show')
+    if (!openCollapse) return
+
+    const templateComponentId = openCollapse.dataset.templateComponentId
+    if (!templateComponentId) return
+
+    document.dispatchEvent(new CustomEvent('lato-cms:component-change', {
+      detail: {
+        id: templateComponentId,
+        templateComponentId,
+        componentId: openCollapse.dataset.componentId
+      }
+    }))
   }
 
   showStatus(message, type) {
