@@ -46,7 +46,7 @@ export default class extends Controller {
   }
 
   refreshPreview() {
-    const iframe = document.querySelector('[data-page-preview-target="iframe"]')
+    const iframe = document.querySelector('[data-lato-cms-page-preview-target="iframe"]')
     if (iframe && iframe.src) {
       const url = new URL(iframe.src)
       url.searchParams.set('_t', Date.now())
