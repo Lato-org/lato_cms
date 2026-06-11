@@ -1,7 +1,7 @@
 <% page ||= @page %>
 <% template_components ||= @template_components %>
 
-<div class="accordion" id="components-accordion">
+<div class="accordion" id="components-accordion" data-controller="lato-cms-component-accordion">
   <% template_components.each_with_index do |tc, index| %>
     <%= render 'lato_cms/pages/component_accordion',
         page: page,

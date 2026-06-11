@@ -12,7 +12,7 @@
       <% end %>
     </button>
   </h2>
-  <div id="collapse-<%= accordion_id %>" class="accordion-collapse collapse <%= 'show' if expanded %>" aria-labelledby="heading-<%= accordion_id %>" data-bs-parent="#components-accordion">
+  <div id="collapse-<%= accordion_id %>" class="accordion-collapse collapse <%= 'show' if expanded %>" aria-labelledby="heading-<%= accordion_id %>" data-bs-parent="#components-accordion" data-template-component-id="<%= tc[:template_component_id] %>" data-component-id="<%= tc[:component_id] %>">
     <div class="accordion-body">
       <% if required_component %>
         <div>
