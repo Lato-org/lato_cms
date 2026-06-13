@@ -64,6 +64,7 @@ end</code></pre>
   Templates define which content blocks are available on a page.
   Components define the fields inside those blocks.
   Both are YAML files stored in the application.
+  Template components are enabled by default, and each page can turn optional components on or off from the admin panel.
 </p>
 
 <pre><code>config/lato_cms/
@@ -88,8 +89,38 @@ components:
   hero_section:
     component_id: hero
     name: Hero Section
+    required: true
   content_section:
     component_id: content</code></pre>
+
+<h3>Optional and required components</h3>
+
+<p>
+  Components listed in a template are optional unless <code>required: true</code> is set.
+  Optional components show an enabled switch in the page editor. Admins can disable them for a specific page
+  without removing the component from the template.
+</p>
+
+<pre><code># config/lato_cms/templates/homepage.yml
+id: homepage
+name: Homepage
+components:
+  hero_section:
+    component_id: hero
+    name: Hero Section
+    required: true
+  banner_section:
+    component_id: banner
+    name: Promotional Banner
+  content_section:
+    component_id: content
+    name: Content</code></pre>
+
+<p>
+  In this example <code>hero_section</code> is always active and cannot be disabled.
+  <code>banner_section</code> and <code>content_section</code> can be enabled or disabled per page.
+  Disabled components are hidden in the editor, cannot be saved, and are not exposed when page fields are returned by the API.
+</p>
 
 <h3>Component example</h3>
 
