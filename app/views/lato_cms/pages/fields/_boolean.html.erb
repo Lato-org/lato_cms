@@ -1,16 +1,18 @@
 <% label = field_config['name'] || field_id.humanize %>
 <% current_value = page_field&.value %>
 <% checked = current_value == 'true' %>
+<% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
+<% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
 <div class="form-check form-switch">
-  <input type="hidden" name="fields[<%= field_id %>][value]" value="false">
+  <input type="hidden" name="<%= input_name %>" value="false">
   <input type="checkbox"
     class="form-check-input"
-    name="fields[<%= field_id %>][value]"
-    id="fields_<%= field_id %>_value"
+    name="<%= input_name %>"
+    id="<%= input_id %>"
     value="true"
     <%= 'checked' if checked %>>
-  <label class="form-check-label" for="fields_<%= field_id %>_value">
+  <label class="form-check-label" for="<%= input_id %>">
     <%= label %>
   </label>
 </div>

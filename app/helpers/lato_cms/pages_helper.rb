@@ -42,15 +42,28 @@ module LatoCms
       end
     end
 
-    def lato_cms_render_field(field_id:, field_config:, page_field:)
+    def lato_cms_render_field(field_id:, field_config:, page_field:, input_name_prefix: nil, dom_id_prefix: nil)
       render resolve_lato_cms_field_partial(field_config),
         field_id: field_id,
         field_config: field_config,
-        page_field: page_field
+        page_field: page_field,
+        input_name_prefix: input_name_prefix,
+        dom_id_prefix: dom_id_prefix
     rescue ActionView::MissingTemplate => e
       content_tag(:div, class: 'alert alert-danger mb-0') do
         "Field '#{field_id}' render error: #{e.message}"
       end
+    end
+
+    def lato_cms_field_input_name(field_id, suffix = 'value', input_name_prefix: nil, multiple: false)
+      base = input_name_prefix.presence || "fields[#{field_id}]"
+      name = "#{base}[#{suffix}]"
+      multiple ? "#{name}[]" : name
+    end
+
+    def lato_cms_field_dom_id(field_id, suffix = 'value', dom_id_prefix: nil)
+      base = dom_id_prefix.presence || "fields_#{field_id}"
+      "#{base}_#{suffix}".parameterize(separator: '_')
     end
 
     private

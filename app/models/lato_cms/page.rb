@@ -87,12 +87,43 @@ module LatoCms
         hash[tc[:template_component_id]] = {
           component_id: tc[:component_id],
           name: tc[:name],
-          fields: (tc[:fields] || {}).each_with_object({}) do |(fid, fconfig), fhash|
-            field = component_fields[fid.to_s]
-            fhash[fid] = field ? field.as_json : empty_field_json(fid.to_s, fconfig)
-          end
+          fields: tc[:repeater] ?
+            build_repeater_fields_json(tc, fields_by_component[tc[:template_component_id]] || []) :
+            build_component_fields_json(tc, component_fields)
         }
       end
+    end
+
+    def build_component_fields_json(tc, component_fields)
+      (tc[:fields] || {}).each_with_object({}) do |(fid, fconfig), fhash|
+        field = component_fields[fid.to_s]
+        fhash[fid] = field ? field.as_json : empty_field_json(fid.to_s, fconfig)
+      end
+    end
+
+    def build_repeater_fields_json(tc, component_fields)
+      order = repeater_order(component_fields)
+      fields_by_item = component_fields.reject(&:repeater_order?).group_by(&:repeater_item_id)
+      item_ids = order.presence || fields_by_item.keys.compact
+
+      item_ids.filter_map do |item_id|
+        item_fields = (fields_by_item[item_id] || []).index_by(&:base_field_id)
+        next if item_fields.blank?
+
+        {
+          id: item_id,
+          fields: build_component_fields_json(tc, item_fields)
+        }
+      end
+    end
+
+    def repeater_order(component_fields)
+      order_field = component_fields.find(&:repeater_order?)
+      return [] unless order_field&.value.present?
+
+      JSON.parse(order_field.value)
+    rescue JSON::ParserError
+      []
     end
 
     def empty_field_json(fid, fconfig)

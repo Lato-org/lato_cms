@@ -3,6 +3,9 @@
 <% settings = field_config['settings'] || {} %>
 <% accept = settings['accept'] || 'image/*' %>
 <% current_file = page_field&.files&.attached? ? page_field.files.first : nil %>
+<% files_input_name = lato_cms_field_input_name(field_id, 'files', input_name_prefix: local_assigns[:input_name_prefix], multiple: true) %>
+<% remove_input_name = lato_cms_field_input_name(field_id, 'remove_file_ids', input_name_prefix: local_assigns[:input_name_prefix], multiple: true) %>
+<% input_id = lato_cms_field_dom_id(field_id, 'files', dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
 <label class="form-label">
   <%= label %><%= ' *' if required %>
@@ -14,7 +17,7 @@
       <div class="position-relative d-inline-block">
         <img src="<%= lato_cms_attachment_path(current_file) %>" class="img-thumbnail lato-cms-image-field__thumb" data-lato-cms-image-field-target="currentImage" alt="<%= current_file.filename %>">
         <label class="lato-cms-image-field__remove-btn" title="<%= t('lato_cms.field_image_remove') %>">
-          <input type="checkbox" class="d-none" name="fields[<%= field_id %>][remove_file_ids][]" value="<%= current_file.id %>" data-lato-cms-image-field-target="removeCheck" data-action="change->lato-cms-image-field#toggleRemove">
+          <input type="checkbox" class="d-none" name="<%= remove_input_name %>" value="<%= current_file.id %>" data-lato-cms-image-field-target="removeCheck" data-action="change->lato-cms-image-field#toggleRemove">
           <i class="bi bi-x-lg"></i>
         </label>
       </div>
@@ -30,8 +33,8 @@
 
   <input type="file"
     class="form-control"
-    name="fields[<%= field_id %>][files][]"
-    id="fields_<%= field_id %>_files"
+    name="<%= files_input_name %>"
+    id="<%= input_id %>"
     accept="<%= accept %>"
     data-lato-cms-image-field-target="input"
     data-action="change->lato-cms-image-field#preview"

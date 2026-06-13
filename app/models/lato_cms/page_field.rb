@@ -10,6 +10,8 @@ module LatoCms
     validates :field_id, presence: true
     validates :field_id, uniqueness: { scope: [:page_id, :template_component_id] }
 
+    REPEATER_ORDER_FIELD_ID = "__repeater_order".freeze
+
     before_save :parse_value
 
     def parsed_value
@@ -34,9 +36,27 @@ module LatoCms
     end
 
     def field_config
+      return nil if repeater_order?
+
       component = LatoCms::TemplateManager.find_component(component_id)
       return nil unless component
-      component.dig('fields', field_id)
+      component.dig('fields', base_field_id)
+    end
+
+    def repeater_order?
+      field_id == REPEATER_ORDER_FIELD_ID
+    end
+
+    def repeater_item_id
+      return nil unless field_id.to_s.include?('.')
+
+      field_id.to_s.split('.', 2).first
+    end
+
+    def base_field_id
+      return field_id unless repeater_item_id
+
+      field_id.to_s.split('.', 2).last
     end
 
     def field_type
@@ -58,7 +78,7 @@ module LatoCms
     def as_json(_options = {})
       result = {
         id: id,
-        field_id: field_id,
+        field_id: base_field_id,
         field_type: field_type,
         field_name: field_name,
         required: field_required?,

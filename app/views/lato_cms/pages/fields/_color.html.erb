@@ -1,15 +1,17 @@
 <% label = field_config['name'] || field_id.humanize %>
 <% required = field_config['required'] == true %>
 <% current_value = page_field&.value.presence || '#000000' %>
+<% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
+<% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
-<label class="form-label" for="fields_<%= field_id %>_value">
+<label class="form-label" for="<%= input_id %>">
   <%= label %><%= ' *' if required %>
 </label>
 <div class="d-flex align-items-center gap-2" data-controller="lato-cms-color-field">
   <input type="color"
     class="form-control form-control-color"
-    name="fields[<%= field_id %>][value]"
-    id="fields_<%= field_id %>_value"
+    name="<%= input_name %>"
+    id="<%= input_id %>"
     value="<%= current_value %>"
     data-lato-cms-color-field-target="input"
     data-action="input->lato-cms-color-field#update"

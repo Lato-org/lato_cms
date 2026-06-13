@@ -2,6 +2,7 @@
 <% required = field_config['required'] == true %>
 <% settings = field_config['settings'] || {} %>
 <% accept = settings['accept'] || 'image/*' %>
+<% files_input_name = lato_cms_field_input_name(field_id, 'files', input_name_prefix: local_assigns[:input_name_prefix], multiple: true) %>
 
 <%# Build ordered file list from value JSON or default order %>
 <% ordered_files = begin
@@ -19,7 +20,7 @@ end %>
   <%= label %><%= ' *' if required %>
 </label>
 
-<div data-controller="lato-cms-gallery-field" data-lato-cms-gallery-field-field-id-value="<%= field_id %>">
+<div data-controller="lato-cms-gallery-field" data-lato-cms-gallery-field-field-id-value="<%= field_id %>" data-lato-cms-gallery-field-input-name-prefix-value="<%= local_assigns[:input_name_prefix].presence || "fields[#{field_id}]" %>">
   <div class="lato-cms-gallery-field__grid mb-2"
        data-lato-cms-gallery-field-target="grid"
        data-action="dragover->lato-cms-gallery-field#onGridDragOver drop->lato-cms-gallery-field#onGridDrop">
@@ -45,7 +46,7 @@ end %>
     <i class="bi bi-plus-lg me-1"></i><%= t('lato_cms.field_gallery_add_images') %>
     <input type="file"
       class="d-none"
-      name="fields[<%= field_id %>][files][]"
+      name="<%= files_input_name %>"
       accept="<%= accept %>"
       multiple
       data-lato-cms-gallery-field-target="fileInput"

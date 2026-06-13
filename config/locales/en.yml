@@ -48,6 +48,8 @@ en:
     component_required_cannot_disable: Required component cannot be disabled
     component_disabled_cannot_save: Disabled component cannot be saved
     fields_save_component: Save
+    repeater_add_item: Add item
+    repeater_remove_item: Remove
     fields_component_missing_alert_html: "Component <strong>%{component_id}</strong> not found. The component configuration may have been removed."
     fields_previously_saved_data: "Previously saved data:"
     field_file_remove: Remove

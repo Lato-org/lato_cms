@@ -122,6 +122,34 @@ components:
   Disabled components are hidden in the editor, cannot be saved, and are not exposed when page fields are returned by the API.
 </p>
 
+<h3>Repeater components</h3>
+
+<p>
+  Add <code>repeater: true</code> to a template component when admins need to create multiple items with the same field set.
+  The API returns repeater fields as an ordered array of items.
+</p>
+
+<pre><code># config/lato_cms/templates/homepage.yml
+components:
+  feature_cards:
+    component_id: feature_card
+    name: Feature Cards
+    repeater: true
+    settings:
+      min: 1</code></pre>
+
+<pre><code># config/lato_cms/components/feature_card.yml
+id: feature_card
+name: Feature Card
+fields:
+  title:
+    name: Title
+    type: string
+    required: true
+  description:
+    name: Description
+    type: textarea</code></pre>
+
 <h3>Component example</h3>
 
 <pre><code># config/lato_cms/components/hero.yml

@@ -1,0 +1,22 @@
+<% order_field = component_fields.find(&:repeater_order?) %>
+<% saved_order = begin; order_field&.value.present? ? JSON.parse(order_field.value) : []; rescue JSON::ParserError; []; end %>
+<% fields_by_item = component_fields.reject(&:repeater_order?).group_by(&:repeater_item_id) %>
+<% item_ids = (saved_order.presence || fields_by_item.keys.compact) %>
+<% item_ids = [SecureRandom.uuid] if item_ids.blank? && tc[:settings]['min'].to_i.positive? %>
+
+<div data-controller="lato-cms-repeater">
+  <div data-lato-cms-repeater-target="items">
+    <% item_ids.each_with_index do |item_id, item_index| %>
+      <% item_fields = (fields_by_item[item_id] || []).index_by(&:base_field_id) %>
+      <%= render 'lato_cms/pages/repeater_item', tc: tc, item_id: item_id, item_index: item_index, item_fields: item_fields %>
+    <% end %>
+  </div>
+
+  <template data-lato-cms-repeater-target="template">
+    <%= render 'lato_cms/pages/repeater_item', tc: tc, item_id: 'NEW_RECORD', item_index: 'NEW_INDEX', item_fields: {} %>
+  </template>
+
+  <button type="button" class="btn btn-sm btn-outline-primary" data-action="lato-cms-repeater#add">
+    <i class="bi bi-plus-lg me-1"></i><%= t('lato_cms.repeater_add_item') %>
+  </button>
+</div>

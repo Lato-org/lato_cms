@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["grid", "fileInput", "emptyMsg"]
-  static values = { fieldId: String }
+  static values = { fieldId: String, inputNamePrefix: String }
 
   dragging = null
   newFileMap = new Map()
@@ -42,7 +42,7 @@ export default class extends Controller {
     if (attachmentId) {
       const input = document.createElement('input')
       input.type = 'hidden'
-      input.name = `fields[${this.fieldIdValue}][remove_file_ids][]`
+      input.name = `${this.inputNamePrefixValue}[remove_file_ids][]`
       input.value = attachmentId
       this.element.appendChild(input)
     } else if (fileUid) {
@@ -96,7 +96,7 @@ export default class extends Controller {
       if (!id) return
       const input = document.createElement('input')
       input.type = 'hidden'
-      input.name = `fields[${this.fieldIdValue}][order][]`
+      input.name = `${this.inputNamePrefixValue}[order][]`
       input.value = id
       input.setAttribute('data-gallery-order-input', '')
       this.element.appendChild(input)

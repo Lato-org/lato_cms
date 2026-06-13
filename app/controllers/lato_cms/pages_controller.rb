@@ -77,55 +77,13 @@ module LatoCms
         return
       end
 
-      fields_data.each do |field_id, field_data|
-        field = @page.fields.find_or_initialize_by(
-          template_id: @page.template_id,
-          template_component_id: template_component_id,
-          component_id: component_id,
-          field_id: field_id
-        )
+      template_component = @page.template_components.find { |tc| tc[:template_component_id] == template_component_id.to_s }
 
-        field_config = component&.dig('fields', field_id)
-        field_type = field_config&.dig('type') || 'string'
-
-        case field_type
-        when 'file', 'image'
-          field.save if field.new_record?
-          if field_data[:files].present?
-            Array(field_data[:files]).compact.each { |f| field.files.attach(f) }
-          end
-          if field_data[:remove_file_ids].present?
-            Array(field_data[:remove_file_ids]).reject(&:blank?).each do |file_id_to_remove|
-              field.files.find { |f| f.id == file_id_to_remove.to_i }&.purge
-            end
-          end
-        when 'gallery'
-          field.save if field.new_record?
-          if field_data[:files].present?
-            Array(field_data[:files]).compact.each { |f| field.files.attach(f) }
-          end
-          if field_data[:remove_file_ids].present?
-            Array(field_data[:remove_file_ids]).reject(&:blank?).each do |file_id_to_remove|
-              field.files.find { |f| f.id == file_id_to_remove.to_i }&.purge
-            end
-          end
-          # Persist order: existing IDs in dragged order + any new file IDs appended at end
-          order = Array(field_data[:order]).reject(&:blank?).map(&:to_s)
-          all_ids = field.files.reload.map { |f| f.id.to_s }
-          sorted = order.select { |id| all_ids.include?(id) }
-          new_ids = all_ids - sorted
-          field.value = (sorted + new_ids).to_json
-        when 'multiselect'
-          value = field_data[:value]
-          value = Array(value).reject(&:blank?)
-          field.value = value.to_json
-        else
-          raw_value = field_data.is_a?(ActionController::Parameters) ? field_data[:value] : field_data
-          field.value = raw_value.to_s.presence
-        end
-
-        unless field.save
-          errors << { field_id: field_id, errors: field.errors.full_messages }
+      if template_component&.dig(:repeater)
+        save_repeater_fields(template_component, component, params[:repeater_items] || {}, params[:repeater_order] || [], errors)
+      else
+        fields_data.each do |field_id, field_data|
+          save_field(component, template_component_id, component_id, field_id, field_id, field_data, errors)
         end
       end
 
@@ -182,6 +140,92 @@ module LatoCms
     end
 
     private
+
+    def save_repeater_fields(template_component, component, repeater_items, repeater_order, errors)
+      template_component_id = template_component[:template_component_id]
+      component_id = template_component[:component_id]
+      item_ids = Array(repeater_order).reject(&:blank?).map(&:to_s)
+
+      order_field = @page.fields.find_or_initialize_by(
+        template_id: @page.template_id,
+        template_component_id: template_component_id,
+        component_id: component_id,
+        field_id: LatoCms::PageField::REPEATER_ORDER_FIELD_ID
+      )
+      order_field.value = item_ids.to_json
+      errors << { field_id: order_field.field_id, errors: order_field.errors.full_messages } unless order_field.save
+
+      existing_item_ids = @page.fields.where(template_component_id: template_component_id).reject(&:repeater_order?).filter_map(&:repeater_item_id).uniq
+      removed_item_ids = existing_item_ids - item_ids
+      removed_item_ids.each do |item_id|
+        @page.fields
+          .where(template_component_id: template_component_id)
+          .where("field_id LIKE ?", "#{ActiveRecord::Base.sanitize_sql_like(item_id)}.%")
+          .destroy_all
+      end
+
+      item_ids.each do |item_id|
+        item_fields = repeater_items[item_id] || repeater_items[item_id.to_sym] || {}
+        (template_component[:fields] || {}).each_key do |field_id|
+          field_data = item_fields[field_id] || item_fields[field_id.to_sym] || {}
+          save_field(component, template_component_id, component_id, field_id, "#{item_id}.#{field_id}", field_data, errors)
+        end
+      end
+    end
+
+    def save_field(component, template_component_id, component_id, config_field_id, persisted_field_id, field_data, errors)
+      field = @page.fields.find_or_initialize_by(
+        template_id: @page.template_id,
+        template_component_id: template_component_id,
+        component_id: component_id,
+        field_id: persisted_field_id
+      )
+
+      field_config = component&.dig('fields', config_field_id)
+      field_type = field_config&.dig('type') || 'string'
+
+      assign_field_value(field, field_type, field_data)
+
+      unless field.save
+        errors << { field_id: persisted_field_id, errors: field.errors.full_messages }
+      end
+    end
+
+    def assign_field_value(field, field_type, field_data)
+      case field_type
+      when 'file', 'image'
+        field.save if field.new_record?
+        attach_field_files(field, field_data)
+        remove_field_files(field, field_data)
+      when 'gallery'
+        field.save if field.new_record?
+        attach_field_files(field, field_data)
+        remove_field_files(field, field_data)
+        order = Array(field_data[:order]).reject(&:blank?).map(&:to_s)
+        all_ids = field.files.reload.map { |f| f.id.to_s }
+        sorted = order.select { |id| all_ids.include?(id) }
+        field.value = (sorted + (all_ids - sorted)).to_json
+      when 'multiselect'
+        field.value = Array(field_data[:value]).reject(&:blank?).to_json
+      else
+        raw_value = field_data.is_a?(ActionController::Parameters) ? field_data[:value] : field_data
+        field.value = raw_value.to_s.presence
+      end
+    end
+
+    def attach_field_files(field, field_data)
+      return unless field_data[:files].present?
+
+      Array(field_data[:files]).compact.each { |file| field.files.attach(file) }
+    end
+
+    def remove_field_files(field, field_data)
+      return unless field_data[:remove_file_ids].present?
+
+      Array(field_data[:remove_file_ids]).reject(&:blank?).each do |file_id_to_remove|
+        field.files.find { |file| file.id == file_id_to_remove.to_i }&.purge
+      end
+    end
 
     def create_params
       params.require(:page).permit(:title, :locale)

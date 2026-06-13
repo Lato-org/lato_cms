@@ -3,14 +3,16 @@
 <% settings = field_config['settings'] || {} %>
 <% options = settings['options'] || [] %>
 <% current_values = begin; page_field&.value.present? ? JSON.parse(page_field.value) : []; rescue; []; end %>
+<% input_name = lato_cms_field_input_name(field_id, 'value', input_name_prefix: local_assigns[:input_name_prefix], multiple: true) %>
+<% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
-<label class="form-label" for="fields_<%= field_id %>_value">
+<label class="form-label" for="<%= input_id %>">
   <%= label %><%= ' *' if required %>
 </label>
 <select
   class="form-select"
-  name="fields[<%= field_id %>][value][]"
-  id="fields_<%= field_id %>_value"
+  name="<%= input_name %>"
+  id="<%= input_id %>"
   multiple
   size="<%= [options.length, 6].min %>"
   <%= 'required' if required %>>

@@ -41,6 +41,8 @@ module LatoCms
             component_id: tc_config['component_id'].to_s,
             name: tc_config['name'].presence || component&.dig('name') || tc_config['component_id'].to_s.humanize,
             required: tc_config['required'] == true,
+            repeater: tc_config['repeater'] == true || tc_config['repeatable'] == true,
+            settings: tc_config['settings'] || {},
             component: component,
             fields: component ? (component['fields'] || {}) : {}
           }

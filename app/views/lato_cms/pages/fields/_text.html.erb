@@ -1,8 +1,10 @@
 <% label = field_config['name'] || field_id.humanize %>
 <% required = field_config['required'] == true %>
 <% current_value = page_field&.value || '' %>
+<% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
+<% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
-<label class="form-label" for="fields_<%= field_id %>_value">
+<label class="form-label" for="<%= input_id %>">
   <%= label %><%= ' *' if required %>
 </label>
 
@@ -73,8 +75,8 @@
 
   <%# ── Hidden input submitted with the form ───────────────────────────── %>
   <input type="hidden"
-         name="fields[<%= field_id %>][value]"
-         id="fields_<%= field_id %>_value"
+          name="<%= input_name %>"
+          id="<%= input_id %>"
          data-lato-cms-text-field-target="input"
          value="<%= CGI.escapeHTML(current_value) %>">
 </div>

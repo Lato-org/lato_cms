@@ -1,0 +1,22 @@
+id: feature_card
+name: Feature Card
+fields:
+  title:
+    name: Title
+    type: string
+    required: true
+    settings:
+      placeholder: "Feature title"
+  description:
+    name: Description
+    type: textarea
+    required: false
+    settings:
+      rows: 3
+      placeholder: "Short feature description"
+  icon:
+    name: Icon
+    type: string
+    required: false
+    settings:
+      placeholder: "bi-star"

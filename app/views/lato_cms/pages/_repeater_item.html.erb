@@ -1,0 +1,28 @@
+<div class="card mb-3" data-lato-cms-repeater-target="item" data-repeater-item-id="<%= item_id %>">
+  <input type="hidden" name="repeater_order[]" value="<%= item_id %>" data-lato-cms-repeater-target="orderInput">
+
+  <div class="card-header d-flex justify-content-between align-items-center py-2">
+    <strong class="small"><%= tc[:name] %> #<span data-lato-cms-repeater-target="position"><%= item_index.to_i + 1 %></span></strong>
+    <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-repeater#remove">
+      <i class="bi bi-trash me-1"></i><%= t('lato_cms.repeater_remove_item') %>
+    </button>
+  </div>
+
+  <div class="card-body pb-2">
+    <% tc[:fields].each do |field_id, field_config| %>
+      <% page_field = item_fields[field_id.to_s] %>
+      <% input_name_prefix = "repeater_items[#{item_id}][#{field_id}]" %>
+      <% dom_id_prefix = "repeater_items_#{item_id}_#{field_id}" %>
+
+      <div class="mb-3">
+        <%= lato_cms_render_field(
+            field_id: field_id,
+            field_config: field_config,
+            page_field: page_field,
+            input_name_prefix: input_name_prefix,
+            dom_id_prefix: dom_id_prefix
+          ) %>
+      </div>
+    <% end %>
+  </div>
+</div>

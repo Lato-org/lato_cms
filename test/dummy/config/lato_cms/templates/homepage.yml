@@ -8,3 +8,9 @@ components:
   all_fields:
     component_id: all_fields_example
     name: All Field Types Demo
+  feature_cards:
+    component_id: feature_card
+    name: Feature Cards
+    repeater: true
+    settings:
+      min: 1

@@ -5,15 +5,17 @@
 <% if current_value.present? %>
   <% begin; current_value = JSON.pretty_generate(JSON.parse(current_value)); rescue JSON::ParserError; end %>
 <% end %>
+<% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
+<% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
-<label class="form-label" for="fields_<%= field_id %>_value">
+<label class="form-label" for="<%= input_id %>">
   <%= label %><%= ' *' if required %>
 </label>
 <div data-controller="lato-cms-json-field">
   <textarea
     class="form-control font-monospace"
-    name="fields[<%= field_id %>][value]"
-    id="fields_<%= field_id %>_value"
+    name="<%= input_name %>"
+    id="<%= input_id %>"
     rows="<%= settings['rows'] || 6 %>"
     data-lato-cms-json-field-target="input"
     data-action="input->lato-cms-json-field#validate"

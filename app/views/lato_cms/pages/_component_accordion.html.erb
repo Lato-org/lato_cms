@@ -54,16 +54,20 @@
             <%= hidden_field_tag :template_component_id, tc[:template_component_id] %>
             <%= hidden_field_tag :component_id, tc[:component_id] %>
 
-            <% tc[:fields].each do |field_id, field_config| %>
-              <% page_field = component_fields.find { |f| f.field_id == field_id } %>
+            <% if tc[:repeater] %>
+              <%= render 'lato_cms/pages/repeater', tc: tc, component_fields: component_fields %>
+            <% else %>
+              <% tc[:fields].each do |field_id, field_config| %>
+                <% page_field = component_fields.find { |f| f.field_id == field_id } %>
 
-              <div class="mb-3">
-                <%= lato_cms_render_field(
-                    field_id: field_id,
-                    field_config: field_config,
-                    page_field: page_field
-                  ) %>
-              </div>
+                <div class="mb-3">
+                  <%= lato_cms_render_field(
+                      field_id: field_id,
+                      field_config: field_config,
+                      page_field: page_field
+                    ) %>
+                </div>
+              <% end %>
             <% end %>
 
             <div class="d-flex justify-content-end align-items-center gap-3 mt-1">
