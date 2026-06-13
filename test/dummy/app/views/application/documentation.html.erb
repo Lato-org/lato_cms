@@ -192,9 +192,63 @@ fields:
         <td><code>file</code></td>
         <td>Uploaded files through Active Storage.</td>
       </tr>
+      <tr>
+        <td><code>image</code></td>
+        <td>Single image upload through Active Storage.</td>
+      </tr>
+      <tr>
+        <td><code>gallery</code></td>
+        <td>Multiple sortable image uploads through Active Storage.</td>
+      </tr>
+      <tr>
+        <td><code>custom</code></td>
+        <td>Application-defined field rendered with a custom partial.</td>
+      </tr>
     </tbody>
   </table>
 </div>
+
+<h3>Custom fields</h3>
+
+<p>
+  Use <code>type: custom</code> when a component needs an editor that is not covered by built-in field types.
+  Set <code>render</code> to an application partial path. The partial receives <code>field_id</code>,
+  <code>field_config</code>, and <code>page_field</code> locals.
+</p>
+
+<pre><code># config/lato_cms/components/hero.yml
+id: hero
+name: Hero
+fields:
+  icon_note:
+    name: Icon note
+    type: custom
+    render: lato_cms/custom_fields/icon_note
+    required: false
+    settings:
+      placeholder: "Example: rocket|Hero launch section"</code></pre>
+
+<p>Create the partial in the host application:</p>
+
+<pre><code>&lt;%# app/views/lato_cms/custom_fields/_icon_note.html.erb %&gt;
+&lt;% settings = field_config["settings"] || {} %&gt;
+&lt;% current_value = page_field&amp;.value.to_s %&gt;
+
+&lt;label class="form-label" for="fields_&lt;%= field_id %&gt;_value"&gt;
+  &lt;%= field_config["name"] || field_id.humanize %&gt;
+&lt;/label&gt;
+
+&lt;input type="text"
+  class="form-control"
+  name="fields[&lt;%= field_id %&gt;][value]"
+  id="fields_&lt;%= field_id %&gt;_value"
+  value="&lt;%= current_value %&gt;"
+  placeholder="&lt;%= settings["placeholder"] %&gt;"&gt;</code></pre>
+
+<p>
+  Custom field values are saved like standard scalar fields when the input name is
+  <code>fields[FIELD_ID][value]</code>. Use <code>settings</code> for custom options consumed by the partial.
+</p>
 
 <h3>Using CMS content in the application</h3>
 
