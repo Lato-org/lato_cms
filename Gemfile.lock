@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    lato_cms (3.0.0)
+    lato_cms (3.0.2)
       jbuilder
       lato
       lato_spaces

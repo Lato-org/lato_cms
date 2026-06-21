@@ -167,7 +167,12 @@ fields:
     name: Image
     type: file
     settings:
-      accept: "image/*"</code></pre>
+      accept: "image/*"
+  attachments:
+    name: Attachments
+    type: file
+    settings:
+      multiple: true</code></pre>
 
 <h3>Supported field types</h3>
 
@@ -218,7 +223,7 @@ fields:
       </tr>
       <tr>
         <td><code>file</code></td>
-        <td>Uploaded files through Active Storage.</td>
+        <td>Single file upload through Active Storage by default. Set <code>settings.multiple: true</code> to allow multiple files.</td>
       </tr>
       <tr>
         <td><code>image</code></td>

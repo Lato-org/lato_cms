@@ -53,10 +53,14 @@ en:
     fields_component_missing_alert_html: "Component <strong>%{component_id}</strong> not found. The component configuration may have been removed."
     fields_previously_saved_data: "Previously saved data:"
     field_file_remove: Remove
+    field_file_remove_pending: File will be removed on save
+    field_file_remove_undo: Undo
+    field_file_new_badge: New
     field_gallery_empty: No images yet. Add images below.
     field_gallery_add_images: Add images
     field_gallery_drag_to_reorder: Drag to reorder
     field_image_remove: Remove
+    field_image_remove_pending: Image will be removed on save
     field_image_new_badge: New
     field_multiselect_hint: Hold Ctrl/Cmd to select multiple
     field_select_placeholder: "-- Select --"

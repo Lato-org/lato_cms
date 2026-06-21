@@ -32,6 +32,10 @@ export default class extends Controller {
 
       if (response.ok) {
         this.showStatus('Fields saved successfully', 'success')
+        form.dispatchEvent(new CustomEvent('lato-cms:fields-save-success', {
+          bubbles: true,
+          detail: { success: true, data }
+        }))
         this.refreshPreview()
       } else {
         const errorMsg = data.errors?.map(e => `${e.field_id}: ${e.errors.join(', ')}`).join('; ') || 'Failed to save fields'

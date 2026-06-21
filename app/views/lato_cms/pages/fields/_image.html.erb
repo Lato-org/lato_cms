@@ -11,24 +11,49 @@
   <%= label %><%= ' *' if required %>
 </label>
 
-<div data-controller="lato-cms-image-field">
+<div data-controller="lato-cms-image-field"
+     data-field-id="<%= field_id %>"
+     data-new-badge-label="<%= t('lato_cms.field_image_new_badge') %>"
+     data-remove-label="<%= t('lato_cms.field_image_remove') %>"
+     data-remove-pending-label="<%= t('lato_cms.field_image_remove_pending') %>"
+     data-undo-label="<%= t('lato_cms.field_file_remove_undo') %>">
   <% if current_file %>
-    <div class="mb-2" data-lato-cms-image-field-target="currentContainer">
-      <div class="position-relative d-inline-block">
-        <img src="<%= lato_cms_attachment_path(current_file) %>" class="img-thumbnail lato-cms-image-field__thumb" data-lato-cms-image-field-target="currentImage" alt="<%= current_file.filename %>">
-        <label class="lato-cms-image-field__remove-btn" title="<%= t('lato_cms.field_image_remove') %>">
-          <input type="checkbox" class="d-none" name="<%= remove_input_name %>" value="<%= current_file.id %>" data-lato-cms-image-field-target="removeCheck" data-action="change->lato-cms-image-field#toggleRemove">
-          <i class="bi bi-x-lg"></i>
-        </label>
+    <div class="lato-cms-file-field__item lato-cms-image-field__item" data-lato-cms-image-field-target="currentContainer" data-attachment-id="<%= current_file.id %>">
+      <div class="lato-cms-image-field__preview">
+        <img src="<%= lato_cms_attachment_path(current_file) %>" class="lato-cms-image-field__thumb" data-lato-cms-image-field-target="currentImage" alt="<%= current_file.filename %>">
+      </div>
+      <div class="lato-cms-file-field__info">
+        <i class="bi bi-image"></i>
+        <span><%= current_file.blob.filename %></span>
+        <span class="text-muted small">(<%= number_to_human_size(current_file.blob.byte_size) %>)</span>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-image-field#remove">
+        <i class="bi bi-trash me-1"></i><%= t('lato_cms.field_image_remove') %>
+      </button>
+      <div class="lato-cms-image-field__removed d-none" data-lato-cms-image-field-target="removedNotice">
+        <span class="text-danger small">
+          <i class="bi bi-trash me-1"></i><%= t('lato_cms.field_image_remove_pending') %>
+        </span>
+        <button type="button" class="btn btn-link btn-sm p-0" data-action="lato-cms-image-field#undo">
+          <%= t('lato_cms.field_file_remove_undo') %>
+        </button>
       </div>
     </div>
   <% end %>
 
-  <div class="mb-2 d-none" data-lato-cms-image-field-target="newPreviewContainer">
-    <div class="position-relative d-inline-block">
-      <img src="" class="img-thumbnail lato-cms-image-field__thumb" data-lato-cms-image-field-target="newPreview" alt="">
-      <span class="badge bg-success lato-cms-image-field__new-badge"><%= t('lato_cms.field_image_new_badge') %></span>
+  <div class="lato-cms-file-field__item lato-cms-file-field__item--new lato-cms-image-field__item d-none" data-lato-cms-image-field-target="newPreviewContainer">
+    <div class="lato-cms-image-field__preview">
+      <img src="" class="lato-cms-image-field__thumb" data-lato-cms-image-field-target="newPreview" alt="">
     </div>
+    <div class="lato-cms-file-field__info">
+      <i class="bi bi-image"></i>
+      <span data-lato-cms-image-field-target="newPreviewName"></span>
+      <span class="text-muted small" data-lato-cms-image-field-target="newPreviewSize"></span>
+      <span class="badge bg-success"><%= t('lato_cms.field_image_new_badge') %></span>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-image-field#removeNew">
+      <i class="bi bi-trash me-1"></i><%= t('lato_cms.field_image_remove') %>
+    </button>
   </div>
 
   <input type="file"

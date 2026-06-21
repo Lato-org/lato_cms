@@ -8,6 +8,15 @@ export default class extends Controller {
   newFileMap = new Map()
   nextUid = 0
 
+  connect() {
+    this.afterSave = this.afterSave.bind(this)
+    this.element.closest('form')?.addEventListener('lato-cms:fields-save-success', this.afterSave)
+  }
+
+  disconnect() {
+    this.element.closest('form')?.removeEventListener('lato-cms:fields-save-success', this.afterSave)
+  }
+
   // ─── File selection ─────────────────────────────────────────────────────────
 
   addFiles() {
@@ -124,7 +133,7 @@ export default class extends Controller {
     div.dataset.fileUid = fileUid || ''
     div.draggable = true
     div.className = 'lato-cms-gallery-field__item'
-    div.setAttribute('data-action', 'dragstart->gallery-field#onDragStart dragend->gallery-field#onDragEnd')
+    div.setAttribute('data-action', 'dragstart->lato-cms-gallery-field#onDragStart dragend->lato-cms-gallery-field#onDragEnd')
     div.innerHTML = `
       <img src="${src}" class="lato-cms-gallery-field__thumb" alt="">
       <button type="button" class="lato-cms-gallery-field__remove" data-action="click->lato-cms-gallery-field#remove">
@@ -132,5 +141,28 @@ export default class extends Controller {
       </button>
     `
     return div
+  }
+
+  afterSave(event) {
+    if (!event.detail.success) return
+
+    const field = this.findSavedField(event.detail.data?.fields || [])
+    if (!field) return
+
+    this.newFileMap.clear()
+    this.fileInputTarget.value = ''
+    this.element.querySelectorAll('[name$="[remove_file_ids][]"]').forEach(input => input.remove())
+    this.gridTarget.innerHTML = ''
+    field.attachments.forEach(attachment => {
+      this.gridTarget.appendChild(this.buildItem(attachment.url, attachment.id, null))
+    })
+    this.updateEmpty()
+    this.updateOrderInputs()
+  }
+
+  findSavedField(fields) {
+    return fields.find(field => {
+      return field.persisted_field_id === this.fieldIdValue || field.field_id === this.fieldIdValue
+    })
   }
 }

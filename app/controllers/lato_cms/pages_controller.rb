@@ -90,7 +90,7 @@ module LatoCms
       respond_to do |format|
         if errors.empty?
           format.html { redirect_to lato_cms.pages_show_path(@page), notice: t('lato_cms.fields_saved') }
-          format.json { render json: { message: t('lato_cms.fields_saved') } }
+          format.json { render json: { message: t('lato_cms.fields_saved'), fields: @page.fields.reload.map(&:as_json) } }
         else
           error_messages = errors.map { |e| "#{e[:field_id]}: #{e[:errors].join(', ')}" }.join('; ')
           format.html { redirect_to lato_cms.pages_show_path(@page), alert: error_messages }
@@ -193,10 +193,12 @@ module LatoCms
 
     def assign_field_value(field, field_type, field_data)
       case field_type
-      when 'file', 'image'
+      when 'file'
         field.save if field.new_record?
-        attach_field_files(field, field_data)
-        remove_field_files(field, field_data)
+        assign_file_field_files(field, field_data)
+      when 'image'
+        field.save if field.new_record?
+        replace_field_image(field, field_data)
       when 'gallery'
         field.save if field.new_record?
         attach_field_files(field, field_data)
@@ -219,11 +221,36 @@ module LatoCms
       Array(field_data[:files]).compact.each { |file| field.files.attach(file) }
     end
 
+    def assign_file_field_files(field, field_data)
+      if field.field_settings['multiple'] != true && field_data[:files].present?
+        new_file = Array(field_data[:files]).compact.first
+        return unless new_file
+
+        field.files.each(&:purge)
+        field.files.attach(new_file)
+      else
+        attach_field_files(field, field_data)
+        remove_field_files(field, field_data)
+      end
+    end
+
     def remove_field_files(field, field_data)
       return unless field_data[:remove_file_ids].present?
 
       Array(field_data[:remove_file_ids]).reject(&:blank?).each do |file_id_to_remove|
         field.files.find { |file| file.id == file_id_to_remove.to_i }&.purge
+      end
+    end
+
+    def replace_field_image(field, field_data)
+      if field_data[:files].present?
+        new_file = Array(field_data[:files]).compact.first
+        return unless new_file
+
+        field.files.each(&:purge)
+        field.files.attach(new_file)
+      else
+        remove_field_files(field, field_data)
       end
     end
 

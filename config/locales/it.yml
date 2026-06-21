@@ -53,10 +53,14 @@ it:
     fields_component_missing_alert_html: "Componente <strong>%{component_id}</strong> non trovato. La configurazione del componente potrebbe essere stata rimossa."
     fields_previously_saved_data: "Dati salvati in precedenza:"
     field_file_remove: Rimuovi
+    field_file_remove_pending: Il file verra rimosso al salvataggio
+    field_file_remove_undo: Annulla
+    field_file_new_badge: Nuovo
     field_gallery_empty: Nessuna immagine presente. Aggiungi immagini qui sotto.
     field_gallery_add_images: Aggiungi immagini
     field_gallery_drag_to_reorder: Trascina per riordinare
     field_image_remove: Rimuovi
+    field_image_remove_pending: L'immagine verra rimossa al salvataggio
     field_image_new_badge: Nuovo
     field_multiselect_hint: Tieni premuto Ctrl/Cmd per selezionare piu opzioni
     field_select_placeholder: "-- Seleziona --"

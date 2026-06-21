@@ -78,6 +78,7 @@ module LatoCms
     def as_json(_options = {})
       result = {
         id: id,
+        persisted_field_id: field_id,
         field_id: base_field_id,
         field_type: field_type,
         field_name: field_name,
@@ -87,7 +88,9 @@ module LatoCms
       }
 
       case field_type
-      when 'file', 'image'
+      when 'file'
+        result[:attachments] = files.map { |f| attachment_as_json(f) }
+      when 'image'
         attached = files.first
         result[:attachments] = attached ? [attachment_as_json(attached)] : []
       when 'gallery'
@@ -109,6 +112,7 @@ module LatoCms
         id: attachment.id,
         filename: attachment.filename.to_s,
         content_type: attachment.content_type,
+        byte_size: attachment.byte_size,
         url: Rails.application.routes.url_helpers.rails_blob_path(attachment, only_path: true)
       }
     end
