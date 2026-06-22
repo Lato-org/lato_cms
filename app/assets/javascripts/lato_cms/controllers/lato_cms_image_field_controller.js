@@ -42,7 +42,7 @@ export default class extends Controller {
   remove() {
     if (!this.hasCurrentContainerTarget) return
 
-    this.currentContainerTarget.classList.add('lato-cms-image-field--removing')
+    this.currentContainerTarget.classList.add('lato-cms-file-field__item--removing')
     this.removedNoticeTarget.classList.remove('d-none')
     this.ensureRemoveInput()
   }
@@ -50,7 +50,7 @@ export default class extends Controller {
   undo() {
     if (!this.hasCurrentContainerTarget) return
 
-    this.currentContainerTarget.classList.remove('lato-cms-image-field--removing')
+    this.currentContainerTarget.classList.remove('lato-cms-file-field__item--removing')
     this.removedNoticeTarget.classList.add('d-none')
     this.removeInput?.remove()
     this.removeInput = null
@@ -104,10 +104,10 @@ export default class extends Controller {
         <span>${this.escapeHtml(attachment.filename)}</span>
         <span class="text-muted small">(${this.humanSize(attachment.byte_size || 0)})</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-image-field#remove">
-        <i class="bi bi-trash me-1"></i>${this.removeLabel}
+      <button type="button" class="lato-cms-attachment-field__remove" title="${this.removeLabel}" aria-label="${this.removeLabel}" data-action="lato-cms-image-field#remove">
+        <i class="bi bi-trash"></i>
       </button>
-      <div class="lato-cms-image-field__removed d-none" data-lato-cms-image-field-target="removedNotice">
+      <div class="lato-cms-file-field__removed d-none" data-lato-cms-image-field-target="removedNotice">
         <span class="text-danger small">
           <i class="bi bi-trash me-1"></i>${this.removePendingLabel}
         </span>

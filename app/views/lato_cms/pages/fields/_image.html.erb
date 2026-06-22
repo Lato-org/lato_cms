@@ -27,10 +27,10 @@
         <span><%= current_file.blob.filename %></span>
         <span class="text-muted small">(<%= number_to_human_size(current_file.blob.byte_size) %>)</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-image-field#remove">
-        <i class="bi bi-trash me-1"></i><%= t('lato_cms.field_image_remove') %>
+      <button type="button" class="lato-cms-attachment-field__remove" title="<%= t('lato_cms.field_image_remove') %>" aria-label="<%= t('lato_cms.field_image_remove') %>" data-action="lato-cms-image-field#remove">
+        <i class="bi bi-trash"></i>
       </button>
-      <div class="lato-cms-image-field__removed d-none" data-lato-cms-image-field-target="removedNotice">
+      <div class="lato-cms-file-field__removed d-none" data-lato-cms-image-field-target="removedNotice">
         <span class="text-danger small">
           <i class="bi bi-trash me-1"></i><%= t('lato_cms.field_image_remove_pending') %>
         </span>
@@ -51,8 +51,8 @@
       <span class="text-muted small" data-lato-cms-image-field-target="newPreviewSize"></span>
       <span class="badge bg-success"><%= t('lato_cms.field_image_new_badge') %></span>
     </div>
-    <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-image-field#removeNew">
-      <i class="bi bi-trash me-1"></i><%= t('lato_cms.field_image_remove') %>
+    <button type="button" class="lato-cms-attachment-field__remove" title="<%= t('lato_cms.field_image_remove') %>" aria-label="<%= t('lato_cms.field_image_remove') %>" data-action="lato-cms-image-field#removeNew">
+      <i class="bi bi-trash"></i>
     </button>
   </div>
 

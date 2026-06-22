@@ -136,8 +136,8 @@ export default class extends Controller {
     div.setAttribute('data-action', 'dragstart->lato-cms-gallery-field#onDragStart dragend->lato-cms-gallery-field#onDragEnd')
     div.innerHTML = `
       <img src="${src}" class="lato-cms-gallery-field__thumb" alt="">
-      <button type="button" class="lato-cms-gallery-field__remove" data-action="click->lato-cms-gallery-field#remove">
-        <i class="bi bi-x-lg"></i>
+      <button type="button" class="lato-cms-attachment-field__remove lato-cms-gallery-field__remove" title="${this.removeLabel}" aria-label="${this.removeLabel}" data-action="click->lato-cms-gallery-field#remove">
+        <i class="bi bi-trash"></i>
       </button>
     `
     return div
@@ -164,5 +164,9 @@ export default class extends Controller {
     return fields.find(field => {
       return field.persisted_field_id === this.fieldIdValue || field.field_id === this.fieldIdValue
     })
+  }
+
+  get removeLabel() {
+    return this.element.dataset.removeLabel || 'Remove'
   }
 }

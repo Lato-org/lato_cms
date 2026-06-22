@@ -20,7 +20,7 @@ end %>
   <%= label %><%= ' *' if required %>
 </label>
 
-<div data-controller="lato-cms-gallery-field" data-lato-cms-gallery-field-field-id-value="<%= field_id %>" data-lato-cms-gallery-field-input-name-prefix-value="<%= local_assigns[:input_name_prefix].presence || "fields[#{field_id}]" %>">
+<div data-controller="lato-cms-gallery-field" data-lato-cms-gallery-field-field-id-value="<%= field_id %>" data-lato-cms-gallery-field-input-name-prefix-value="<%= local_assigns[:input_name_prefix].presence || "fields[#{field_id}]" %>" data-remove-label="<%= t('lato_cms.field_file_remove') %>">
   <div class="lato-cms-gallery-field__grid mb-2"
        data-lato-cms-gallery-field-target="grid"
        data-action="dragover->lato-cms-gallery-field#onGridDragOver drop->lato-cms-gallery-field#onGridDrop">
@@ -31,8 +31,8 @@ end %>
            draggable="true"
            data-action="dragstart->lato-cms-gallery-field#onDragStart dragend->lato-cms-gallery-field#onDragEnd">
         <img src="<%= lato_cms_attachment_path(file) %>" class="lato-cms-gallery-field__thumb" alt="<%= file.filename %>">
-        <button type="button" class="lato-cms-gallery-field__remove" data-action="click->lato-cms-gallery-field#remove">
-          <i class="bi bi-x-lg"></i>
+        <button type="button" class="lato-cms-attachment-field__remove lato-cms-gallery-field__remove" title="<%= t('lato_cms.field_file_remove') %>" aria-label="<%= t('lato_cms.field_file_remove') %>" data-action="click->lato-cms-gallery-field#remove">
+          <i class="bi bi-trash"></i>
         </button>
       </div>
     <% end %>

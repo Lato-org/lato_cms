@@ -106,8 +106,8 @@ export default class extends Controller {
         <span class="text-muted small">(${this.humanSize(file.size)})</span>
         <span class="badge bg-success">${this.newBadgeLabel}</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-file-field#remove">
-        <i class="bi bi-trash me-1"></i>${this.removeLabel}
+      <button type="button" class="lato-cms-attachment-field__remove" title="${this.removeLabel}" aria-label="${this.removeLabel}" data-action="lato-cms-file-field#remove">
+        <i class="bi bi-trash"></i>
       </button>
     `
     return item
@@ -150,8 +150,8 @@ export default class extends Controller {
         <span>${this.escapeHtml(attachment.filename)}</span>
         <span class="text-muted small">(${this.humanSize(attachment.byte_size || 0)})</span>
       </div>
-      <button type="button" class="btn btn-sm btn-outline-danger" data-action="lato-cms-file-field#remove">
-        <i class="bi bi-trash me-1"></i>${this.removeLabel}
+      <button type="button" class="lato-cms-attachment-field__remove" title="${this.removeLabel}" aria-label="${this.removeLabel}" data-action="lato-cms-file-field#remove">
+        <i class="bi bi-trash"></i>
       </button>
       <div class="lato-cms-file-field__removed d-none" data-lato-cms-file-field-target="removedNotice">
         <span class="text-danger small">

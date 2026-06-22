@@ -90,6 +90,16 @@ fields:
     settings:
       accept: "image/*,.pdf"
       multiple: true
+  example_image:
+    name: Image Field
+    type: image
+    required: false
+    settings:
+      accept: "image/*"
+  example_gallery:
+    name: Gallery Field
+    type: gallery
+    required: false
   example_custom:
     name: Custom Field (Icon + Note)
     type: custom
