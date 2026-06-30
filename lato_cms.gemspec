@@ -26,4 +26,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "lato"
   spec.add_dependency "lato_spaces"
   spec.add_dependency "jbuilder"
+  spec.add_dependency "image_processing", ">= 1.2"
 end

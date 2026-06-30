@@ -227,11 +227,11 @@ fields:
       </tr>
       <tr>
         <td><code>image</code></td>
-        <td>Single image upload through Active Storage.</td>
+        <td>Single image upload through Active Storage. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
       </tr>
       <tr>
         <td><code>gallery</code></td>
-        <td>Multiple sortable image uploads through Active Storage.</td>
+        <td>Multiple sortable image uploads through Active Storage. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
       </tr>
       <tr>
         <td><code>custom</code></td>
@@ -240,6 +240,50 @@ fields:
     </tbody>
   </table>
 </div>
+
+<h3 id="image-sizes">Image sizes</h3>
+
+<p>
+  <code>image</code> and <code>gallery</code> fields can declare <code>settings.sizes</code> to generate
+  resized variants via <code>image_processing</code>. Each size produces an Active Storage variant that is
+  processed lazily on first request and exposed in the API under the attachment's <code>sizes</code> map.
+</p>
+
+<p>Each size accepts <code>width</code>, <code>height</code>, and a <code>resize</code> mode:</p>
+
+<ul>
+  <li><code>limit</code> (default): scale down to fit within the bounds, never upscale, keep aspect ratio.</li>
+  <li><code>fit</code>: scale to fit within the bounds, keep aspect ratio.</li>
+  <li><code>fill</code>: crop to exactly <code>width</code>×<code>height</code>.</li>
+</ul>
+
+<pre><code># config/lato_cms/components/hero.yml
+id: hero
+name: Hero
+fields:
+  cover:
+    name: Cover
+    type: image
+    settings:
+      sizes:
+        thumb:
+          width: 150
+          height: 150
+          resize: fill
+        medium:
+          width: 800</code></pre>
+
+<p>The API response includes the generated variant URLs alongside the original:</p>
+
+<pre><code>{
+  "id": 12,
+  "filename": "cover.jpg",
+  "url": "/rails/active_storage/blobs/.../cover.jpg",
+  "sizes": {
+    "thumb": "/rails/active_storage/representations/.../cover.jpg",
+    "medium": "/rails/active_storage/representations/.../cover.jpg"
+  }
+}</code></pre>
 
 <h3>Custom fields</h3>
 

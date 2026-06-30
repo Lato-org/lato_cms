@@ -96,10 +96,23 @@ fields:
     required: false
     settings:
       accept: "image/*"
+      sizes:
+        thumb:
+          width: 150
+          height: 150
+          resize: fill
+        medium:
+          width: 800
   example_gallery:
     name: Gallery Field
     type: gallery
     required: false
+    settings:
+      sizes:
+        thumb:
+          width: 300
+          height: 300
+          resize: fill
   example_custom:
     name: Custom Field (Icon + Note)
     type: custom

@@ -1,7 +1,8 @@
 PATH
   remote: .
   specs:
-    lato_cms (3.0.2)
+    lato_cms (3.0.3)
+      image_processing (>= 1.2)
       jbuilder
       lato
       lato_spaces
@@ -119,6 +120,7 @@ GEM
       activesupport (>= 6.1)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
+    image_processing (2.0.2)
     importmap-rails (2.2.2)
       actionpack (>= 6.0.0)
       activesupport (>= 6.0.0)
