@@ -23,6 +23,17 @@ en:
     form_no_template_option: "-- No template --"
     form_template_unavailable: "The template \"%{template_id}\" is no longer available. Please select a different template."
     action_view_frontend: View
+    cta_actions: Actions
+    translations_title: Translations
+    translation_no_other_locales: No other locales are configured.
+    translation_link_cta: Link
+    translation_unlink_cta: Unlink
+    translation_unlink_confirm: Are you sure you want to unlink this translation?
+    translation_no_candidates: No pages available for this language
+    translation_linked: Translation linked successfully
+    translation_unlinked: Translation unlinked successfully
+    translation_link_failed: Failed to link translation
+    translation_unlink_failed: Failed to unlink translation
     show_no_preview_title: No preview available
     show_no_preview_description: Set the <strong>Frontend URL</strong> to see the page preview.
     show_edit_settings_cta: Edit page settings

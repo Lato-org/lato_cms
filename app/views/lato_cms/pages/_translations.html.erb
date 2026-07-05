@@ -1,0 +1,41 @@
+<%= turbo_frame_tag dom_id(page, 'translations') do %>
+  <%= lato_form_notices class: %w[mb-3] %>
+
+  <% other_locales = LatoCms.config.locales.map(&:to_s) - [page.locale.to_s] %>
+  <% if other_locales.empty? %>
+    <p class="text-muted mb-0"><%= t('lato_cms.translation_no_other_locales') %></p>
+  <% else %>
+    <% other_locales.each do |locale| %>
+      <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+        <span class="badge bg-secondary">
+          <%= locale_to_flag(locale) %> <%= locale.upcase %>
+        </span>
+
+        <% sibling = page.translation_for(locale) %>
+        <% if sibling %>
+          <%# Linked translation: show it with an unlink button. %>
+          <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end">
+            <%= link_to sibling.title, lato_cms.pages_show_path(sibling), class: 'text-truncate' %>
+            <%= button_to t('lato_cms.translation_unlink_cta'), lato_cms.pages_unlink_translation_action_path(page),
+              method: :delete, params: { translation_page_id: sibling.id },
+              class: 'btn btn-sm btn-outline-danger', form: { data: { turbo_confirm: t('lato_cms.translation_unlink_confirm') } } %>
+          </div>
+        <% else %>
+          <%# No translation for this locale: let the user link an existing page. %>
+          <% candidates = page.translation_candidates(locale) %>
+          <% if candidates.any? %>
+            <%= form_with url: lato_cms.pages_link_translation_action_path(page), method: :post,
+              class: 'd-flex align-items-center gap-2 flex-grow-1 justify-content-end' do %>
+              <%= select_tag :translation_page_id,
+                options_from_collection_for_select(candidates, :id, :title),
+                class: 'form-select form-select-sm', style: 'max-width: 260px;' %>
+              <%= submit_tag t('lato_cms.translation_link_cta'), class: 'btn btn-sm btn-outline-primary' %>
+            <% end %>
+          <% else %>
+            <span class="text-muted small"><%= t('lato_cms.translation_no_candidates') %></span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

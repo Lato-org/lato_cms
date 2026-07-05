@@ -125,6 +125,40 @@ module LatoCms
       end
     end
 
+    def translations
+      @page = query_pages.find(params[:id])
+    end
+
+    def link_translation_action
+      @page = query_pages.find(params[:id])
+      other_page = query_pages.find(params[:translation_page_id])
+
+      respond_to do |format|
+        if @page.link_translation(other_page)
+          format.html { redirect_to lato_cms.pages_translations_path(@page), notice: t('lato_cms.translation_linked') }
+          format.json { render json: @page }
+        else
+          format.html { redirect_to lato_cms.pages_translations_path(@page), alert: t('lato_cms.translation_link_failed') }
+          format.json { render json: { error: t('lato_cms.translation_link_failed') }, status: :unprocessable_entity }
+        end
+      end
+    end
+
+    def unlink_translation_action
+      @page = query_pages.find(params[:id])
+      other_page = query_pages.find(params[:translation_page_id])
+
+      respond_to do |format|
+        if @page.unlink_translation(other_page)
+          format.html { redirect_to lato_cms.pages_translations_path(@page), notice: t('lato_cms.translation_unlinked') }
+          format.json { render json: @page }
+        else
+          format.html { redirect_to lato_cms.pages_translations_path(@page), alert: t('lato_cms.translation_unlink_failed') }
+          format.json { render json: { error: t('lato_cms.translation_unlink_failed') }, status: :unprocessable_entity }
+        end
+      end
+    end
+
     def destroy_action
       @page = query_pages.find(params[:id])
 

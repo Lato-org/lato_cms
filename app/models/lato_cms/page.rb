@@ -10,10 +10,72 @@ module LatoCms
     validates :locale, presence: true, inclusion: { in: ->(page) { LatoCms.config.locales.map(&:to_s) } }
     validates :permalink, presence: true, format: { with: /\A\/([a-zA-Z0-9\-_]+(\/[a-zA-Z0-9\-_]+)*)?\z/, message: 'must start with / and contain only letters, numbers, hyphens, and underscores' }
     validate :permalink_unique_within_lato_spaces_group
+    validate :locale_unique_within_translation_group
 
     before_validation :generate_permalink, on: :create
 
     has_many :fields, class_name: 'LatoCms::PageField', dependent: :destroy
+
+    # ── Translations ────────────────────────────────────────────────────────
+    # Pages sharing the same translation_group_id (within the same spaces group)
+    # are translations of each other, at most one per locale.
+
+    # Sibling pages linked as translations of this page.
+    def translations
+      return LatoCms::Page.none if translation_group_id.blank?
+
+      LatoCms::Page
+        .for_lato_spaces_group(lato_spaces_group_id)
+        .where(translation_group_id: translation_group_id)
+        .where.not(id: id)
+    end
+
+    # The linked translation for a given locale, if any.
+    def translation_for(locale)
+      translations.find_by(locale: locale.to_s)
+    end
+
+    # Pages of a given locale that can be linked to this page: same spaces group,
+    # not this page, and not already part of any translation group.
+    def translation_candidates(locale)
+      LatoCms::Page
+        .for_lato_spaces_group(lato_spaces_group_id)
+        .where(locale: locale.to_s, translation_group_id: nil)
+        .where.not(id: id)
+    end
+
+    # Links another page as a translation of this one, merging any existing
+    # groups so all members share a single translation_group_id.
+    def link_translation(other_page)
+      return false unless other_page && other_page.id != id
+      return false unless other_page.lato_spaces_group_id == lato_spaces_group_id
+
+      group_id = translation_group_id.presence || other_page.translation_group_id.presence || SecureRandom.uuid
+      old_group_id = other_page.translation_group_id.presence
+
+      transaction do
+        update!(translation_group_id: group_id)
+        # Re-point every member of the other page's former group to keep groups merged.
+        if old_group_id && old_group_id != group_id
+          LatoCms::Page
+            .for_lato_spaces_group(lato_spaces_group_id)
+            .where(translation_group_id: old_group_id)
+            .update_all(translation_group_id: group_id)
+        else
+          other_page.update!(translation_group_id: group_id)
+        end
+      end
+
+      true
+    end
+
+    # Removes a page from this page's translation group.
+    def unlink_translation(other_page)
+      return false unless other_page && other_page.translation_group_id == translation_group_id
+
+      other_page.update!(translation_group_id: nil)
+      true
+    end
 
     def template
       LatoCms::TemplateManager.find_template(template_id)
@@ -64,6 +126,7 @@ module LatoCms
         template_id: template_id,
         template_name: template_name,
         frontend_url: frontend_url,
+        translations: translations_json,
         created_at: created_at,
         updated_at: updated_at
       }
@@ -77,6 +140,13 @@ module LatoCms
     end
 
     private
+
+    # Map of locale => permalink/id for linked translations, for API consumers.
+    def translations_json
+      translations.each_with_object({}) do |page, hash|
+        hash[page.locale] = { id: page.id, permalink: page.permalink, frontend_url: page.frontend_url }
+      end
+    end
 
     def build_fields_json(comps)
       fields_by_component = fields.group_by(&:template_component_id)
@@ -159,6 +229,18 @@ module LatoCms
       if other_pages_with_same_permalink.count.positive?
         errors.add(:permalink, :taken)
       end
+    end
+
+    def locale_unique_within_translation_group
+      return if translation_group_id.blank?
+
+      conflict = LatoCms::Page
+        .for_lato_spaces_group(lato_spaces_group_id)
+        .where(translation_group_id: translation_group_id, locale: locale)
+        .where.not(id: id)
+        .exists?
+
+      errors.add(:locale, :taken) if conflict
     end
   end
 end

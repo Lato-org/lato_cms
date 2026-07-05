@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_24_100123) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_05_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -59,9 +59,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_24_100123) do
     t.string "permalink", null: false
     t.string "template_id"
     t.string "title", null: false
+    t.string "translation_group_id"
     t.datetime "updated_at", null: false
     t.index ["locale"], name: "index_lato_cms_pages_on_locale"
     t.index ["permalink"], name: "index_lato_cms_pages_on_permalink", unique: true
+    t.index ["translation_group_id"], name: "index_lato_cms_pages_on_translation_group_id"
   end
 
   create_table "lato_invitations", force: :cascade do |t|

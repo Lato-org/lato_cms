@@ -10,6 +10,7 @@ module LatoCms
       '#'
     end
 
+    # Index locale cell (also the `locale` column viewer). Static badge.
     def lato_cms_page_locale(page)
       content_tag(:span, class: 'badge bg-secondary') do
         concat locale_to_flag(page.locale)
@@ -17,6 +18,7 @@ module LatoCms
       end
     end
 
+    # Index actions cell (also the `actions` column viewer). Inline buttons.
     def lato_cms_page_actions(page, show_edit: false, show_delete: false, hide_show: false)
       btn_group = capture do
         content_tag(:div, class: 'btn-group btn-group-sm') do
@@ -39,6 +41,60 @@ module LatoCms
           concat link_to(t('lato_cms.action_view_frontend'), page.frontend_url, class: 'btn btn-sm btn-link px-0', target: '_blank')
         end
         concat btn_group
+      end
+    end
+
+    # Show-page locale: dropdown to jump to the same page in another language.
+    def lato_cms_page_locale_dropdown(page)
+      siblings = page.translations.order(:locale).to_a
+      badge = capture do
+        concat locale_to_flag(page.locale)
+        concat " #{page.locale.upcase}"
+      end
+
+      return content_tag(:span, badge, class: 'badge bg-secondary') if siblings.empty?
+
+      content_tag(:div, class: 'dropdown') do
+        concat button_tag(badge, type: 'button', class: 'btn btn-sm btn-secondary dropdown-toggle', data: { bs_toggle: 'dropdown' })
+        concat(content_tag(:ul, class: 'dropdown-menu') do
+          siblings.each do |sibling|
+            concat(content_tag(:li) do
+              link_to lato_cms.pages_show_path(sibling), class: 'dropdown-item' do
+                concat locale_to_flag(sibling.locale)
+                concat " #{sibling.locale.upcase} — #{sibling.title}"
+              end
+            end)
+          end
+        end)
+      end
+    end
+
+    # Show-page actions: single dropdown (view frontend, show, edit settings,
+    # translations, delete).
+    def lato_cms_page_actions_dropdown(page, show_edit: false, show_translations: false, show_delete: false, hide_show: false)
+      content_tag(:div, class: 'dropdown') do
+        concat button_tag(t('lato_cms.cta_actions'), type: 'button', class: 'btn btn-sm btn-outline-secondary dropdown-toggle', data: { bs_toggle: 'dropdown' })
+        concat(content_tag(:ul, class: 'dropdown-menu dropdown-menu-end') do
+          if page.frontend_url.present?
+            concat content_tag(:li, link_to(t('lato_cms.action_view_frontend'), page.frontend_url, class: 'dropdown-item', target: '_blank'))
+          end
+          unless hide_show
+            concat content_tag(:li, link_to(t('lato_cms.cta_show'), lato_cms.pages_show_path(page), class: 'dropdown-item'))
+          end
+          if show_edit
+            concat content_tag(:li, link_to(t('lato_cms.cta_edit'), lato_cms.pages_update_path(page), class: 'dropdown-item',
+              data: { lato_action_target: 'trigger', turbo_frame: dom_id(page, 'form'), action_title: t('lato_cms.page_update_title') }))
+          end
+          if show_translations
+            concat content_tag(:li, link_to(t('lato_cms.translations_title'), lato_cms.pages_translations_path(page), class: 'dropdown-item',
+              data: { lato_action_target: 'trigger', turbo_frame: dom_id(page, 'translations'), action_title: t('lato_cms.translations_title') }))
+          end
+          if show_delete
+            concat content_tag(:li, tag.hr(class: 'dropdown-divider'))
+            concat content_tag(:li, link_to(t('lato_cms.cta_delete'), lato_cms.pages_destroy_action_path(page), class: 'dropdown-item text-danger',
+              data: { turbo_method: 'DELETE', turbo_confirm: t('lato_cms.cta_delete_confirm') }))
+          end
+        end)
       end
     end
 

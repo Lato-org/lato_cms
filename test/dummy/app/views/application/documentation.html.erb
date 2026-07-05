@@ -338,3 +338,24 @@ fields:
 <pre><code>page = LatoCms::Page.find_by(permalink: "/homepage")
 title = page.fields.find_by(field_id: "title")&.parsed_value
 image = page.fields.find_by(field_id: "image")&.files&.first</code></pre>
+
+<h3>Page translations</h3>
+
+<p>
+  Each page belongs to a single locale. From a page, the <em>Actions &rarr; Translations</em>
+  menu lets you link the corresponding pages in the other configured locales. Linked pages
+  form a translation group with at most one page per locale, and the link is
+  symmetric: linking A to B makes both aware of each other. On the page view, the
+  locale badge becomes a dropdown to jump to the same page in another language.
+</p>
+
+<p>Read a page's translations in the application or from the JSON API:</p>
+
+<pre><code>page = LatoCms::Page.find_by(permalink: "/homepage")
+
+# Sibling pages in the other locales
+page.translations               # =&gt; ActiveRecord::Relation of pages
+page.translation_for(:it)       # =&gt; the linked Italian page, or nil
+
+# In as_json / API output, translations are exposed as a locale =&gt; page map:
+# { "it" =&gt; { id:, permalink:, frontend_url: }, ... }</code></pre>

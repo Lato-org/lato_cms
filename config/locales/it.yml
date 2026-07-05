@@ -23,6 +23,17 @@ it:
     form_no_template_option: "-- Nessun template --"
     form_template_unavailable: "Il template \"%{template_id}\" non e piu disponibile. Seleziona un template diverso."
     action_view_frontend: Anteprima
+    cta_actions: Azioni
+    translations_title: Traduzioni
+    translation_no_other_locales: Nessuna altra lingua configurata.
+    translation_link_cta: Collega
+    translation_unlink_cta: Scollega
+    translation_unlink_confirm: Sei sicuro di voler scollegare questa traduzione?
+    translation_no_candidates: Nessuna pagina disponibile per questa lingua
+    translation_linked: Traduzione collegata con successo
+    translation_unlinked: Traduzione scollegata con successo
+    translation_link_failed: Impossibile collegare la traduzione
+    translation_unlink_failed: Impossibile scollegare la traduzione
     show_no_preview_title: Anteprima non disponibile
     show_no_preview_description: Imposta il <strong>URL Frontend</strong> per visualizzare l'anteprima della pagina.
     show_edit_settings_cta: Modifica impostazioni pagina

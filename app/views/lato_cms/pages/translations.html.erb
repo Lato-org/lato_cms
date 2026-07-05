@@ -1,0 +1,14 @@
+<%= lato_page_head t('lato_cms.translations_title'), [
+  { label: t('lato_cms.pages_index_title'), path: lato_cms.pages_path },
+  { label: @page.title, path: lato_cms.pages_show_path(@page) },
+  { label: t('lato_cms.translations_title') }
+] %>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="fs-4 mb-0"><%= t('lato_cms.translations_title') %></h2>
+  </div>
+  <div class="card-body">
+    <%= render 'lato_cms/pages/translations', page: @page %>
+  </div>
+</div>

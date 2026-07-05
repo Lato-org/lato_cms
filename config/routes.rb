@@ -17,6 +17,9 @@ LatoCms::Engine.routes.draw do
     patch ':id/update', to: 'pages#update_action', as: :pages_update_action
     post ':id/fields', to: 'pages#save_fields_action', as: :pages_save_fields_action
     patch ':id/components/:template_component_id/toggle', to: 'pages#toggle_component_action', as: :pages_toggle_component_action
+    get ':id/translations', to: 'pages#translations', as: :pages_translations
+    post ':id/translations', to: 'pages#link_translation_action', as: :pages_link_translation_action
+    delete ':id/translations', to: 'pages#unlink_translation_action', as: :pages_unlink_translation_action
     delete ':id', to: 'pages#destroy_action', as: :pages_destroy_action
   end
 end

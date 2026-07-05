@@ -33,23 +33,23 @@
         <div class="card-header d-flex justify-content-between align-items-center">
           <h2 class="fs-5 mb-0"><%= t('lato_cms.show_editor_title') %></h2>
           <div class="d-flex align-items-center gap-2">
-            <%= lato_cms_page_locale(@page) %>
+            <%= lato_cms_page_locale_dropdown(@page) %>
             <span class="vr"></span>
-            <%= lato_cms_page_actions(@page, show_edit: true, show_delete: true, hide_show: true) %>
+            <%= lato_cms_page_actions_dropdown(@page, show_edit: true, show_translations: true, show_delete: true, hide_show: true) %>
             <span class="vr"></span>
-            <button class="btn btn-sm btn-outline-secondary"
-                    title="<%= t('lato_cms.show_advanced_editor_tooltip') %>"
-                    data-controller="lato-tooltip"
-                    data-action="click->lato-cms-advanced-editor#toggle"
-                    data-lato-cms-advanced-editor-target="toggleBtn">
-              <i class="bi bi-fullscreen"></i>
-            </button>
             <button class="btn btn-sm btn-outline-secondary d-none"
                     title="<%= t('lato_cms.show_hide_panel_tooltip') %>"
                     data-controller="lato-tooltip"
                     data-action="click->lato-cms-advanced-editor#toggleSidebar"
                     data-lato-cms-advanced-editor-target="collapseBtn">
               <i class="bi bi-layout-sidebar-reverse"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary"
+                    title="<%= t('lato_cms.show_advanced_editor_tooltip') %>"
+                    data-controller="lato-tooltip"
+                    data-action="click->lato-cms-advanced-editor#toggle"
+                    data-lato-cms-advanced-editor-target="toggleBtn">
+              <i class="bi bi-fullscreen"></i>
             </button>
           </div>
         </div>
