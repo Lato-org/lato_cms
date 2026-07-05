@@ -349,6 +349,12 @@ image = page.fields.find_by(field_id: "image")&.files&.first</code></pre>
   locale badge becomes a dropdown to jump to the same page in another language.
 </p>
 
+<p>
+  When a page has linked translations, each component header shows a <em>Clone</em>
+  dropdown. Picking a language copies that component's field values (and files) from
+  the corresponding translation, replacing the current ones after confirmation.</p>
+</p>
+
 <p>Read a page's translations in the application or from the JSON API:</p>
 
 <pre><code>page = LatoCms::Page.find_by(permalink: "/homepage")

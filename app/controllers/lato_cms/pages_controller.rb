@@ -125,6 +125,22 @@ module LatoCms
       end
     end
 
+    def clone_component_action
+      @page = query_pages.find(params[:id])
+      source = @page.translations.find_by(id: params[:source_page_id])
+      template_component_id = params[:template_component_id].to_s
+
+      respond_to do |format|
+        if source && clone_component_fields(source, @page, template_component_id)
+          format.html { redirect_to lato_cms.pages_show_path(@page), notice: t('lato_cms.component_cloned') }
+          format.json { render json: { message: t('lato_cms.component_cloned') } }
+        else
+          format.html { redirect_to lato_cms.pages_show_path(@page), alert: t('lato_cms.component_clone_failed') }
+          format.json { render json: { error: t('lato_cms.component_clone_failed') }, status: :unprocessable_entity }
+        end
+      end
+    end
+
     def translations
       @page = query_pages.find(params[:id])
     end
@@ -174,6 +190,33 @@ module LatoCms
     end
 
     private
+
+    # Replaces the target page's fields for a component with copies of the source
+    # page's fields for the same component. Attachments share the source blobs.
+    def clone_component_fields(source, target, template_component_id)
+      # Components are template-specific: only clone between pages using the same template.
+      return false unless source.template_id == target.template_id
+
+      source_fields = source.fields.select { |f| f.template_component_id == template_component_id }
+      return false if source_fields.empty?
+
+      target.transaction do
+        target.fields.where(template_component_id: template_component_id).destroy_all
+
+        source_fields.each do |src|
+          field = target.fields.create!(
+            template_id: target.template_id,
+            template_component_id: src.template_component_id,
+            component_id: src.component_id,
+            field_id: src.field_id,
+            value: src.value
+          )
+          src.files.each { |file| field.files.attach(file.blob) }
+        end
+      end
+
+      true
+    end
 
     def save_repeater_fields(template_component, component, repeater_items, repeater_order, errors)
       template_component_id = template_component[:template_component_id]

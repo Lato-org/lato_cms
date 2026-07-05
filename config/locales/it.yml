@@ -53,6 +53,11 @@ it:
     component_inactive_label: Questa componente non e attiva
     component_disabled_alert: Questa componente e disattivata e non verra esposta dalle API.
     component_state_updated: Stato componente aggiornato
+    component_clone_cta: Clona
+    component_clone_from: "Clona da %{lang}"
+    component_clone_confirm: "Sostituire i campi di questa componente con quelli della pagina in %{lang}?"
+    component_cloned: Componente clonata con successo
+    component_clone_failed: Impossibile clonare la componente
     component_state_saving: Aggiornamento in corso...
     component_state_saved: Stato aggiornato
     component_state_save_error: Errore durante aggiornamento stato

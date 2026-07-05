@@ -1,5 +1,6 @@
 <% page ||= @page %>
 <% template_components ||= @template_components %>
+<% translations = page.translations.order(:locale).to_a %>
 
 <div class="accordion" id="components-accordion" data-controller="lato-cms-component-accordion">
   <% template_components.each_with_index do |tc, index| %>
@@ -7,6 +8,7 @@
         page: page,
         tc: tc,
         index: index,
-        expanded: index == 0 %>
+        expanded: index == 0,
+        translations: translations %>
   <% end %>
 </div>

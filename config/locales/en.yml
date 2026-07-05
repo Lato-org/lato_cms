@@ -53,6 +53,11 @@ en:
     component_inactive_label: This component is not active
     component_disabled_alert: This component is disabled and will not be exposed by API.
     component_state_updated: Component state updated
+    component_clone_cta: Clone
+    component_clone_from: "Clone from %{lang}"
+    component_clone_confirm: "Replace this component's fields with the ones from the %{lang} page?"
+    component_cloned: Component cloned successfully
+    component_clone_failed: Failed to clone component
     component_state_saving: Updating...
     component_state_saved: State updated
     component_state_save_error: Failed to update state

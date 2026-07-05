@@ -2,6 +2,9 @@
 <% component_fields = page.fields.select { |f| f.template_component_id == tc[:template_component_id] } %>
 <% required_component = tc[:required] == true %>
 <% enabled_component = page.component_effectively_enabled?(tc[:template_component_id]) %>
+<%# Clonable translations: linked pages using the same template (components differ
+    across templates, so cross-template clone is not allowed). %>
+<% clonable_translations = tc[:component] ? translations.select { |s| s.template_id == page.template_id } : [] %>
 
 <div class="accordion-item">
   <h2 class="accordion-header" id="heading-<%= accordion_id %>">
@@ -23,25 +26,50 @@
              data-lato-cms-component-toggle-saving-label-value="<%= t('lato_cms.component_state_saving') %>"
              data-lato-cms-component-toggle-saved-label-value="<%= t('lato_cms.component_state_saved') %>"
              data-lato-cms-component-toggle-error-label-value="<%= t('lato_cms.component_state_save_error') %>">
+      <% end %>
 
-        <%= form_with url: lato_cms.pages_toggle_component_action_path(page, tc[:template_component_id]), method: :patch,
-            data: { turbo: false, action: 'submit->lato-cms-component-toggle#toggle' } do %>
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-          <div class="d-flex align-items-center gap-2 small fw-medium <%= enabled_component ? 'text-success' : 'text-muted' %>" data-lato-cms-component-toggle-target="stateWrapper">
-            <i class="<%= enabled_component ? 'bi bi-eye' : 'bi bi-eye-slash' %>" data-lato-cms-component-toggle-target="stateIcon"></i>
-            <span data-lato-cms-component-toggle-target="stateLabel"><%= enabled_component ? t('lato_cms.component_active_label') : t('lato_cms.component_inactive_label') %></span>
+        <%# Component settings header: enable/disable toggle (left) and clone (right). %>
+        <% if !required_component || clonable_translations.any? %>
+        <div class="d-flex justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
+          <div class="d-flex align-items-center gap-3">
+            <% unless required_component %>
+              <%= form_with url: lato_cms.pages_toggle_component_action_path(page, tc[:template_component_id]), method: :patch,
+                  data: { turbo: false, action: 'submit->lato-cms-component-toggle#toggle' } do %>
+                <div class="d-flex align-items-center gap-3">
+                  <div class="form-check form-switch m-0">
+                    <%= hidden_field_tag :enabled, '0' %>
+                    <%= check_box_tag :enabled, '1', enabled_component, class: 'form-check-input', id: "toggle-#{accordion_id}", onchange: 'this.form.requestSubmit()', 'aria-label': t('lato_cms.component_enabled_label'), data: { lato_cms_component_toggle_target: 'checkbox' } %>
+                  </div>
+                  <div class="d-flex align-items-center gap-2 small fw-medium <%= enabled_component ? 'text-success' : 'text-muted' %>" data-lato-cms-component-toggle-target="stateWrapper">
+                    <i class="<%= enabled_component ? 'bi bi-eye' : 'bi bi-eye-slash' %>" data-lato-cms-component-toggle-target="stateIcon"></i>
+                    <span data-lato-cms-component-toggle-target="stateLabel"><%= enabled_component ? t('lato_cms.component_active_label') : t('lato_cms.component_inactive_label') %></span>
+                  </div>
+                  <span data-lato-cms-component-toggle-target="status"></span>
+                </div>
+              <% end %>
+            <% end %>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <span data-lato-cms-component-toggle-target="status"></span>
-            <div class="form-check form-switch m-0">
-            <%= hidden_field_tag :enabled, '0' %>
-            <%= check_box_tag :enabled, '1', enabled_component, class: 'form-check-input', id: "toggle-#{accordion_id}", onchange: 'this.form.requestSubmit()', data: { lato_cms_component_toggle_target: 'checkbox' } %>
-            <%= label_tag "toggle-#{accordion_id}", t('lato_cms.component_enabled_label'), class: 'form-check-label ms-1 small' %>
+
+          <% if clonable_translations.any? %>
+            <div class="dropdown flex-shrink-0" data-controller="lato-tooltip" title="<%= t('lato_cms.component_clone_cta') %>">
+              <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-files"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <% clonable_translations.each do |sibling| %>
+                  <li>
+                    <%= button_to lato_cms.pages_clone_component_action_path(page, tc[:template_component_id]),
+                        params: { source_page_id: sibling.id }, method: :post, class: 'dropdown-item',
+                        form: { data: { turbo_confirm: t('lato_cms.component_clone_confirm', lang: sibling.locale.upcase) } } do %>
+                      <%= locale_to_flag(sibling.locale) %> <%= t('lato_cms.component_clone_from', lang: sibling.locale.upcase) %>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
             </div>
-          </div>
+          <% end %>
         </div>
         <% end %>
-      <% end %>
 
       <% if tc[:component] %>
         <% if required_component %>

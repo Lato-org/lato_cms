@@ -72,11 +72,14 @@ module LatoCms
     # Show-page actions: single dropdown (view frontend, show, edit settings,
     # translations, delete).
     def lato_cms_page_actions_dropdown(page, show_edit: false, show_translations: false, show_delete: false, hide_show: false)
-      content_tag(:div, class: 'dropdown') do
-        concat button_tag(t('lato_cms.cta_actions'), type: 'button', class: 'btn btn-sm btn-outline-secondary dropdown-toggle', data: { bs_toggle: 'dropdown' })
+      content_tag(:div, class: 'dropdown', title: t('lato_cms.cta_actions'), data: { controller: 'lato-tooltip' }) do
+        concat button_tag(tag.i(class: 'bi bi-three-dots-vertical'), type: 'button',
+          class: 'btn btn-sm btn-outline-primary', data: { bs_toggle: 'dropdown' })
         concat(content_tag(:ul, class: 'dropdown-menu dropdown-menu-end') do
           if page.frontend_url.present?
             concat content_tag(:li, link_to(t('lato_cms.action_view_frontend'), page.frontend_url, class: 'dropdown-item', target: '_blank'))
+          else
+            concat content_tag(:li, content_tag(:span, t('lato_cms.action_view_frontend'), class: 'dropdown-item disabled text-muted'))
           end
           unless hide_show
             concat content_tag(:li, link_to(t('lato_cms.cta_show'), lato_cms.pages_show_path(page), class: 'dropdown-item'))
