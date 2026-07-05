@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    lato_cms (3.0.3)
+    lato_cms (3.0.4)
       image_processing (>= 1.2)
       jbuilder
       lato

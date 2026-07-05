@@ -19,19 +19,20 @@ body.lato-cms-advanced-editor--open {
     padding: 0;
     margin: 0;
 
-    .card {
+    // Only the direct editor card fills the screen — not nested cards (e.g. repeater items)
+    > .card {
       height: 100dvh !important;
       border: none !important;
       border-radius: 0 !important;
-    }
 
-    iframe {
-      height: 100dvh !important;
-    }
+      iframe {
+        height: 100dvh !important;
+      }
 
-    // No-preview placeholder fills full screen
-    .card-body {
-      height: 100dvh;
+      // No-preview placeholder fills full screen
+      > .card-body {
+        height: 100dvh;
+      }
     }
   }
 
@@ -43,16 +44,17 @@ body.lato-cms-advanced-editor--open {
     overflow: hidden;
     transition: flex-basis 0.25s ease, width 0.25s ease;
 
-    .card {
+    // Only the direct editor card fills the screen — not nested cards (e.g. repeater items)
+    > .card {
       height: 100dvh !important;
       border-radius: 0 !important;
       border-top: none !important;
       border-bottom: none !important;
       border-right: none !important;
-    }
 
-    .card-body {
-      max-height: calc(100dvh - 57px) !important;
+      > .card-body {
+        max-height: calc(100dvh - 57px) !important;
+      }
     }
 
     &.lato-cms-advanced-editor__editor-col--collapsed {
