@@ -20,8 +20,10 @@
             <i class="bi bi-globe fs-1 mb-3"></i>
             <p class="mb-1"><%= t('lato_cms.show_no_preview_title') %></p>
             <p class="small"><%= t('lato_cms.show_no_preview_description').html_safe %></p>
-            <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-primary mt-2',
-              data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+            <% if lato_cms_admin? %>
+              <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-primary mt-2',
+                data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+            <% end %>
           </div>
         </div>
       <% end %>
@@ -35,7 +37,7 @@
           <div class="d-flex align-items-center gap-2">
             <%= lato_cms_page_locale_dropdown(@page) %>
             <span class="vr"></span>
-            <%= lato_cms_page_actions_dropdown(@page, show_edit: true, show_translations: true, show_delete: true, hide_show: true) %>
+            <%= lato_cms_page_actions_dropdown(@page, show_edit: lato_cms_admin?, show_translations: lato_cms_admin?, show_delete: lato_cms_admin?, hide_show: true) %>
             <span class="vr"></span>
             <button class="btn btn-sm btn-outline-primary d-none"
                     title="<%= t('lato_cms.show_hide_panel_tooltip') %>"
@@ -59,15 +61,19 @@
               <i class="bi bi-file-earmark-code fs-1 mb-3 d-block"></i>
               <p class="mb-1"><%= t('lato_cms.show_no_template_title') %></p>
               <p class="small"><%= t('lato_cms.show_no_template_description') %></p>
-              <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-primary mt-2',
-                data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+              <% if lato_cms_admin? %>
+                <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-primary mt-2',
+                  data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+              <% end %>
             </div>
           <% elsif !@page.template_available? %>
             <div class="alert alert-warning">
               <i class="bi bi-exclamation-triangle me-1"></i>
               <%= t('lato_cms.show_template_unavailable', template_id: @page.template_id) %>
-              <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-warning ms-2',
-                data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+              <% if lato_cms_admin? %>
+                <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-warning ms-2',
+                  data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
+              <% end %>
             </div>
             <% existing_fields = @page.fields.group_by(&:template_component_id) %>
             <% if existing_fields.any? %>

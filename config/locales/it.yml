@@ -6,7 +6,7 @@ it:
   lato_cms:
     admin_roles:
       none: Nessun accesso
-      editor: Editor
+      operator: Operatore
       admin: Amministratore
     cta_show: Visualizza
     cta_edit: Modifica
@@ -19,6 +19,7 @@ it:
     fields_saved: Campi salvati con successo
     page_deleted: Pagina eliminata con successo
     unauthorized_section: Non hai accesso a questa sezione.
+    unauthorized_action: Non hai i permessi per eseguire questa azione.
     page_delete_failed: Impossibile eliminare la pagina
     api_page_not_found: Pagina non trovata
     pages_index_title: Pagine

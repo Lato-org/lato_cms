@@ -1,6 +1,16 @@
 module LatoCms
   class PagesController < ApplicationController
+    # Page management and translation links are reserved to the admin role.
+    # Operators keep read access plus field editing and component toggles.
+    ADMIN_ONLY_ACTIONS = %i[
+      create create_action
+      update update_action
+      destroy_action
+      translations link_translation_action unlink_translation_action
+    ].freeze
+
     before_action { active_sidebar(:lato_cms_pages) }
+    before_action :authenticate_lato_cms_admin, only: ADMIN_ONLY_ACTIONS
 
     def index
       pages = query_pages

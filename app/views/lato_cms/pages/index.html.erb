@@ -13,7 +13,7 @@
   </div>
   <div class="card-body">
     <%= lato_index @pages,
-      custom_actions: {
+      custom_actions: lato_cms_admin? ? {
         create: {
           path: lato_cms.pages_create_path,
           icon: 'bi bi-plus',
@@ -25,7 +25,7 @@
             action_title: t('lato_cms.page_create_title')
           }
         }
-      },
+      } : {},
       pagination_options: [10, 20, 50, 100]
     %>
   </div>

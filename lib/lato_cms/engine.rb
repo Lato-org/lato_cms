@@ -23,6 +23,17 @@ module LatoCms
             [I18n.t("lato_cms.admin_roles.#{key}"), value]
           end
         end
+
+        # True when the user can access the CMS section (operator or admin).
+        def lato_cms_access?
+          lato_cms_admin_role.to_i.positive?
+        end
+
+        # True when the user has the admin role: full page management
+        # (create, update, delete) and translation links.
+        def lato_cms_admin?
+          lato_cms_admin_role.to_i >= LatoCms.config.admin_roles.fetch(:admin, 0)
+        end
       end
     end
   end
