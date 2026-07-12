@@ -1,5 +1,13 @@
 it:
+  activerecord:
+    attributes:
+      lato/user:
+        lato_cms_admin_role: Ruolo Lato CMS
   lato_cms:
+    admin_roles:
+      none: Nessun accesso
+      editor: Editor
+      admin: Amministratore
     cta_show: Visualizza
     cta_edit: Modifica
     cta_update: Aggiorna
