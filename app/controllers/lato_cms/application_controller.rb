@@ -18,7 +18,7 @@ module LatoCms
     end
 
     def authenticate_lato_cms_admin
-      return true if @session.user&.lato_cms_admin
+      return true if (@session.user&.lato_cms_admin_role).to_i.positive?
 
       redirect_to lato.root_path, alert: t('lato_cms.unauthorized_section')
     end

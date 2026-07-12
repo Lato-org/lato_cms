@@ -9,6 +9,6 @@ Lato::User.create!(
   accepted_privacy_policy_version: 1,
   accepted_terms_and_conditions_version: 1,
   lato_spaces_admin: true,
-  lato_cms_admin: true
+  lato_cms_admin_role: 1
 )
 puts 'Default lato user created successfully!'

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_05_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_12_092241) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -147,7 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_05_000000) do
     t.datetime "email_verified_at"
     t.string "first_name"
     t.string "last_name"
-    t.boolean "lato_cms_admin", default: false
+    t.integer "lato_cms_admin_role", default: 0, null: false
     t.boolean "lato_spaces_admin", default: false
     t.string "locale"
     t.string "password_digest"
