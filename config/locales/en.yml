@@ -47,9 +47,14 @@ en:
     show_no_preview_description: Set the <strong>Frontend URL</strong> to see the page preview.
     show_edit_settings_cta: Edit page settings
     show_editor_title: Editor
-    show_advanced_editor_tooltip: Advanced editor
     show_hide_panel_tooltip: Hide panel
     show_show_editor_panel_tooltip: Show editor panel
+    show_back_to_list_tooltip: Back to pages
+    show_preview_desktop_tooltip: Desktop
+    show_preview_tablet_tooltip: Tablet
+    show_preview_mobile_tooltip: Mobile
+    show_preview_custom_width_tooltip: Custom width
+    show_preview_custom_width_placeholder: Width
     show_no_template_title: No template assigned
     show_no_template_description: Assign a template to start editing fields.
     show_template_unavailable: "The template <strong>%{template_id}</strong> is no longer available. Please assign a different template."

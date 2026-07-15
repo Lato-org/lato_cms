@@ -47,9 +47,14 @@ it:
     show_no_preview_description: Imposta il <strong>URL Frontend</strong> per visualizzare l'anteprima della pagina.
     show_edit_settings_cta: Modifica impostazioni pagina
     show_editor_title: Editor
-    show_advanced_editor_tooltip: Editor avanzato
     show_hide_panel_tooltip: Nascondi pannello
     show_show_editor_panel_tooltip: Mostra pannello editor
+    show_back_to_list_tooltip: Torna alle pagine
+    show_preview_desktop_tooltip: Desktop
+    show_preview_tablet_tooltip: Tablet
+    show_preview_mobile_tooltip: Mobile
+    show_preview_custom_width_tooltip: Larghezza personalizzata
+    show_preview_custom_width_placeholder: Larghezza
     show_no_template_title: Nessun template assegnato
     show_no_template_description: Assegna un template per iniziare a modificare i campi.
     show_template_unavailable: "Il template <strong>%{template_id}</strong> non e piu disponibile. Assegna un template diverso."

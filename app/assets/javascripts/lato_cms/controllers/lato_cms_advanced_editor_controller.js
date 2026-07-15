@@ -1,55 +1,35 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["row", "previewCol", "editorCol", "toggleBtn", "collapseBtn", "reopenBtn"]
+  static targets = ["row", "editorCol", "reopenBtn"]
+  static values = { listPath: String }
 
-  isActive = false
   isSidebarOpen = true
 
-  // ─── Toggle advanced mode ────────────────────────────────────────────────────
+  // ─── Advanced full-screen editor is the only view ────────────────────────────
 
-  toggle() {
-    this.isActive ? this.deactivate() : this.activate()
-  }
-
-  activate() {
-    this.isActive = true
-    this.isSidebarOpen = true
-
+  // Activate on load: no base view exists, only back to the pages list.
+  connect() {
     this.rowTarget.classList.add('lato-cms-advanced-editor__row--active')
     document.body.classList.add('lato-cms-advanced-editor--open')
 
-    this.toggleBtnTarget.title = 'Exit advanced editor'
-    this.toggleBtnTarget.querySelector('i').className = 'bi bi-fullscreen-exit'
-    this.collapseBtnTarget.classList.remove('d-none')
-    this.editorColTarget.classList.remove('lato-cms-advanced-editor__editor-col--collapsed')
-    this.reopenBtnTarget.hidden = true
-
-    this._escHandler = (e) => { if (e.key === 'Escape') this.deactivate() }
+    // Escape returns to the pages list instead of exiting to a base view.
+    this._escHandler = (e) => { if (e.key === 'Escape') this.back() }
     document.addEventListener('keydown', this._escHandler)
   }
 
-  deactivate() {
-    this.isActive = false
-    this.isSidebarOpen = true
-
-    this.rowTarget.classList.remove('lato-cms-advanced-editor__row--active')
+  disconnect() {
     document.body.classList.remove('lato-cms-advanced-editor--open')
-
-    this.toggleBtnTarget.title = 'Advanced editor'
-    this.toggleBtnTarget.querySelector('i').className = 'bi bi-fullscreen'
-    this.collapseBtnTarget.classList.add('d-none')
-    this.editorColTarget.classList.remove('lato-cms-advanced-editor__editor-col--collapsed')
-    this.reopenBtnTarget.hidden = true
-
     document.removeEventListener('keydown', this._escHandler)
+  }
+
+  back() {
+    if (this.hasListPathValue) window.location.href = this.listPathValue
   }
 
   // ─── Toggle sidebar within advanced mode ─────────────────────────────────────
 
   toggleSidebar() {
-    if (!this.isActive) return
-
     this.isSidebarOpen = !this.isSidebarOpen
     this.editorColTarget.classList.toggle('lato-cms-advanced-editor__editor-col--collapsed', !this.isSidebarOpen)
     this.reopenBtnTarget.hidden = this.isSidebarOpen

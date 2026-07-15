@@ -3,15 +3,55 @@
   { label: @page.title }
 ] %>
 
-<div data-controller="lato-cms-advanced-editor">
+<div data-controller="lato-cms-advanced-editor" data-lato-cms-advanced-editor-list-path-value="<%= lato_cms.pages_path %>">
   <div class="row align-items-stretch lato-cms-advanced-editor__row" data-lato-cms-advanced-editor-target="row">
 
     <%# ── Preview column ─────────────────────────────────────────────────── %>
-    <div class="col-12 col-lg-6 mb-4 lato-cms-advanced-editor__preview-col" data-lato-cms-advanced-editor-target="previewCol">
+    <div class="col-12 col-lg-6 mb-4 lato-cms-advanced-editor__preview-col">
       <% if @page.frontend_url.present? %>
         <div class="card h-100" style="overflow: hidden;" data-controller="lato-cms-page-preview">
-          <div class="card-body p-0">
-            <iframe src="<%= @page.frontend_url %>" data-lato-cms-page-preview-target="iframe" style="width: 100%; height: calc(100dvh - 180px); border: none; display: block;"></iframe>
+          <div class="card-header d-flex justify-content-between align-items-center py-2 gap-2">
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary active"
+                      title="<%= t('lato_cms.show_preview_desktop_tooltip') %>"
+                      data-controller="lato-tooltip"
+                      data-action="click->lato-cms-page-preview#setDevice"
+                      data-device="desktop"
+                      data-lato-cms-page-preview-target="deviceBtn">
+                <i class="bi bi-display"></i>
+              </button>
+              <button type="button" class="btn btn-outline-secondary"
+                      title="<%= t('lato_cms.show_preview_tablet_tooltip') %>"
+                      data-controller="lato-tooltip"
+                      data-action="click->lato-cms-page-preview#setDevice"
+                      data-device="tablet"
+                      data-lato-cms-page-preview-target="deviceBtn">
+                <i class="bi bi-tablet"></i>
+              </button>
+              <button type="button" class="btn btn-outline-secondary"
+                      title="<%= t('lato_cms.show_preview_mobile_tooltip') %>"
+                      data-controller="lato-tooltip"
+                      data-action="click->lato-cms-page-preview#setDevice"
+                      data-device="mobile"
+                      data-lato-cms-page-preview-target="deviceBtn">
+                <i class="bi bi-phone"></i>
+              </button>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <div class="input-group input-group-sm" style="width: 130px;">
+                <input type="number" class="form-control" min="320" max="3840" step="1"
+                       placeholder="<%= t('lato_cms.show_preview_custom_width_placeholder') %>"
+                       title="<%= t('lato_cms.show_preview_custom_width_tooltip') %>"
+                       data-controller="lato-tooltip"
+                       data-action="input->lato-cms-page-preview#setCustomWidth"
+                       data-lato-cms-page-preview-target="customWidth">
+                <span class="input-group-text">px</span>
+              </div>
+              <span class="badge text-bg-light font-monospace" data-lato-cms-page-preview-target="dimensions">—</span>
+            </div>
+          </div>
+          <div class="lato-cms-page-preview__viewport" data-lato-cms-page-preview-target="viewport">
+            <iframe src="<%= @page.frontend_url %>" data-lato-cms-page-preview-target="iframe"></iframe>
           </div>
         </div>
       <% else %>
@@ -39,20 +79,16 @@
             <span class="vr"></span>
             <%= lato_cms_page_actions_dropdown(@page, show_edit: lato_cms_admin?, show_translations: lato_cms_admin?, show_delete: lato_cms_admin?, hide_show: true) %>
             <span class="vr"></span>
-            <button class="btn btn-sm btn-outline-primary d-none"
+            <button class="btn btn-sm btn-outline-primary"
                     title="<%= t('lato_cms.show_hide_panel_tooltip') %>"
                     data-controller="lato-tooltip"
-                    data-action="click->lato-cms-advanced-editor#toggleSidebar"
-                    data-lato-cms-advanced-editor-target="collapseBtn">
+                    data-action="click->lato-cms-advanced-editor#toggleSidebar">
               <i class="bi bi-layout-sidebar-reverse"></i>
             </button>
-            <button class="btn btn-sm btn-outline-primary"
-                    title="<%= t('lato_cms.show_advanced_editor_tooltip') %>"
-                    data-controller="lato-tooltip"
-                    data-action="click->lato-cms-advanced-editor#toggle"
-                    data-lato-cms-advanced-editor-target="toggleBtn">
-              <i class="bi bi-fullscreen"></i>
-            </button>
+            <%= link_to lato_cms.pages_path, class: 'btn btn-sm btn-outline-danger',
+              title: t('lato_cms.show_back_to_list_tooltip'), data: { controller: 'lato-tooltip' } do %>
+              <i class="bi bi-box-arrow-left"></i>
+            <% end %>
           </div>
         </div>
         <div class="card-body" style="overflow-y: auto; max-height: calc(100dvh - 230px);">
