@@ -1,6 +1,7 @@
 // ── Advanced editor mode ───────────────────────────────────────────────────────
 
-body.lato-cms-advanced-editor--open {
+// Full-screen editor is the only view on the page show: lock background scroll.
+body.controller-pages.action-show {
   overflow: hidden;
 }
 
