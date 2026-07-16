@@ -233,6 +233,19 @@ module LatoCms
       component_id = template_component[:component_id]
       item_ids = Array(repeater_order).reject(&:blank?).map(&:to_s)
 
+      # Enforce min/max item count (authoritative check). Missing settings = no constraint.
+      settings = template_component[:settings] || {}
+      min = settings['min'].presence && settings['min'].to_i
+      max = settings['max'].presence && settings['max'].to_i
+      if min && item_ids.size < min
+        errors << { field_id: template_component_id, errors: [t('lato_cms.repeater_min_error', count: min)] }
+        return
+      end
+      if max && item_ids.size > max
+        errors << { field_id: template_component_id, errors: [t('lato_cms.repeater_max_error', count: max)] }
+        return
+      end
+
       order_field = @page.fields.find_or_initialize_by(
         template_id: @page.template_id,
         template_component_id: template_component_id,
