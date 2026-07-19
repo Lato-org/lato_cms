@@ -103,6 +103,12 @@ fields:
           resize: fill
         medium:
           width: 800
+  example_video:
+    name: Video Field
+    type: video
+    required: false
+    settings:
+      accept: "video/*"
   example_gallery:
     name: Gallery Field
     type: gallery

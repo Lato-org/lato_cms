@@ -1,6 +1,6 @@
 module LatoCms
   module PagesHelper
-    BUILTIN_FIELD_TYPES = %w[string textarea text number date datetime boolean select multiselect color json file image gallery].freeze
+    BUILTIN_FIELD_TYPES = %w[string textarea text number date datetime boolean select multiselect color json file image video gallery].freeze
 
     # Returns the path for an Active Storage attachment.
     # Using main_app avoids the missing `attachment_path` error inside the engine.

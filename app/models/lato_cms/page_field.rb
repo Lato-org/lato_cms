@@ -75,6 +75,38 @@ module LatoCms
       field_config&.dig('settings') || {}
     end
 
+    # A video field stores two attachments in `files`: the video itself and an
+    # optional auto-generated poster image. Content type is the discriminator,
+    # so no extra column or naming convention is needed.
+    def video_attachment
+      files.find { |file| file.content_type.to_s.start_with?("video/") }
+    end
+
+    def poster_attachment
+      files.find { |file| file.content_type.to_s.start_with?("image/") }
+    end
+
+    # Generates a poster image from the video via Active Storage previews
+    # (ffmpeg) and attaches it alongside the video. Best effort: any failure is
+    # logged and the video keeps working without a poster.
+    def generate_video_poster!
+      video = video_attachment
+      return unless video
+      return if poster_attachment
+
+      unless video.previewable?
+        Rails.logger.warn("LatoCms: video preview unavailable (ffmpeg missing?) for attachment #{video.id}, skipping poster generation")
+        return
+      end
+
+      preview = video.preview(resize_to_limit: [1280, 720]).processed
+      preview.image.blob.open do |file|
+        files.attach(io: file, filename: "#{video.filename.base}_poster.jpg", content_type: preview.image.blob.content_type)
+      end
+    rescue StandardError => e
+      Rails.logger.warn("LatoCms: failed to generate video poster for field #{id}: #{e.message}")
+    end
+
     def as_json(_options = {})
       result = {
         id: id,
@@ -93,6 +125,9 @@ module LatoCms
       when 'image'
         attached = files.first
         result[:attachments] = attached ? [attachment_as_json(attached, with_variants: true)] : []
+      when 'video'
+        attached = video_attachment
+        result[:attachments] = attached ? [video_attachment_as_json(attached)] : []
       when 'gallery'
         order = value ? (JSON.parse(value) rescue []) : []
         all_files = files.to_a
@@ -117,6 +152,15 @@ module LatoCms
       }
       json[:sizes] = attachment_variant_urls(attachment) if with_variants
       json
+    end
+
+    # Video attachment json gains a `poster_url` key (nil until the poster job
+    # runs) so API consumers get video and poster URLs in a single object.
+    def video_attachment_as_json(attachment)
+      poster = poster_attachment
+      attachment_as_json(attachment).merge(
+        poster_url: poster && Rails.application.routes.url_helpers.rails_blob_path(poster, only_path: true)
+      )
     end
 
     # Builds a map of { size_name => variant_url } from the field's `settings.sizes`.

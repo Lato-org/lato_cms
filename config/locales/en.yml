@@ -94,6 +94,9 @@ en:
     field_image_remove: Remove
     field_image_remove_pending: Image will be removed on save
     field_image_new_badge: New
+    field_video_remove: Remove
+    field_video_remove_pending: Video will be removed on save
+    field_video_new_badge: New
     field_multiselect_hint: Hold Ctrl/Cmd to select multiple
     field_select_placeholder: "-- Select --"
     field_text_toolbar_bold: Bold

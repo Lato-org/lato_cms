@@ -268,6 +268,7 @@ body.controller-pages.action-show {
 
   .lato-cms-file-field__info,
   .lato-cms-image-field__preview,
+  .lato-cms-video-field__preview,
   .lato-cms-attachment-field__remove,
   > .btn {
     display: none;
@@ -337,6 +338,27 @@ body.controller-pages.action-show {
   bottom: 4px;
   left: 4px;
   font-size: 10px;
+}
+
+// ── Video field ────────────────────────────────────────────────────────────────
+.lato-cms-video-field__item {
+  align-items: stretch;
+}
+
+.lato-cms-video-field__preview {
+  align-self: center;
+  background: #000;
+  border: 1px solid rgba(33, 37, 41, 0.08);
+  border-radius: 6px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  width: 180px;
+}
+
+.lato-cms-video-field__player {
+  display: block;
+  max-height: 110px;
+  width: 100%;
 }
 
 // ── Gallery field ──────────────────────────────────────────────────────────────

@@ -230,6 +230,10 @@ fields:
         <td>Single image upload through Active Storage. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
       </tr>
       <tr>
+        <td><code>video</code></td>
+        <td>Single video upload through Active Storage. Automatically generates a poster image (see <a href="#video-poster">Video poster</a>).</td>
+      </tr>
+      <tr>
         <td><code>gallery</code></td>
         <td>Multiple sortable image uploads through Active Storage. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
       </tr>
@@ -283,6 +287,36 @@ fields:
     "thumb": "/rails/active_storage/representations/.../cover.jpg",
     "medium": "/rails/active_storage/representations/.../cover.jpg"
   }
+}</code></pre>
+
+<h3 id="video-poster">Video poster</h3>
+
+<p>
+  After a <code>video</code> field is saved, a background job generates a poster image from the video
+  via Active Storage previews (requires <code>ffmpeg</code> on the server) and attaches it alongside the
+  video. Poster generation is best effort: when <code>ffmpeg</code> is unavailable or preview fails, the
+  save still succeeds and the video is exposed without a poster.
+</p>
+
+<pre><code># config/lato_cms/components/hero.yml
+id: hero
+name: Hero
+fields:
+  trailer:
+    name: Trailer
+    type: video
+    settings:
+      accept: "video/mp4"</code></pre>
+
+<p>The API response exposes the video attachment with its poster URL (<code>null</code> until the job runs):</p>
+
+<pre><code>{
+  "id": 12,
+  "filename": "trailer.mp4",
+  "content_type": "video/mp4",
+  "byte_size": 1048576,
+  "url": "/rails/active_storage/blobs/.../trailer.mp4",
+  "poster_url": "/rails/active_storage/blobs/.../trailer_poster.jpg"
 }</code></pre>
 
 <h3>Custom fields</h3>

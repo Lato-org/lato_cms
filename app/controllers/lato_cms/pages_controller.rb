@@ -299,6 +299,9 @@ module LatoCms
       when 'image'
         field.save if field.new_record?
         replace_field_image(field, field_data)
+      when 'video'
+        field.save if field.new_record?
+        replace_field_video(field, field_data)
       when 'gallery'
         field.save if field.new_record?
         attach_field_files(field, field_data)
@@ -351,6 +354,22 @@ module LatoCms
         field.files.attach(new_file)
       else
         remove_field_files(field, field_data)
+      end
+    end
+
+    # Single-video semantics: uploading a new video replaces both the previous
+    # video and its auto-generated poster; removing the video drops the poster
+    # too. Poster generation runs in a background job to keep the save fast.
+    def replace_field_video(field, field_data)
+      if field_data[:files].present?
+        new_file = Array(field_data[:files]).compact.first
+        return unless new_file
+
+        field.files.each(&:purge)
+        field.files.attach(new_file)
+        LatoCms::GenerateVideoPosterJob.perform_later(field.id)
+      elsif field_data[:remove_file_ids].present?
+        field.files.each(&:purge)
       end
     end
 

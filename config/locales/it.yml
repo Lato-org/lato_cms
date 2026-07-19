@@ -94,6 +94,9 @@ it:
     field_image_remove: Rimuovi
     field_image_remove_pending: L'immagine verra rimossa al salvataggio
     field_image_new_badge: Nuovo
+    field_video_remove: Rimuovi
+    field_video_remove_pending: Il video verra rimosso al salvataggio
+    field_video_new_badge: Nuovo
     field_multiselect_hint: Tieni premuto Ctrl/Cmd per selezionare piu opzioni
     field_select_placeholder: "-- Seleziona --"
     field_text_toolbar_bold: Grassetto
