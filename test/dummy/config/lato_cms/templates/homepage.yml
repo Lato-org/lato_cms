@@ -14,3 +14,7 @@ components:
     repeater: true
     settings:
       min: 1
+  required_attachments:
+    component_id: required_attachments_example
+    name: Required Attachments
+

@@ -27,6 +27,7 @@ export default class extends Controller {
 
     this.inputTarget.value = ''
     this.syncFileInput()
+    this.syncRequired()
   }
 
   remove(event) {
@@ -38,12 +39,14 @@ export default class extends Controller {
       item.remove()
       this.syncFileInput()
       if (!this.multipleValue) this.restoreReplacedItems()
+      this.syncRequired()
       return
     }
 
     item.classList.add('lato-cms-file-field__item--removing')
     item.querySelector('[data-lato-cms-file-field-target="removedNotice"]')?.classList.remove('d-none')
     this.ensureRemoveInput(item)
+    this.syncRequired()
   }
 
   undo(event) {
@@ -53,6 +56,19 @@ export default class extends Controller {
     item.classList.remove('lato-cms-file-field__item--removing')
     item.querySelector('[data-lato-cms-file-field-target="removedNotice"]')?.classList.add('d-none')
     item.querySelector('[data-remove-file-input]')?.remove()
+    this.syncRequired()
+  }
+
+  // The file input only has to be required while nothing survives the next save:
+  // a pending new file or a persisted attachment not marked for removal already
+  // satisfies the field, so keeping `required` would block every re-save (the
+  // form saves via fetch without reload, so the attribute must track state).
+  syncRequired() {
+    const hasActiveAttachment = this.newFileMap.size > 0 ||
+      this.itemTargets.some(item => {
+        return item.dataset.attachmentId && !item.classList.contains('lato-cms-file-field__item--removing')
+      })
+    this.inputTarget.required = this.fieldRequired && !hasActiveAttachment
   }
 
   ensureRemoveInput(item) {
@@ -124,6 +140,7 @@ export default class extends Controller {
       this.itemTargets
         .filter(item => item.querySelector('[data-remove-file-input]'))
         .forEach(item => item.remove())
+      this.syncRequired()
       return
     }
 
@@ -131,6 +148,7 @@ export default class extends Controller {
     field.attachments.forEach(attachment => {
       this.listTarget.appendChild(this.buildExistingItem(attachment))
     })
+    this.syncRequired()
   }
 
   findSavedField(fields) {
@@ -199,5 +217,9 @@ export default class extends Controller {
 
   get fieldId() {
     return this.element.dataset.fieldId
+  }
+
+  get fieldRequired() {
+    return this.element.dataset.fieldRequired === 'true'
   }
 }

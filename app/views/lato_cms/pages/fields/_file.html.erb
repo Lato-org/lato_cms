@@ -13,6 +13,7 @@
 
 <div data-controller="lato-cms-file-field"
      data-field-id="<%= field_id %>"
+     data-field-required="<%= required %>"
      data-lato-cms-file-field-multiple-value="<%= multiple %>"
      data-new-badge-label="<%= t('lato_cms.field_file_new_badge') %>"
      data-remove-label="<%= t('lato_cms.field_file_remove') %>"
@@ -49,6 +50,7 @@
     id="<%= input_id %>"
     data-lato-cms-file-field-target="input"
     data-action="change->lato-cms-file-field#addFiles"
+    <%= 'required' if required && !page_field&.files&.attached? %>
     <%= 'multiple' if multiple %>
     <% if accept %>accept="<%= accept %>"<% end %>>
 </div>

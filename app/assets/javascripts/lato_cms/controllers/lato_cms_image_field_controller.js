@@ -45,6 +45,7 @@ export default class extends Controller {
     this.currentContainerTarget.classList.add('lato-cms-file-field__item--removing')
     this.removedNoticeTarget.classList.remove('d-none')
     this.ensureRemoveInput()
+    this.syncRequired()
   }
 
   undo() {
@@ -54,6 +55,16 @@ export default class extends Controller {
     this.removedNoticeTarget.classList.add('d-none')
     this.removeInput?.remove()
     this.removeInput = null
+    this.syncRequired()
+  }
+
+  // The file input only has to be required while no attachment survives the next
+  // save: a persisted attachment (not marked for removal) already satisfies the
+  // field, so keeping `required` on the emptied input would block every re-save.
+  syncRequired() {
+    const hasActiveAttachment = this.hasCurrentContainerTarget &&
+      !this.currentContainerTarget.classList.contains('lato-cms-file-field__item--removing')
+    this.inputTarget.required = this.fieldRequired && !hasActiveAttachment
   }
 
   ensureRemoveInput() {
@@ -82,6 +93,7 @@ export default class extends Controller {
     if (attachment) {
       this.element.insertBefore(this.buildCurrentContainer(attachment), this.newPreviewContainerTarget)
     }
+    this.syncRequired()
   }
 
   findSavedField(fields) {
@@ -137,6 +149,10 @@ export default class extends Controller {
 
   get fieldId() {
     return this.element.dataset.fieldId
+  }
+
+  get fieldRequired() {
+    return this.element.dataset.fieldRequired === 'true'
   }
 
   get removeLabel() {

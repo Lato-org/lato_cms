@@ -82,6 +82,7 @@ it:
     repeater_remove_item: Rimuovi
     repeater_min_error: "Sono richiesti almeno %{count} elementi"
     repeater_max_error: "Sono ammessi al massimo %{count} elementi"
+    field_required_attachment_error: "È richiesto almeno un file"
     fields_component_missing_alert_html: "Componente <strong>%{component_id}</strong> non trovato. La configurazione del componente potrebbe essere stata rimossa."
     fields_previously_saved_data: "Dati salvati in precedenza:"
     field_file_remove: Rimuovi

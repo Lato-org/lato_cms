@@ -1,0 +1,13 @@
+id: required_attachments_example
+name: Required Attachments Example
+fields:
+  required_file:
+    name: Required File
+    type: file
+    required: true
+    settings:
+      multiple: true
+  required_gallery:
+    name: Required Gallery
+    type: gallery
+    required: true

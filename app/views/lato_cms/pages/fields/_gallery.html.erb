@@ -20,7 +20,7 @@ end %>
   <%= label %><%= ' *' if required %>
 </label>
 
-<div data-controller="lato-cms-gallery-field" data-lato-cms-gallery-field-field-id-value="<%= field_id %>" data-lato-cms-gallery-field-input-name-prefix-value="<%= local_assigns[:input_name_prefix].presence || "fields[#{field_id}]" %>" data-remove-label="<%= t('lato_cms.field_file_remove') %>">
+<div data-controller="lato-cms-gallery-field" data-lato-cms-gallery-field-field-id-value="<%= field_id %>" data-lato-cms-gallery-field-input-name-prefix-value="<%= local_assigns[:input_name_prefix].presence || "fields[#{field_id}]" %>" data-field-required="<%= required %>" data-remove-label="<%= t('lato_cms.field_file_remove') %>">
   <div class="lato-cms-gallery-field__grid mb-2"
        data-lato-cms-gallery-field-target="grid"
        data-action="dragover->lato-cms-gallery-field#onGridDragOver drop->lato-cms-gallery-field#onGridDrop">
@@ -44,13 +44,17 @@ end %>
 
   <label class="btn btn-sm btn-outline-secondary">
     <i class="bi bi-plus-lg me-1"></i><%= t('lato_cms.field_gallery_add_images') %>
+    <%# visually-hidden (not d-none): a required display:none input makes native
+        validation fail silently with a "not focusable" error, while a clipped
+        1px input stays focusable so the browser can anchor its message here. %>
     <input type="file"
-      class="d-none"
+      class="visually-hidden"
       name="<%= files_input_name %>"
       accept="<%= accept %>"
       multiple
       data-lato-cms-gallery-field-target="fileInput"
-      data-action="change->lato-cms-gallery-field#addFiles">
+      data-action="change->lato-cms-gallery-field#addFiles"
+      <%= 'required' if required && ordered_files.empty? %>>
   </label>
   <small class="text-muted ms-2"><%= t('lato_cms.field_gallery_drag_to_reorder') %></small>
 </div>

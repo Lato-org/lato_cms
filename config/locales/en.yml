@@ -82,6 +82,7 @@ en:
     repeater_remove_item: Remove
     repeater_min_error: "At least %{count} items are required"
     repeater_max_error: "At most %{count} items are allowed"
+    field_required_attachment_error: "At least one file is required"
     fields_component_missing_alert_html: "Component <strong>%{component_id}</strong> not found. The component configuration may have been removed."
     fields_previously_saved_data: "Previously saved data:"
     field_file_remove: Remove

@@ -38,6 +38,7 @@ export default class extends Controller {
     // Reset input then sync with DataTransfer
     this.fileInputTarget.value = ''
     this.syncFileInput()
+    this.syncRequired()
   }
 
   // ─── Remove ─────────────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ export default class extends Controller {
     item.remove()
     this.updateEmpty()
     this.updateOrderInputs()
+    this.syncRequired()
   }
 
   // ─── Drag & drop ─────────────────────────────────────────────────────────────
@@ -126,6 +128,17 @@ export default class extends Controller {
     this.emptyMsgTarget.classList.toggle('d-none', !!hasItems)
   }
 
+  // Required enforcement rides on native form validation: the file input is
+  // `visually-hidden` (not display:none) so the browser can focus it and anchor
+  // the validation bubble on the "Add images" button. `required` must be set
+  // only while no image survives the next save — pending files kept in the
+  // input via DataTransfer or surviving grid items satisfy the field.
+  syncRequired() {
+    const hasActiveItem = this.newFileMap.size > 0 ||
+      !!this.gridTarget.querySelector('[data-gallery-item]')
+    this.fileInputTarget.required = this.fieldRequired && !hasActiveItem
+  }
+
   buildItem(src, attachmentId, fileUid) {
     const div = document.createElement('div')
     div.setAttribute('data-gallery-item', '')
@@ -158,6 +171,7 @@ export default class extends Controller {
     })
     this.updateEmpty()
     this.updateOrderInputs()
+    this.syncRequired()
   }
 
   findSavedField(fields) {
@@ -168,5 +182,9 @@ export default class extends Controller {
 
   get removeLabel() {
     return this.element.dataset.removeLabel || 'Remove'
+  }
+
+  get fieldRequired() {
+    return this.element.dataset.fieldRequired === 'true'
   }
 }

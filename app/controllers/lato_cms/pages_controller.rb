@@ -9,6 +9,10 @@ module LatoCms
       translations link_translation_action unlink_translation_action
     ].freeze
 
+    # Field types whose value lives in Active Storage attachments instead of
+    # `value`, so `required` must be checked against the attached files.
+    ATTACHMENT_FIELD_TYPES = %w[file image video gallery].freeze
+
     before_action { active_sidebar(:lato_cms_pages) }
     before_action :authenticate_lato_cms_admin, only: ADMIN_ONLY_ACTIONS
 
@@ -288,6 +292,15 @@ module LatoCms
 
       unless field.save
         errors << { field_id: persisted_field_id, errors: field.errors.full_messages }
+        return
+      end
+
+      # Attachments are attached/purged here in the controller, so the model
+      # cannot validate `required` for attachment fields. Backstop the
+      # client-side enforcement: a required field must end the save with at
+      # least one file, otherwise required would be bypassable.
+      if ATTACHMENT_FIELD_TYPES.include?(field_type) && field_config&.dig("required") == true && field.files.reload.empty?
+        errors << { field_id: persisted_field_id, errors: [t("lato_cms.field_required_attachment_error")] }
       end
     end
 
@@ -318,17 +331,20 @@ module LatoCms
       end
     end
 
-    def attach_field_files(field, field_data)
-      return unless field_data[:files].present?
+    # Browsers submit empty entries for file inputs with no selection: strip
+    # them so `attach` never receives a blank value and the required check
+    # sees the field as actually empty.
+    def submitted_files(field_data)
+      Array(field_data[:files]).reject(&:blank?)
+    end
 
-      Array(field_data[:files]).compact.each { |file| field.files.attach(file) }
+    def attach_field_files(field, field_data)
+      submitted_files(field_data).each { |file| field.files.attach(file) }
     end
 
     def assign_file_field_files(field, field_data)
-      if field.field_settings['multiple'] != true && field_data[:files].present?
-        new_file = Array(field_data[:files]).compact.first
-        return unless new_file
-
+      new_file = submitted_files(field_data).first
+      if field.field_settings['multiple'] != true && new_file
         field.files.each(&:purge)
         field.files.attach(new_file)
       else
@@ -346,10 +362,8 @@ module LatoCms
     end
 
     def replace_field_image(field, field_data)
-      if field_data[:files].present?
-        new_file = Array(field_data[:files]).compact.first
-        return unless new_file
-
+      new_file = submitted_files(field_data).first
+      if new_file
         field.files.each(&:purge)
         field.files.attach(new_file)
       else
@@ -361,10 +375,8 @@ module LatoCms
     # video and its auto-generated poster; removing the video drops the poster
     # too. Poster generation runs in a background job to keep the save fast.
     def replace_field_video(field, field_data)
-      if field_data[:files].present?
-        new_file = Array(field_data[:files]).compact.first
-        return unless new_file
-
+      new_file = submitted_files(field_data).first
+      if new_file
         field.files.each(&:purge)
         field.files.attach(new_file)
         LatoCms::GenerateVideoPosterJob.perform_later(field.id)
