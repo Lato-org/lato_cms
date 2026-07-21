@@ -400,6 +400,19 @@ body.controller-pages.action-show {
   top: 4px;
 }
 
+// ── Repeater items ─────────────────────────────────────────────────────────────
+
+.lato-cms-repeater-item__toggle {
+  .bi-chevron-down {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  &.collapsed .bi-chevron-down {
+    transform: rotate(-90deg);
+  }
+}
+
 .controller-pages-show {
   .accordion-button {
     font-weight: 500;

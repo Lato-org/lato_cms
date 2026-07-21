@@ -6,6 +6,44 @@ export default class extends Controller {
 
   connect () {
     this.refresh()
+
+    // Native validation skips hidden inputs: expand the item hosting an invalid
+    // field so the browser can focus it and show the error message.
+    this.onInvalid = (event) => this.expandItemFor(event.target)
+    this.element.addEventListener('invalid', this.onInvalid, true)
+  }
+
+  disconnect () {
+    this.element.removeEventListener('invalid', this.onInvalid, true)
+  }
+
+  expandItemFor (field) {
+    const item = field.closest('[data-lato-cms-repeater-target="item"]')
+    if (!item) return
+
+    this.collapseOthers(item)
+    this.setItemExpanded(item, true)
+  }
+
+  // Close every item except the given one (single-open accordion invariant).
+  collapseOthers (item) {
+    this.itemTargets.forEach((other) => {
+      if (other !== item) this.setItemExpanded(other, false)
+    })
+  }
+
+  // Bootstrap reads open state from the 'show' class, so toggling classes
+  // directly stays in sync with its lazily-created Collapse instances.
+  setItemExpanded (item, expanded) {
+    const collapse = item.querySelector('.collapse')
+    if (!collapse || collapse.classList.contains('show') === expanded) return
+
+    collapse.classList.toggle('show', expanded)
+    const toggle = item.querySelector('[data-bs-toggle="collapse"]')
+    if (toggle) {
+      toggle.classList.toggle('collapsed', !expanded)
+      toggle.setAttribute('aria-expanded', expanded.toString())
+    }
   }
 
   add () {
@@ -18,6 +56,8 @@ export default class extends Controller {
       .replaceAll('NEW_INDEX', this.itemTargets.length.toString())
 
     this.itemsTarget.insertAdjacentHTML('beforeend', html)
+    // The new item is rendered expanded: enforce single-open accordion behavior.
+    this.collapseOthers(this.itemTargets[this.itemTargets.length - 1])
     this.refresh()
   }
 

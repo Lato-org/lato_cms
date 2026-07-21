@@ -7,18 +7,25 @@
 <%# Seed `min` empty items when the list is empty, so the minimum is met up front. %>
 <% item_ids = Array.new(min) { SecureRandom.uuid } if item_ids.blank? && min.positive? %>
 
+<%# Accordion behavior (one item open at a time) hangs off the items container id. %>
+<% items_container_id = "repeater-items-#{tc[:template_component_id]}" %>
+<%# Expand only the first empty item: saved items start collapsed. %>
+<% first_empty_id = item_ids.find { |id| fields_by_item[id].blank? } %>
+
 <div data-controller="lato-cms-repeater"
      data-lato-cms-repeater-min-value="<%= min %>"
      data-lato-cms-repeater-max-value="<%= max %>">
-  <div data-lato-cms-repeater-target="items">
+  <div id="<%= items_container_id %>" data-lato-cms-repeater-target="items">
     <% item_ids.each_with_index do |item_id, item_index| %>
       <% item_fields = (fields_by_item[item_id] || []).index_by(&:base_field_id) %>
-      <%= render 'lato_cms/pages/repeater_item', tc: tc, item_id: item_id, item_index: item_index, item_fields: item_fields %>
+      <%= render 'lato_cms/pages/repeater_item', tc: tc, item_id: item_id, item_index: item_index, item_fields: item_fields,
+          parent_id: items_container_id, expanded: item_id == first_empty_id %>
     <% end %>
   </div>
 
   <template data-lato-cms-repeater-target="template">
-    <%= render 'lato_cms/pages/repeater_item', tc: tc, item_id: 'NEW_RECORD', item_index: 'NEW_INDEX', item_fields: {} %>
+    <%= render 'lato_cms/pages/repeater_item', tc: tc, item_id: 'NEW_RECORD', item_index: 'NEW_INDEX', item_fields: {},
+        parent_id: items_container_id, expanded: true %>
   </template>
 
   <button type="button" class="btn btn-sm btn-outline-primary" data-action="lato-cms-repeater#add" data-lato-cms-repeater-target="addButton">
