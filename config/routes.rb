@@ -10,6 +10,7 @@ LatoCms::Engine.routes.draw do
 
   scope :pages do
     get '', to: 'pages#index', as: :pages
+    post 'sitemap-export', to: 'pages#sitemap_export_action', as: :pages_sitemap_export_action
     get 'create', to: 'pages#create', as: :pages_create
     post 'create', to: 'pages#create_action', as: :pages_create_action
     get ':id', to: 'pages#show', as: :pages_show

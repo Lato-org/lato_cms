@@ -30,6 +30,20 @@ module LatoCms
       )
     end
 
+    def sitemap_export_action
+      @operation = Lato::Operation.generate(
+        'LatoCms::ExportSitemapCsvJob',
+        { lato_spaces_group_id: @session.get(:spaces_group_id) },
+        @session.user_id
+      )
+
+      if @operation.start
+        redirect_to lato.operation_path(@operation)
+      else
+        redirect_to lato_cms.pages_path, alert: t('lato_cms.sitemap_export_failed')
+      end
+    end
+
     def show
       @page = query_pages.find(params[:id])
       @page.fields.load

@@ -33,6 +33,10 @@ it:
     form_template_unavailable: "Il template \"%{template_id}\" non e piu disponibile. Seleziona un template diverso."
     action_view_frontend: Anteprima
     cta_actions: Azioni
+    sitemap_export_cta: Esporta sitemap (CSV)
+    sitemap_export_title: Esportazione sitemap CSV
+    sitemap_export_message: "%{count} pagine esportate"
+    sitemap_export_failed: Impossibile avviare l'esportazione della sitemap
     translations_title: Traduzioni
     translation_no_other_locales: Nessuna altra lingua configurata.
     translation_link_cta: Collega

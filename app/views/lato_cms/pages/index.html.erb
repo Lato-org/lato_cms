@@ -10,6 +10,23 @@
         <%= locale_to_flag(locale) %> <%= locale.to_s.upcase %>
       <% end %>
     <% end %>
+
+    <div class="dropdown ms-auto" title="<%= t('lato_cms.cta_actions') %>" data-controller="lato-tooltip">
+      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="bi bi-three-dots"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <%= link_to t('lato_cms.sitemap_export_cta'), lato_cms.pages_sitemap_export_action_path, class: 'dropdown-item',
+            data: {
+              lato_action_target: 'trigger',
+              turbo_method: :post,
+              turbo_frame: 'lato_operation',
+              action_title: t('lato_cms.sitemap_export_title')
+            } %>
+        </li>
+      </ul>
+    </div>
   </div>
   <div class="card-body">
     <%= lato_index @pages,
