@@ -7,4 +7,7 @@ end
 
 LatoCms.configure do |config|
   config.locales = [:en, :it, :de, :fr]
+  config.llm_api_url = "https://api.openai.com/v1"
+  config.llm_model = "gpt-4o-mini"
+  config.llm_api_key = "..."
 end
