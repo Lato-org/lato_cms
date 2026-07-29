@@ -1,8 +1,8 @@
 require "test_helper"
 
 # Server-side backstop for required attachment fields: a required file/gallery
-# field must end the save with at least one attachment, so the client-side
-# `required` enforcement cannot be bypassed by posting directly.
+# field must end the save with at least one Media reference, so the
+# client-side `required` enforcement cannot be bypassed by posting directly.
 class RequiredAttachmentFieldSaveTest < ActionDispatch::IntegrationTest
   def setup
     @user = lato_users(:user)
@@ -14,54 +14,60 @@ class RequiredAttachmentFieldSaveTest < ActionDispatch::IntegrationTest
     post lato_spaces.setgroup_url(@group.id) # CMS controllers require a selected spaces group
   end
 
-  test "saving a required file field with no files returns an error" do
-    # Browsers submit a blank entry for an empty file input
-    save_fields(required_file: { files: [""] })
+  test "saving a required file field with no media returns an error" do
+    save_fields(required_file: { media_ids: [""] })
 
     assert_response :unprocessable_entity
     assert_field_error "required_file"
   end
 
-  test "saving a required file field with a file succeeds" do
-    save_fields(required_file: { files: [fixture_file_upload("example_image.png", "image/png")] })
+  test "saving a required file field with a media id succeeds" do
+    save_fields(required_file: { media_ids: [create_media.id] })
 
     assert_response :success
-    assert_equal 1, field("required_file").files.count
+    assert_equal 1, field("required_file").media.count
   end
 
-  test "removing the last attachment of a required file field returns an error" do
-    save_fields(required_file: { files: [fixture_file_upload("example_image.png", "image/png")] })
-    attachment_id = field("required_file").files.first.id
+  test "removing the last media of a required file field returns an error" do
+    save_fields(required_file: { media_ids: [create_media.id] })
 
-    save_fields(required_file: { remove_file_ids: [attachment_id.to_s] })
+    save_fields(required_file: { media_ids: [""] })
 
     assert_response :unprocessable_entity
     assert_field_error "required_file"
   end
 
-  test "saving a required gallery field with no files returns an error" do
-    # Browsers submit a blank entry for an empty file input
-    save_fields(required_gallery: { files: [""] })
+  test "saving a required gallery field with no media returns an error" do
+    save_fields(required_gallery: { media_ids: [""] })
 
     assert_response :unprocessable_entity
     assert_field_error "required_gallery"
   end
 
   test "saving a required gallery field with images succeeds" do
-    save_fields(required_gallery: { files: [fixture_file_upload("example_image.png", "image/png")] })
+    save_fields(required_gallery: { media_ids: [create_media.id] })
 
     assert_response :success
-    assert_equal 1, field("required_gallery").files.count
+    assert_equal 1, field("required_gallery").media.count
   end
 
   test "removing the last image of a required gallery field returns an error" do
-    save_fields(required_gallery: { files: [fixture_file_upload("example_image.png", "image/png")] })
-    attachment_id = field("required_gallery").files.first.id
+    save_fields(required_gallery: { media_ids: [create_media.id] })
 
-    save_fields(required_gallery: { remove_file_ids: [attachment_id.to_s] })
+    save_fields(required_gallery: { media_ids: [""] })
 
     assert_response :unprocessable_entity
     assert_field_error "required_gallery"
+  end
+
+  test "a media id from another spaces group is silently dropped" do
+    other_group = LatoSpaces::Group.create!(name: "Other group")
+    foreign_media = create_media(group: other_group)
+
+    save_fields(required_file: { media_ids: [foreign_media.id] })
+
+    assert_response :unprocessable_entity
+    assert_field_error "required_file"
   end
 
   private
@@ -78,6 +84,13 @@ class RequiredAttachmentFieldSaveTest < ActionDispatch::IntegrationTest
 
   def field(field_id)
     @page.fields.find_by(field_id: field_id)
+  end
+
+  def create_media(group: @group)
+    media = LatoCms::Media.new(lato_spaces_group_id: group.id)
+    media.file.attach(io: file_fixture("example_image.png").open, filename: "example_image.png", content_type: "image/png")
+    media.save!
+    media
   end
 
   def assert_field_error(field_id)

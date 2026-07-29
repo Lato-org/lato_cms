@@ -9,10 +9,6 @@ module LatoCms
       translations link_translation_action unlink_translation_action
     ].freeze
 
-    # Field types whose value lives in Active Storage attachments instead of
-    # `value`, so `required` must be checked against the attached files.
-    ATTACHMENT_FIELD_TYPES = %w[file image video gallery].freeze
-
     before_action { active_sidebar(:lato_cms_pages) }
     before_action :authenticate_lato_cms_admin, only: ADMIN_ONLY_ACTIONS
 
@@ -220,7 +216,8 @@ module LatoCms
     private
 
     # Replaces the target page's fields for a component with copies of the source
-    # page's fields for the same component. Attachments share the source blobs.
+    # page's fields for the same component. Media references are shared (not
+    # duplicated), so a cloned video field's poster stays correct for free.
     def clone_component_fields(source, target, template_component_id)
       # Components are template-specific: only clone between pages using the same template.
       return false unless source.template_id == target.template_id
@@ -239,7 +236,7 @@ module LatoCms
             field_id: src.field_id,
             value: src.value
           )
-          src.files.each { |file| field.files.attach(file.blob) }
+          field.replace_media!(src.media.pluck(:id))
         end
       end
 
@@ -302,41 +299,33 @@ module LatoCms
       field_config = component&.dig('fields', config_field_id)
       field_type = field_config&.dig('type') || 'string'
 
-      assign_field_value(field, field_type, field_data)
-
-      unless field.save
-        errors << { field_id: persisted_field_id, errors: field.errors.full_messages }
-        return
+      if LatoCms::PageField::ATTACHMENT_FIELD_TYPES.include?(field_type)
+        # Bootstrap-persist to get an id so join rows can reference it before
+        # the real, validated save below (the one that actually enforces
+        # `required`, now possible since media presence is a real association).
+        field.save(validate: false) if field.new_record?
+        assign_media_field_value(field, field_type, field_data)
+      else
+        assign_scalar_field_value(field, field_type, field_data)
       end
 
-      # Attachments are attached/purged here in the controller, so the model
-      # cannot validate `required` for attachment fields. Backstop the
-      # client-side enforcement: a required field must end the save with at
-      # least one file, otherwise required would be bypassable.
-      if ATTACHMENT_FIELD_TYPES.include?(field_type) && field_config&.dig("required") == true && field.files.reload.empty?
-        errors << { field_id: persisted_field_id, errors: [t("lato_cms.field_required_attachment_error")] }
+      errors << { field_id: persisted_field_id, errors: field.errors.full_messages } unless field.save
+    end
+
+    def assign_media_field_value(field, field_type, field_data)
+      case field_type
+      when 'file'
+        ids = field.field_settings['multiple'] == true ? Array(field_data[:media_ids]) : [field_data[:media_id]]
+        assign_media_field(field, ids)
+      when 'image', 'video'
+        assign_media_field(field, [field_data[:media_id]])
+      when 'gallery'
+        assign_media_field(field, Array(field_data[:media_ids]))
       end
     end
 
-    def assign_field_value(field, field_type, field_data)
+    def assign_scalar_field_value(field, field_type, field_data)
       case field_type
-      when 'file'
-        field.save if field.new_record?
-        assign_file_field_files(field, field_data)
-      when 'image'
-        field.save if field.new_record?
-        replace_field_image(field, field_data)
-      when 'video'
-        field.save if field.new_record?
-        replace_field_video(field, field_data)
-      when 'gallery'
-        field.save if field.new_record?
-        attach_field_files(field, field_data)
-        remove_field_files(field, field_data)
-        order = Array(field_data[:order]).reject(&:blank?).map(&:to_s)
-        all_ids = field.files.reload.map { |f| f.id.to_s }
-        sorted = order.select { |id| all_ids.include?(id) }
-        field.value = (sorted + (all_ids - sorted)).to_json
       when 'multiselect'
         field.value = Array(field_data[:value]).reject(&:blank?).to_json
       else
@@ -345,58 +334,13 @@ module LatoCms
       end
     end
 
-    # Browsers submit empty entries for file inputs with no selection: strip
-    # them so `attach` never receives a blank value and the required check
-    # sees the field as actually empty.
-    def submitted_files(field_data)
-      Array(field_data[:files]).reject(&:blank?)
-    end
-
-    def attach_field_files(field, field_data)
-      submitted_files(field_data).each { |file| field.files.attach(file) }
-    end
-
-    def assign_file_field_files(field, field_data)
-      new_file = submitted_files(field_data).first
-      if field.field_settings['multiple'] != true && new_file
-        field.files.each(&:purge)
-        field.files.attach(new_file)
-      else
-        attach_field_files(field, field_data)
-        remove_field_files(field, field_data)
-      end
-    end
-
-    def remove_field_files(field, field_data)
-      return unless field_data[:remove_file_ids].present?
-
-      Array(field_data[:remove_file_ids]).reject(&:blank?).each do |file_id_to_remove|
-        field.files.find { |file| file.id == file_id_to_remove.to_i }&.purge
-      end
-    end
-
-    def replace_field_image(field, field_data)
-      new_file = submitted_files(field_data).first
-      if new_file
-        field.files.each(&:purge)
-        field.files.attach(new_file)
-      else
-        remove_field_files(field, field_data)
-      end
-    end
-
-    # Single-video semantics: uploading a new video replaces both the previous
-    # video and its auto-generated poster; removing the video drops the poster
-    # too. Poster generation runs in a background job to keep the save fast.
-    def replace_field_video(field, field_data)
-      new_file = submitted_files(field_data).first
-      if new_file
-        field.files.each(&:purge)
-        field.files.attach(new_file)
-        LatoCms::GenerateVideoPosterJob.perform_later(field.id)
-      elsif field_data[:remove_file_ids].present?
-        field.files.each(&:purge)
-      end
+    # Tenant-scopes the submitted media ids (drops any id outside this
+    # session's spaces group) before delegating to the model, preserving the
+    # order given by the client.
+    def assign_media_field(field, media_ids)
+      ordered_ids = Array(media_ids).reject(&:blank?).map(&:to_s).uniq
+      allowed_ids = query_media.where(id: ordered_ids).pluck(:id).map(&:to_s)
+      field.replace_media!(ordered_ids & allowed_ids)
     end
 
     def create_params

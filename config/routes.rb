@@ -24,4 +24,14 @@ LatoCms::Engine.routes.draw do
     delete ':id/translations', to: 'pages#unlink_translation_action', as: :pages_unlink_translation_action
     delete ':id', to: 'pages#destroy_action', as: :pages_destroy_action
   end
+
+  scope :media do
+    get '', to: 'media#index', as: :media
+    get 'picker', to: 'media#picker_action', as: :media_picker_action
+    get 'create', to: 'media#create', as: :media_create
+    post 'create', to: 'media#create_action', as: :media_create_action
+    get ':id/update', to: 'media#update', as: :media_update
+    patch ':id/update', to: 'media#update_action', as: :media_update_action
+    delete ':id', to: 'media#destroy_action', as: :media_destroy_action
+  end
 end

@@ -90,19 +90,32 @@ it:
     fields_component_missing_alert_html: "Componente <strong>%{component_id}</strong> non trovato. La configurazione del componente potrebbe essere stata rimossa."
     fields_previously_saved_data: "Dati salvati in precedenza:"
     field_file_remove: Rimuovi
-    field_file_remove_pending: Il file verra rimosso al salvataggio
-    field_file_remove_undo: Annulla
-    field_file_new_badge: Nuovo
-    field_gallery_empty: Nessuna immagine presente. Aggiungi immagini qui sotto.
-    field_gallery_add_images: Aggiungi immagini
-    field_gallery_drag_to_reorder: Trascina per riordinare
-    field_image_remove: Rimuovi
-    field_image_remove_pending: L'immagine verra rimossa al salvataggio
-    field_image_new_badge: Nuovo
-    field_video_remove: Rimuovi
-    field_video_remove_pending: Il video verra rimosso al salvataggio
-    field_video_new_badge: Nuovo
+    field_media_empty: Nessun file selezionato.
     field_multiselect_hint: Tieni premuto Ctrl/Cmd per selezionare piu opzioni
+    media_index_title: Media
+    media_create_title: Carica media
+    media_create_cta: Carica
+    media_update_title: Modifica media
+    media_name_hint: Se vuoto, viene usato il nome del file.
+    media_alt_text: Testo alternativo
+    media_created: Media caricato con successo
+    media_updated: Media aggiornato con successo
+    media_deleted: Media eliminato con successo
+    media_delete_in_use: "Impossibile eliminare: usato in %{count} punto/i"
+    media_delete_failed: Impossibile eliminare il media
+    media_choose_from_library: Scegli dalla libreria
+    media_picker_title: Libreria media
+    media_picker_tab_browse: Sfoglia libreria
+    media_picker_tab_upload: Carica nuovo
+    media_picker_empty: Nessun media trovato.
+    media_picker_confirm: Conferma selezione
+    media_picker_selected_label: selezionati
+    media_search_placeholder: Cerca media...
+    media_upload_cta: Carica
+    media_type_all: Tutti
+    media_type_image: Immagini
+    media_type_video: Video
+    media_type_file: File
     field_select_placeholder: "-- Seleziona --"
     field_text_toolbar_bold: Grassetto
     field_text_toolbar_italic: Corsivo

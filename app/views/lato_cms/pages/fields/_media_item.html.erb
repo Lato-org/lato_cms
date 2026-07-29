@@ -1,0 +1,25 @@
+<div class="lato-cms-media-field__item"
+     data-media-id="<%= media.id %>"
+     data-lato-cms-media-field-target="item"
+     <% if multiple %>
+       data-lato-cms-media-reorder-target="item"
+       draggable="true"
+       data-action="dragstart->lato-cms-media-reorder#onDragStart dragend->lato-cms-media-reorder#onDragEnd"
+     <% end %>>
+  <div class="lato-cms-media-field__preview">
+    <% if kind == 'video' %>
+      <video controls preload="metadata" class="lato-cms-media-field__player" src="<%= media.url %>" <%= "poster=\"#{media.poster_url}\"".html_safe if media.poster_url %>></video>
+    <% elsif media.thumbnail_url %>
+      <img src="<%= media.thumbnail_url %>" class="lato-cms-media-field__thumb" alt="<%= media.alt_text %>">
+    <% else %>
+      <i class="bi bi-paperclip fs-3"></i>
+    <% end %>
+  </div>
+  <div class="lato-cms-file-field__info">
+    <span><%= media.name %></span>
+  </div>
+  <input type="hidden" name="<%= hidden_name %>" value="<%= media.id %>" data-lato-cms-media-field-target="hiddenInput">
+  <button type="button" class="lato-cms-attachment-field__remove" title="<%= t('lato_cms.field_file_remove') %>" aria-label="<%= t('lato_cms.field_file_remove') %>" data-action="lato-cms-media-field#remove">
+    <i class="bi bi-trash"></i>
+  </button>
+</div>

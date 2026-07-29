@@ -1,12 +1,13 @@
 PATH
   remote: .
   specs:
-    lato_cms (3.0.12)
+    lato_cms (3.0.13)
       image_processing (>= 1.2)
       jbuilder
       lato
       lato_spaces
       rails (>= 7.1.1)
+      ruby-vips (~> 2.0)
 
 GEM
   remote: https://rubygems.org/
@@ -269,6 +270,9 @@ GEM
     rqrcode_core (2.0.1)
     ruby-graphviz (1.2.5)
       rexml
+    ruby-vips (2.3.0)
+      ffi (~> 1.12)
+      logger
     safety_net_attestation (0.5.0)
       jwt (>= 2.0, < 4.0)
     sassc (2.4.0)

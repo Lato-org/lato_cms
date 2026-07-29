@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_12_092241) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_28_175414) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -37,6 +37,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_12_092241) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "lato_cms_media", force: :cascade do |t|
+    t.string "alt_text"
+    t.datetime "created_at", null: false
+    t.string "media_type", default: "file", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["media_type"], name: "index_lato_cms_media_on_media_type"
+  end
+
+  create_table "lato_cms_page_field_media", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "media_id", null: false
+    t.integer "page_field_id", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["media_id"], name: "index_lato_cms_page_field_media_on_media_id"
+    t.index ["page_field_id", "media_id"], name: "index_lato_cms_page_field_media_on_page_field_id_and_media_id", unique: true
+    t.index ["page_field_id", "position"], name: "index_lato_cms_page_field_media_on_page_field_id_and_position"
+    t.index ["page_field_id"], name: "index_lato_cms_page_field_media_on_page_field_id"
   end
 
   create_table "lato_cms_page_fields", force: :cascade do |t|
@@ -160,6 +181,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_12_092241) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "lato_cms_page_field_media", "lato_cms_media", column: "media_id"
+  add_foreign_key "lato_cms_page_field_media", "lato_cms_page_fields", column: "page_field_id"
   add_foreign_key "lato_cms_page_fields", "lato_cms_pages", column: "page_id"
   add_foreign_key "lato_invitations", "lato_users"
   add_foreign_key "lato_invitations", "lato_users", column: "inviter_lato_user_id"

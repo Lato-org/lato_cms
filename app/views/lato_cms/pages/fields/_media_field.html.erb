@@ -1,0 +1,59 @@
+<%# Shared markup for image/video/file/gallery fields. Rendered by the 4
+    type-specific partials with `kind` ('image'/'video'/'file') and `multiple`
+    locals — differences between them are otherwise just presentation. %>
+<% label = field_config['name'] || field_id.humanize %>
+<% required = field_config['required'] == true %>
+<% current_media = page_field ? page_field.media.to_a : [] %>
+<% dom_id = lato_cms_field_dom_id(field_id, 'media_picker', dom_id_prefix: local_assigns[:dom_id_prefix]) %>
+<% frame_id = "media_picker_#{dom_id}" %>
+<% hidden_name = multiple ?
+     lato_cms_field_input_name(field_id, 'media_ids', input_name_prefix: local_assigns[:input_name_prefix], multiple: true) :
+     lato_cms_field_input_name(field_id, 'media_id', input_name_prefix: local_assigns[:input_name_prefix]) %>
+<% picker_type = kind == 'file' ? nil : kind %>
+
+<label class="form-label">
+  <%= label %><%= ' *' if required %>
+</label>
+
+<div data-controller="lato-cms-media-field<%= ' lato-cms-media-reorder' if multiple %>"
+     data-lato-cms-media-field-kind-value="<%= kind %>"
+     data-lato-cms-media-field-multiple-value="<%= multiple %>"
+     data-lato-cms-media-field-frame-id-value="<%= frame_id %>"
+     data-lato-cms-media-field-hidden-name-value="<%= hidden_name %>"
+     data-lato-cms-media-field-field-id-value="<%= field_id %>"
+     data-field-required="<%= required %>">
+
+  <div class="lato-cms-media-field__grid mb-2"
+       data-lato-cms-media-field-target="grid"
+       data-lato-cms-media-reorder-target="grid"
+       <% if multiple %>data-action="dragover->lato-cms-media-reorder#onGridDragOver drop->lato-cms-media-reorder#onGridDrop"<% end %>>
+    <% current_media.each do |m| %>
+      <%= render partial: 'lato_cms/pages/fields/media_item', locals: { media: m, kind: kind, hidden_name: hidden_name, multiple: multiple } %>
+    <% end %>
+  </div>
+
+  <% if current_media.empty? %>
+    <p class="text-muted small mb-2" data-lato-cms-media-field-target="emptyMsg"><%= t('lato_cms.field_media_empty') %></p>
+  <% end %>
+
+  <%# Real-but-hidden input anchors the browser's native required-validation
+      bubble (a display:none required input fails silently as "not
+      focusable"). Kept in sync with selection state by the Stimulus controller. %>
+  <input type="text" class="visually-hidden" value="<%= current_media.first&.id %>"
+    data-lato-cms-media-field-target="validationAnchor"
+    <%= 'required' if required && current_media.empty? %>>
+
+  <%# Deliberately NOT using the shared `lato-action` trigger convention here:
+      it opens frames by hoping Turbo's own click handling notices a
+      just-inserted <turbo-frame> before driving a full-page visit, which
+      loses that race for this link. `openPicker` below prevents the
+      default navigation itself and sets the frame's `src` explicitly
+      (Turbo's documented, non-racy way to trigger a frame-scoped fetch). %>
+  <%= link_to lato_cms.media_picker_action_path(frame_id: frame_id, multiple: multiple, type: picker_type),
+        class: 'btn btn-sm btn-outline-secondary', data: {
+          action: 'click->lato-cms-media-field#openPicker',
+          action_title: t('lato_cms.media_picker_title'), action_size: 'lg'
+        } do %>
+    <i class="bi bi-images me-1"></i><%= t('lato_cms.media_choose_from_library') %>
+  <% end %>
+</div>

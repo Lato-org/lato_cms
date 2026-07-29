@@ -19,6 +19,10 @@ module LatoCms
       @query_pages ||= LatoCms::Page.for_lato_spaces_group(@session.get(:spaces_group_id))
     end
 
+    def query_media
+      @query_media ||= LatoCms::Media.for_lato_spaces_group(@session.get(:spaces_group_id))
+    end
+
     # Section-level guard: any CMS role (operator or admin) may enter.
     def authenticate_lato_cms_access
       return true if @session.user&.lato_cms_access?

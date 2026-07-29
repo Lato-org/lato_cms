@@ -27,4 +27,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "lato_spaces"
   spec.add_dependency "jbuilder"
   spec.add_dependency "image_processing", ">= 1.2"
+  spec.add_dependency "ruby-vips", "~> 2.0"
 end

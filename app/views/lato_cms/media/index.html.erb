@@ -1,0 +1,22 @@
+<%= lato_page_head t('lato_cms.media_index_title'), [{ label: t('lato_cms.media_index_title') }] %>
+
+<div class="card">
+  <div class="card-body">
+    <%= lato_index @media,
+      custom_actions: {
+        create: {
+          path: lato_cms.media_create_path,
+          icon: 'bi bi-plus',
+          title: t('lato_cms.media_create_cta'),
+          data: {
+            controller: 'lato-tooltip',
+            lato_action_target: 'trigger',
+            turbo_frame: dom_id(LatoCms::Media.new, 'form'),
+            action_title: t('lato_cms.media_create_title')
+          }
+        }
+      },
+      pagination_options: [12, 24, 48, 96]
+    %>
+  </div>
+</div>

@@ -192,8 +192,15 @@ body.controller-pages.action-show {
   }
 }
 
-// ── File field ─────────────────────────────────────────────────────────────────
-.lato-cms-file-field__item {
+// ── Media field (image/video/file/gallery, picked from the Media library) ──────
+.lato-cms-media-field__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.lato-cms-media-field__item {
   align-items: center;
   background: #fff;
   border: 1px solid rgba(33, 37, 41, 0.12);
@@ -201,16 +208,55 @@ body.controller-pages.action-show {
   box-shadow: 0 1px 2px rgba(33, 37, 41, 0.04);
   display: flex;
   gap: 0.75rem;
-  justify-content: space-between;
-  margin-bottom: 0.6rem;
   min-height: 56px;
   padding: 0.65rem 0.75rem;
+  position: relative;
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 
   &:hover {
     border-color: rgba(13, 110, 253, 0.25);
     box-shadow: 0 3px 10px rgba(33, 37, 41, 0.07);
   }
+
+  &[draggable="true"] {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &--dragging {
+    opacity: 0.35;
+    box-shadow: 0 0 0 2px var(--bs-primary);
+  }
+}
+
+.lato-cms-media-field__preview {
+  align-items: center;
+  background: var(--bs-light);
+  border: 1px solid rgba(33, 37, 41, 0.08);
+  border-radius: 6px;
+  display: flex;
+  flex: 0 0 auto;
+  height: 64px;
+  justify-content: center;
+  overflow: hidden;
+  width: 64px;
+}
+
+.lato-cms-media-field__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lato-cms-media-field__player {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
 }
 
 .lato-cms-file-field__info {
@@ -224,19 +270,6 @@ body.controller-pages.action-show {
   > span:first-of-type {
     overflow-wrap: anywhere;
   }
-
-  > .bi {
-    color: var(--bs-secondary);
-    font-size: 1rem;
-  }
-}
-
-.lato-cms-file-field__removed {
-  align-items: center;
-  display: flex;
-  gap: 0.75rem;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .lato-cms-attachment-field__remove {
@@ -261,143 +294,31 @@ body.controller-pages.action-show {
   }
 }
 
-.lato-cms-file-field__item--removing {
-  background: rgba(220, 53, 69, 0.06);
-  border-color: rgba(220, 53, 69, 0.35);
-  box-shadow: none;
-
-  .lato-cms-file-field__info,
-  .lato-cms-image-field__preview,
-  .lato-cms-video-field__preview,
-  .lato-cms-attachment-field__remove,
-  > .btn {
-    display: none;
-  }
+// ── Media picker modal ──────────────────────────────────────────────────────────
+.lato-cms-media-picker__grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  max-height: 360px;
+  overflow-y: auto;
 }
 
-.lato-cms-file-field__item--new {
-  background: rgba(25, 135, 84, 0.04);
-  border-color: rgba(25, 135, 84, 0.45);
-
-  .badge {
-    font-weight: 500;
-  }
-}
-
-// ── Image field ────────────────────────────────────────────────────────────────
-.lato-cms-image-field__item {
-  align-items: stretch;
-}
-
-.lato-cms-image-field__preview {
-  align-items: center;
-  align-self: center;
-  background: var(--bs-light);
-  border: 1px solid rgba(33, 37, 41, 0.08);
-  border-radius: 6px;
-  display: flex;
-  flex: 0 0 auto;
-  height: 64px;
-  justify-content: center;
-  overflow: hidden;
-  width: 64px;
-}
-
-.lato-cms-image-field__thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: opacity 0.15s, filter 0.15s;
-}
-
-.lato-cms-image-field__remove-btn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 0;
-  background: rgba(220, 53, 69, 0.85);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+.lato-cms-media-picker__item {
+  border: 2px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  padding: 4px;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
 
   &:hover {
-    background: rgb(220, 53, 69);
-  }
-}
-
-.lato-cms-image-field__new-badge {
-  position: absolute;
-  bottom: 4px;
-  left: 4px;
-  font-size: 10px;
-}
-
-// ── Video field ────────────────────────────────────────────────────────────────
-.lato-cms-video-field__item {
-  align-items: stretch;
-}
-
-.lato-cms-video-field__preview {
-  align-self: center;
-  background: #000;
-  border: 1px solid rgba(33, 37, 41, 0.08);
-  border-radius: 6px;
-  flex: 0 0 auto;
-  overflow: hidden;
-  width: 180px;
-}
-
-.lato-cms-video-field__player {
-  display: block;
-  max-height: 110px;
-  width: 100%;
-}
-
-// ── Gallery field ──────────────────────────────────────────────────────────────
-.lato-cms-gallery-field__grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-height: 24px;
-}
-
-.lato-cms-gallery-field__item {
-  position: relative;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: grab;
-  user-select: none;
-  transition: opacity 0.15s, box-shadow 0.15s;
-
-  &:active {
-    cursor: grabbing;
+    background: var(--bs-light);
   }
 
-  &--dragging {
-    opacity: 0.35;
-    box-shadow: 0 0 0 2px var(--bs-primary);
+  &--selected {
+    border-color: var(--bs-primary);
+    background: rgba(13, 110, 253, 0.08);
   }
-}
-
-.lato-cms-gallery-field__thumb {
-  width: 90px;
-  height: 90px;
-  object-fit: cover;
-  display: block;
-}
-
-.lato-cms-gallery-field__remove {
-  position: absolute;
-  right: 4px;
-  top: 4px;
 }
 
 // ── Repeater items ─────────────────────────────────────────────────────────────

@@ -1,0 +1,95 @@
+<% multiple = ActiveModel::Type::Boolean.new.cast(params[:multiple]) %>
+
+<%= turbo_frame_tag params[:frame_id] do %>
+  <div data-controller="lato-cms-media-picker"
+       data-lato-cms-media-picker-multiple-value="<%= multiple %>"
+       data-lato-cms-media-picker-selected-label-value="<%= t('lato_cms.media_picker_selected_label') %>">
+
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#lato-cms-media-picker-browse" type="button">
+          <%= t('lato_cms.media_picker_tab_browse') %>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#lato-cms-media-picker-upload" type="button">
+          <%= t('lato_cms.media_picker_tab_upload') %>
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="lato-cms-media-picker-browse">
+        <%= form_with url: lato_cms.media_picker_action_path, method: :get, data: { turbo_frame: params[:frame_id] } do %>
+          <%= hidden_field_tag :frame_id, params[:frame_id] %>
+          <%= hidden_field_tag :multiple, multiple %>
+          <div class="d-flex gap-2 mb-3">
+            <div class="btn-group">
+              <%= link_to t('lato_cms.media_type_all'), lato_cms.media_picker_action_path(frame_id: params[:frame_id], multiple: multiple, q: params[:q]),
+                class: "btn btn-sm #{params[:type].blank? ? 'btn-primary' : 'btn-outline-secondary'}", data: { turbo_frame: params[:frame_id] } %>
+              <% %w[image video file].each do |type| %>
+                <%= link_to t("lato_cms.media_type_#{type}"), lato_cms.media_picker_action_path(frame_id: params[:frame_id], multiple: multiple, type: type, q: params[:q]),
+                  class: "btn btn-sm #{params[:type] == type ? 'btn-primary' : 'btn-outline-secondary'}", data: { turbo_frame: params[:frame_id] } %>
+              <% end %>
+            </div>
+            <%= text_field_tag :q, params[:q], class: 'form-control form-control-sm', placeholder: t('lato_cms.media_search_placeholder') %>
+            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
+          </div>
+        <% end %>
+
+        <% if @media.empty? %>
+          <p class="text-muted"><%= t('lato_cms.media_picker_empty') %></p>
+        <% else %>
+          <div class="lato-cms-media-picker__grid mb-3" data-lato-cms-media-picker-target="grid">
+            <% @media.each do |media| %>
+              <div class="lato-cms-media-picker__item"
+                   data-media-id="<%= media.id %>"
+                   data-media-name="<%= media.name %>"
+                   data-media-thumb="<%= media.thumbnail_url %>"
+                   data-media-url="<%= media.url %>"
+                   data-media-poster-url="<%= media.poster_url %>"
+                   data-media-type="<%= media.media_type %>"
+                   data-action="click->lato-cms-media-picker#select"
+                   data-lato-cms-media-picker-target="item">
+                <%= lato_cms_media_thumb(media, size: 100) %>
+                <span class="small text-truncate d-block"><%= media.name %></span>
+              </div>
+            <% end %>
+          </div>
+
+          <%= paginate @media, param_name: :page %>
+        <% end %>
+
+        <% if multiple %>
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <span data-lato-cms-media-picker-target="selectedCount">0 <%= t('lato_cms.media_picker_selected_label') %></span>
+            <button type="button" class="btn btn-primary" data-action="lato-cms-media-picker#confirm" data-lato-cms-media-picker-target="confirmButton" disabled>
+              <%= t('lato_cms.media_picker_confirm') %>
+            </button>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="tab-pane fade" id="lato-cms-media-picker-upload">
+        <div data-lato-cms-media-picker-target="uploadNotice"></div>
+        <%= form_with url: lato_cms.media_create_action_path, scope: :media, data: { lato_cms_media_picker_target: 'uploadForm', action: 'submit->lato-cms-media-picker#upload' } do |form| %>
+          <div class="mb-3">
+            <%= form.label :file, class: 'form-label' %>
+            <%= form.file_field :file, class: 'form-control', required: true %>
+          </div>
+          <div class="mb-3">
+            <%= form.label :name, class: 'form-label' %>
+            <%= form.text_field :name, class: 'form-control' %>
+          </div>
+          <div class="mb-3">
+            <%= form.label :alt_text, t('lato_cms.media_alt_text'), class: 'form-label' %>
+            <%= form.text_field :alt_text, class: 'form-control' %>
+          </div>
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-success"><%= t('lato_cms.media_upload_cta') %></button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
