@@ -62,6 +62,24 @@ module LatoCms
       end
     end
 
+    # Synchronous (unlike the automatic post-upload job): an explicit admin
+    # action expects an immediate result, and it's a single LLM call.
+    def regenerate_alt_text_action
+      @media = query_media.find(params[:id])
+
+      respond_to do |format|
+        if @media.image? && LatoCms.config.llm_configured?
+          @media.generate_alt_text!
+          format.html { redirect_to lato_cms.media_update_path(@media), notice: t('lato_cms.media_alt_text_regenerated') }
+          format.json { render json: @media }
+        else
+          message = t('lato_cms.media_alt_text_regenerate_unavailable')
+          format.html { redirect_to lato_cms.media_update_path(@media), alert: message }
+          format.json { render json: { error: message }, status: :unprocessable_entity }
+        end
+      end
+    end
+
     def destroy_action
       @media = query_media.find(params[:id])
       in_use = @media.usage_count.positive?

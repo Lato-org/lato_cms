@@ -96,6 +96,10 @@ it:
     media_create_cta: Carica
     media_update_title: Modifica media
     media_alt_text: Testo alternativo
+    media_alt_text_regenerate: Rigenera con AI
+    media_alt_text_regenerate_confirm: "Il testo alternativo attuale in ogni lingua verrà sostituito con uno generato dall'AI. Continuare?"
+    media_alt_text_regenerated: Testo alternativo rigenerato
+    media_alt_text_regenerate_unavailable: Il testo alternativo può essere rigenerato solo per le immagini e solo se è configurato un LLM
     media_created: Media caricato con successo
     media_updated: Media aggiornato con successo
     media_deleted: Media eliminato con successo

@@ -288,6 +288,31 @@ image.alt_text_translations       # =&gt; { "en" =&gt; "A dog running on the bea
   gets the right language regardless of the server's current <code>I18n.locale</code>.
 </p>
 
+<h4>AI-generated alt text</h4>
+
+<p>
+  Configure an OpenAI-compatible endpoint to have alt text generated automatically:
+</p>
+
+<pre><code>LatoCms.configure do |config|
+  config.llm_api_url = "https://api.openai.com/v1"
+  config.llm_model = "gpt-4o-mini"
+  config.llm_api_key = Rails.application.credentials.dig(:openai, :api_key)
+end</code></pre>
+
+<p>
+  All three must be set for the feature to activate (it's off by default). Once configured, uploading a new
+  image queues a background job that sends it to the LLM and writes back an alt text translation for every
+  locale in <code>LatoCms.config.locales</code>, in one call. It only runs once, right after upload &mdash;
+  it never overwrites text an admin later edits by hand. Generation is best effort: any failure (LLM
+  unreachable, malformed response, ...) is logged and simply leaves the alt text as it was.
+</p>
+
+<p>
+  A <em>Regenerate with AI</em> button on the media edit form (shown only for images, and only when an LLM
+  is configured) re-runs generation on demand, overwriting the current text in every locale.
+</p>
+
 <h3 id="image-sizes">Image sizes</h3>
 
 <p>

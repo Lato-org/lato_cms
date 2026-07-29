@@ -35,6 +35,24 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Nuovo alt", media.alt_text(:it)
   end
 
+  test "regenerate_alt_text_action is unavailable without an LLM configured" do
+    media = create_media
+
+    post lato_cms.media_regenerate_alt_text_action_url(media), headers: { "Accept" => "application/json" }
+
+    assert_response :unprocessable_entity
+  end
+
+  test "regenerate_alt_text_action is unavailable for non-image media even with an LLM configured" do
+    with_llm_configured do
+      media = create_media(filename: "example_video.mp4", content_type: "video/mp4")
+
+      post lato_cms.media_regenerate_alt_text_action_url(media), headers: { "Accept" => "application/json" }
+
+      assert_response :unprocessable_entity
+    end
+  end
+
   test "picker_action filters by type and search query" do
     image = create_media(name: "Sunset photo")
     video = create_media(filename: "example_video.mp4", content_type: "video/mp4", name: "Intro video")
@@ -88,5 +106,16 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
       component_id: "all_fields_example",
       field_id: "example_image"
     )
+  end
+
+  def with_llm_configured
+    config = LatoCms.config
+    original = [config.llm_api_url, config.llm_model, config.llm_api_key]
+    config.llm_api_url = "https://api.example.com/v1"
+    config.llm_model = "gpt-4o-mini"
+    config.llm_api_key = "sk-test"
+    yield
+  ensure
+    config.llm_api_url, config.llm_model, config.llm_api_key = original
   end
 end

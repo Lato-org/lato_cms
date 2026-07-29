@@ -32,6 +32,7 @@ LatoCms::Engine.routes.draw do
     post 'create', to: 'media#create_action', as: :media_create_action
     get ':id/update', to: 'media#update', as: :media_update
     patch ':id/update', to: 'media#update_action', as: :media_update_action
+    post ':id/regenerate-alt-text', to: 'media#regenerate_alt_text_action', as: :media_regenerate_alt_text_action
     delete ':id', to: 'media#destroy_action', as: :media_destroy_action
   end
 end

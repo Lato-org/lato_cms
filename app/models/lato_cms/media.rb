@@ -1,3 +1,6 @@
+require 'net/http'
+require 'base64'
+
 module LatoCms
   class Media < ApplicationRecord
     attr_accessor :actions
@@ -30,6 +33,7 @@ module LatoCms
     before_validation :set_media_type, on: :create
 
     after_create_commit :enqueue_poster_generation, if: :video?
+    after_create_commit :enqueue_alt_text_generation, if: -> { image? && LatoCms.config.llm_configured? }
 
     scope :of_type, ->(type) { where(media_type: type) if type.present? }
 
@@ -130,6 +134,24 @@ module LatoCms
       Rails.logger.warn("LatoCms: failed to generate video poster for media #{id}: #{e.message}")
     end
 
+    # Best effort: asks the configured OpenAI-compatible LLM for alt text in
+    # every configured locale and merges it in (existing translations for
+    # locales the LLM didn't return, or that it's re-run for, are kept/
+    # replaced individually). Any failure is logged, the image keeps working
+    # without alt text. No-op unless an LLM is configured (see
+    # LatoCms::Config#llm_configured?) and this media is an image.
+    def generate_alt_text!
+      return unless image? && file.attached? && LatoCms.config.llm_configured?
+
+      translations = fetch_alt_text_translations
+      return if translations.blank?
+
+      self.alt_text_translations = alt_text_translations.merge(translations)
+      save!
+    rescue StandardError => e
+      Rails.logger.warn("LatoCms: failed to generate alt text for media #{id}: #{e.message}")
+    end
+
     # Fixed small variant used across admin UI (Media index, picker grid, field
     # preview) regardless of a field's own `settings.sizes` (used only by the
     # public API, see `variant_urls`).
@@ -198,6 +220,63 @@ module LatoCms
 
     def enqueue_poster_generation
       LatoCms::GenerateVideoPosterJob.perform_later(id)
+    end
+
+    def enqueue_alt_text_generation
+      LatoCms::GenerateAltTextJob.perform_later(id)
+    end
+
+    def fetch_alt_text_translations
+      locales = LatoCms.config.locales.map(&:to_s)
+      content = request_alt_text_completion(locales)
+      parse_alt_text_response(content, locales)
+    end
+
+    # Sends the image as a base64 data URI rather than a URL: the file may be
+    # stored on a service (or behind auth) the LLM can't reach, so this works
+    # regardless of storage backend or app visibility settings.
+    def request_alt_text_completion(locales)
+      uri = URI.join("#{LatoCms.config.llm_api_url.chomp('/')}/", 'chat/completions')
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = uri.scheme == 'https'
+      http.open_timeout = 10
+      http.read_timeout = 30
+
+      request = Net::HTTP::Post.new(uri)
+      request['Content-Type'] = 'application/json'
+      request['Authorization'] = "Bearer #{LatoCms.config.llm_api_key}"
+      request.body = {
+        model: LatoCms.config.llm_model,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: alt_text_prompt(locales) },
+            { type: 'image_url', image_url: { url: "data:#{file.content_type};base64,#{Base64.strict_encode64(file.download)}" } }
+          ]
+        }]
+      }.to_json
+
+      response = http.request(request)
+      raise "LLM request failed with status #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+
+      JSON.parse(response.body).dig('choices', 0, 'message', 'content')
+    end
+
+    def alt_text_prompt(locales)
+      "Write a concise, descriptive alt text for this image, for the HTML <img alt> attribute " \
+      "(accessibility use, not a caption). Respond with a single JSON object only, no markdown, " \
+      "no extra text, with exactly these keys: #{locales.join(', ')}. Each value is the alt text " \
+      "written in that language."
+    end
+
+    def parse_alt_text_response(content, locales)
+      return {} if content.blank?
+
+      parsed = JSON.parse(content[/\{.*\}/m] || content)
+      parsed.slice(*locales).transform_values(&:to_s)
+    rescue JSON::ParserError
+      {}
     end
   end
 end

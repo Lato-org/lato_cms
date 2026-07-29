@@ -96,6 +96,10 @@ en:
     media_create_cta: Upload
     media_update_title: Edit media
     media_alt_text: Alt text
+    media_alt_text_regenerate: Regenerate with AI
+    media_alt_text_regenerate_confirm: "This will overwrite the current alt text in every language with a new AI-generated one. Continue?"
+    media_alt_text_regenerated: Alt text regenerated
+    media_alt_text_regenerate_unavailable: Alt text can only be regenerated for images, and only when an LLM is configured
     media_created: Media uploaded successfully
     media_updated: Media updated successfully
     media_deleted: Media deleted successfully

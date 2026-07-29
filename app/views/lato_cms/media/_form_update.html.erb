@@ -17,7 +17,14 @@
 
     <% if media.image? %>
       <div class="mb-3">
-        <label class="form-label"><%= t('lato_cms.media_alt_text') %></label>
+        <div class="d-flex align-items-center justify-content-between">
+          <label class="form-label mb-0"><%= t('lato_cms.media_alt_text') %></label>
+          <% if LatoCms.config.llm_configured? %>
+            <%= link_to t('lato_cms.media_alt_text_regenerate'), lato_cms.media_regenerate_alt_text_action_path(media),
+              class: 'btn btn-sm btn-outline-secondary',
+              data: { turbo_method: :post, turbo_confirm: t('lato_cms.media_alt_text_regenerate_confirm') } %>
+          <% end %>
+        </div>
 
         <ul class="nav nav-tabs">
           <% LatoCms.config.locales.each_with_index do |locale, index| %>

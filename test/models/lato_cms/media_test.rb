@@ -96,6 +96,67 @@ module LatoCms
       refute media.poster_file.attached?
     end
 
+    test "generate_alt_text! is a no-op when no LLM is configured" do
+      media = build_media
+      media.save!
+
+      media.generate_alt_text!
+
+      assert_empty media.alt_text_translations
+    end
+
+    test "generate_alt_text! is a no-op for non-image media" do
+      with_llm_configured do
+        media = build_media(filename: "example_video.mp4", content_type: "video/mp4")
+        media.save!
+        called = false
+        media.define_singleton_method(:request_alt_text_completion) { |_locales| called = true; "{}" }
+
+        media.generate_alt_text!
+
+        refute called
+        assert_empty media.alt_text_translations
+      end
+    end
+
+    test "generate_alt_text! merges the per-locale translations returned by the LLM" do
+      with_llm_configured do
+        media = build_media
+        media.save!
+        media.define_singleton_method(:request_alt_text_completion) do |_locales|
+          { en: "A cat on a windowsill", it: "Un gatto sul davanzale" }.to_json
+        end
+
+        media.generate_alt_text!
+        media.reload
+
+        assert_equal "A cat on a windowsill", media.alt_text(:en)
+        assert_equal "Un gatto sul davanzale", media.alt_text(:it)
+      end
+    end
+
+    test "generate_alt_text! ignores malformed LLM output without raising" do
+      with_llm_configured do
+        media = build_media
+        media.save!
+        media.define_singleton_method(:request_alt_text_completion) { |_locales| "not json" }
+
+        assert_nothing_raised { media.generate_alt_text! }
+        assert_empty media.alt_text_translations
+      end
+    end
+
+    test "generate_alt_text! degrades gracefully when the LLM request fails" do
+      with_llm_configured do
+        media = build_media
+        media.save!
+        media.define_singleton_method(:request_alt_text_completion) { |_locales| raise "boom" }
+
+        assert_nothing_raised { media.generate_alt_text! }
+        assert_empty media.alt_text_translations
+      end
+    end
+
     private
 
     def build_media(name: nil, filename: "example_image.png", content_type: "image/png", attach: true)
@@ -106,6 +167,17 @@ module LatoCms
 
     def group
       @group ||= LatoSpaces::Group.create!(name: "Media test group")
+    end
+
+    def with_llm_configured
+      config = LatoCms.config
+      original = [config.llm_api_url, config.llm_model, config.llm_api_key]
+      config.llm_api_url = "https://api.example.com/v1"
+      config.llm_model = "gpt-4o-mini"
+      config.llm_api_key = "sk-test"
+      yield
+    ensure
+      config.llm_api_url, config.llm_model, config.llm_api_key = original
     end
 
     def build_field
