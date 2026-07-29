@@ -455,8 +455,21 @@ image_url = image&.url</code></pre>
 
 <p>
   When a page has linked translations, each component header shows a <em>Clone</em>
-  dropdown. Picking a language copies that component's field values (and media) from
-  the corresponding translation, replacing the current ones after confirmation.
+  dropdown. Picking a language copies that component's field values from the
+  corresponding translation, replacing the current ones after confirmation; attachment
+  fields keep referencing the same Media (not duplicated).
+</p>
+
+<p>
+  When an LLM is <a href="#media-library">configured</a>, the dropdown also offers
+  <em>Clone &amp; translate</em>: same copy, but every <code>string</code>/<code>textarea</code>/<code>text</code>
+  field is additionally translated into the target page's locale with one batched LLM call
+  (HTML in <code>text</code> fields is preserved, only the visible text is translated).
+  Everything else &mdash; select/multiselect/boolean/number/date/color/json/custom values, and
+  media (including its alt text) &mdash; is left exactly as a plain clone would leave it: media
+  alt text is translated independently by its own per-locale generation, not as part of
+  cloning a page. Best effort: if the LLM call fails, the fields are still cloned, just
+  untranslated, same as a plain clone.
 </p>
 
 <p>Read a page's translations in the application or from the JSON API:</p>

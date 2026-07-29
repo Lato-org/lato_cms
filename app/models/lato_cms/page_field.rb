@@ -7,6 +7,13 @@ module LatoCms
 
     ATTACHMENT_FIELD_TYPES = %w[file image video gallery].freeze
 
+    # Field types that hold free-form text, used to decide what a
+    # "clone & translate" (see PagesController#clone_component_fields) sends
+    # to the LLM. Everything else (select/multiselect options, booleans,
+    # numbers, dates, colors, json, custom) is either a fixed choice or
+    # structured data that translation would corrupt.
+    TRANSLATABLE_FIELD_TYPES = %w[string textarea text].freeze
+
     validates :template_id, presence: true
     validates :template_component_id, presence: true
     validates :component_id, presence: true

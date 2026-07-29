@@ -1,4 +1,3 @@
-require 'net/http'
 require 'base64'
 
 module LatoCms
@@ -236,31 +235,13 @@ module LatoCms
     # stored on a service (or behind auth) the LLM can't reach, so this works
     # regardless of storage backend or app visibility settings.
     def request_alt_text_completion(locales)
-      uri = URI.join("#{LatoCms.config.llm_api_url.chomp('/')}/", 'chat/completions')
-
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == 'https'
-      http.open_timeout = 10
-      http.read_timeout = 30
-
-      request = Net::HTTP::Post.new(uri)
-      request['Content-Type'] = 'application/json'
-      request['Authorization'] = "Bearer #{LatoCms.config.llm_api_key}"
-      request.body = {
-        model: LatoCms.config.llm_model,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'text', text: alt_text_prompt(locales) },
-            { type: 'image_url', image_url: { url: "data:#{file.content_type};base64,#{Base64.strict_encode64(file.download)}" } }
-          ]
-        }]
-      }.to_json
-
-      response = http.request(request)
-      raise "LLM request failed with status #{response.code}" unless response.is_a?(Net::HTTPSuccess)
-
-      JSON.parse(response.body).dig('choices', 0, 'message', 'content')
+      LatoCms::LlmClient.chat(messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: alt_text_prompt(locales) },
+          { type: 'image_url', image_url: { url: "data:#{file.content_type};base64,#{Base64.strict_encode64(file.download)}" } }
+        ]
+      }])
     end
 
     def alt_text_prompt(locales)

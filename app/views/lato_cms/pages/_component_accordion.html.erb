@@ -64,6 +64,15 @@
                       <%= locale_to_flag(sibling.locale) %> <%= t('lato_cms.component_clone_from', lang: sibling.locale.upcase) %>
                     <% end %>
                   </li>
+                  <% if LatoCms.config.llm_configured? %>
+                    <li>
+                      <%= button_to lato_cms.pages_clone_component_action_path(page, tc[:template_component_id]),
+                          params: { source_page_id: sibling.id, translate: true }, method: :post, class: 'dropdown-item',
+                          form: { data: { turbo_confirm: t('lato_cms.component_clone_translate_confirm', lang: sibling.locale.upcase) } } do %>
+                        <i class="bi bi-translate me-1"></i><%= locale_to_flag(sibling.locale) %> <%= t('lato_cms.component_clone_translate_from', lang: sibling.locale.upcase) %>
+                      <% end %>
+                    </li>
+                  <% end %>
                 <% end %>
               </ul>
             </div>

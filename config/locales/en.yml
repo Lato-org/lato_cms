@@ -74,6 +74,8 @@ en:
     component_clone_cta: Clone
     component_clone_from: "Clone from %{lang}"
     component_clone_confirm: "Replace this component's fields with the ones from the %{lang} page?"
+    component_clone_translate_from: "Clone & translate from %{lang}"
+    component_clone_translate_confirm: "Replace this component's fields with translated copies from the %{lang} page?"
     component_cloned: Component cloned successfully
     component_clone_failed: Failed to clone component
     component_state_saving: Updating...
