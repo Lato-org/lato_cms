@@ -223,19 +223,19 @@ fields:
       </tr>
       <tr>
         <td><code>file</code></td>
-        <td>Single file upload through Active Storage by default. Set <code>settings.multiple: true</code> to allow multiple files.</td>
+        <td>One or more files picked from the <a href="#media-library">media library</a>. Set <code>settings.multiple: true</code> to allow more than one.</td>
       </tr>
       <tr>
         <td><code>image</code></td>
-        <td>Single image upload through Active Storage. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
+        <td>Single image picked from the <a href="#media-library">media library</a>. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
       </tr>
       <tr>
         <td><code>video</code></td>
-        <td>Single video upload through Active Storage. Automatically generates a poster image (see <a href="#video-poster">Video poster</a>).</td>
+        <td>Single video picked from the <a href="#media-library">media library</a>. Its poster image is generated once per media item (see <a href="#video-poster">Video poster</a>).</td>
       </tr>
       <tr>
         <td><code>gallery</code></td>
-        <td>Multiple sortable image uploads through Active Storage. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
+        <td>Multiple sortable images picked from the <a href="#media-library">media library</a>. Optionally generates resized variants (see <a href="#image-sizes">Image sizes</a>).</td>
       </tr>
       <tr>
         <td><code>custom</code></td>
@@ -250,6 +250,24 @@ fields:
   (<code>file</code>, <code>image</code>, <code>video</code>, <code>gallery</code>) this means the
   field must keep at least one file: the editor blocks saving when the field would end up empty,
   and the server rejects the save with an error otherwise.
+</p>
+
+<h3 id="media-library">Media library</h3>
+
+<p>
+  <code>file</code>, <code>image</code>, <code>video</code>, and <code>gallery</code> fields don't upload
+  straight into the field: admins pick from a shared <em>Media library</em> (<em>Media</em> in the sidebar),
+  scoped to the current Lato Spaces group like pages. Each field opens a picker overlay to search the
+  existing library or drag &amp; drop a new file; the same media item can be reused across any number of
+  fields and pages.
+</p>
+
+<p>
+  A media item's <code>name</code> and alt text are edited from the library's own edit form, not from the
+  upload dialog &mdash; on upload, <code>name</code> defaults to the filename. Replacing the underlying file
+  of an existing media item isn't supported: uploading a different file always creates a new media item, so
+  that changing what a shared media item points to never silently changes it everywhere it's already in use.
+  Deleting a media item still referenced by a field is blocked until it's removed from every field using it.
 </p>
 
 <h3 id="image-sizes">Image sizes</h3>
@@ -299,10 +317,11 @@ fields:
 <h3 id="video-poster">Video poster</h3>
 
 <p>
-  After a <code>video</code> field is saved, a background job generates a poster image from the video
-  via Active Storage previews (requires <code>ffmpeg</code> on the server) and attaches it alongside the
-  video. Poster generation is best effort: when <code>ffmpeg</code> is unavailable or preview fails, the
-  save still succeeds and the video is exposed without a poster.
+  After a video is uploaded to the media library, a background job generates a poster image from it
+  via Active Storage previews (requires <code>ffmpeg</code> on the server) and attaches it to that media
+  item &mdash; once per media item, regardless of how many fields or pages reuse it. Poster generation is
+  best effort: when <code>ffmpeg</code> is unavailable or preview fails, the upload still succeeds and the
+  video is exposed without a poster.
 </p>
 
 <pre><code># config/lato_cms/components/hero.yml
@@ -378,7 +397,8 @@ fields:
 
 <pre><code>page = LatoCms::Page.find_by(permalink: "/homepage")
 title = page.fields.find_by(field_id: "title")&.parsed_value
-image = page.fields.find_by(field_id: "image")&.files&.first</code></pre>
+image = page.fields.find_by(field_id: "image")&.media&.first
+image_url = image&.url</code></pre>
 
 <h3>Page translations</h3>
 
@@ -392,8 +412,8 @@ image = page.fields.find_by(field_id: "image")&.files&.first</code></pre>
 
 <p>
   When a page has linked translations, each component header shows a <em>Clone</em>
-  dropdown. Picking a language copies that component's field values (and files) from
-  the corresponding translation, replacing the current ones after confirmation.</p>
+  dropdown. Picking a language copies that component's field values (and media) from
+  the corresponding translation, replacing the current ones after confirmation.
 </p>
 
 <p>Read a page's translations in the application or from the JSON API:</p>
