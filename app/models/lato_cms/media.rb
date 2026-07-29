@@ -8,6 +8,15 @@ module LatoCms
 
     MEDIA_TYPES = %w[image video document file].freeze
 
+    # alt_text is stored as a single JSON-serialized {locale => text} hash in
+    # the `alt_text` column (kept as one column rather than a translations
+    # table since it's the only translatable attribute Media has). `alt_text`
+    # itself is overridden below to read/write the current I18n.locale's
+    # entry; `alt_text_en`, `alt_text_it`, etc. (one per configured locale)
+    # are handled dynamically so forms can render/submit them like any other
+    # attribute without predefining a method per locale.
+    ALT_TEXT_ACCESSOR = /\Aalt_text_(?<locale>[a-z]{2}(?:_[A-Z]{2})?)(?<setter>=)?\z/
+
     has_one_attached :file
     has_one_attached :poster_file
 
@@ -59,6 +68,39 @@ module LatoCms
 
     def filename
       file.filename.to_s if file.attached?
+    end
+
+    def alt_text(locale = I18n.locale)
+      alt_text_translations[locale.to_s].presence
+    end
+
+    def alt_text=(value)
+      self.alt_text_translations = alt_text_translations.merge(I18n.locale.to_s => value)
+    end
+
+    def alt_text_translations
+      JSON.parse(self[:alt_text].presence || '{}')
+    rescue JSON::ParserError
+      {}
+    end
+
+    def alt_text_translations=(hash)
+      self[:alt_text] = hash.stringify_keys.to_json
+    end
+
+    def method_missing(name, *args)
+      match = ALT_TEXT_ACCESSOR.match(name.to_s)
+      return super unless match
+
+      if match[:setter]
+        self.alt_text_translations = alt_text_translations.merge(match[:locale] => args.first)
+      else
+        alt_text_translations[match[:locale]].presence
+      end
+    end
+
+    def respond_to_missing?(name, include_private = false)
+      ALT_TEXT_ACCESSOR.match?(name.to_s) || super
     end
 
     def url
@@ -126,6 +168,7 @@ module LatoCms
         id: id,
         name: name,
         alt_text: alt_text,
+        alt_text_translations: alt_text_translations,
         media_type: media_type,
         filename: filename,
         content_type: file.attached? ? file.content_type : nil,

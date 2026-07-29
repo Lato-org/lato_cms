@@ -21,17 +21,18 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "image", body["media_type"]
   end
 
-  test "update_action edits name and alt_text but not the file" do
+  test "update_action edits name and per-locale alt_text but not the file" do
     media = create_media
 
     patch lato_cms.media_update_action_url(media),
-      params: { media: { name: "New name", alt_text: "New alt" } },
+      params: { media: { name: "New name", alt_text_en: "New alt", alt_text_it: "Nuovo alt" } },
       headers: { "Accept" => "application/json" }
 
     assert_response :success
     media.reload
     assert_equal "New name", media.name
-    assert_equal "New alt", media.alt_text
+    assert_equal "New alt", media.alt_text(:en)
+    assert_equal "Nuovo alt", media.alt_text(:it)
   end
 
   test "picker_action filters by type and search query" do

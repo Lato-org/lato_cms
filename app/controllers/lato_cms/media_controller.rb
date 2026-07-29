@@ -90,7 +90,8 @@ module LatoCms
     # many pages, so replacing it in place would silently change what renders
     # everywhere it's referenced). A different file means a new Media.
     def update_params
-      params.require(:media).permit(:name, :alt_text)
+      alt_text_keys = LatoCms.config.locales.map { |locale| :"alt_text_#{locale}" }
+      params.require(:media).permit(:name, *alt_text_keys)
     end
   end
 end

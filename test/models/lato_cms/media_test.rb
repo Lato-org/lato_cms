@@ -63,6 +63,30 @@ module LatoCms
       refute media.poster_file.attached?
     end
 
+    test "alt_text is stored per locale and does not leak across locales" do
+      media = build_media
+      media.save!
+
+      media.alt_text_en = "A dog running"
+      media.alt_text_it = "Un cane che corre"
+      media.save!
+      media.reload
+
+      assert_equal "A dog running", media.alt_text(:en)
+      assert_equal "Un cane che corre", media.alt_text(:it)
+      assert_nil media.alt_text(:fr)
+    end
+
+    test "alt_text without an explicit locale defaults to I18n.locale" do
+      media = build_media
+      media.save!
+
+      I18n.with_locale(:it) { media.alt_text = "Un cane che corre" }
+
+      assert_equal "Un cane che corre", media.alt_text(:it)
+      assert_nil media.alt_text(:en)
+    end
+
     test "generate_video_poster! degrades gracefully when preview unavailable" do
       media = build_media(filename: "example_video.mp4", content_type: "video/mp4")
       media.save!
