@@ -90,13 +90,11 @@ it:
     fields_component_missing_alert_html: "Componente <strong>%{component_id}</strong> non trovato. La configurazione del componente potrebbe essere stata rimossa."
     fields_previously_saved_data: "Dati salvati in precedenza:"
     field_file_remove: Rimuovi
-    field_media_empty: Nessun file selezionato.
     field_multiselect_hint: Tieni premuto Ctrl/Cmd per selezionare piu opzioni
     media_index_title: Media
     media_create_title: Carica media
     media_create_cta: Carica
     media_update_title: Modifica media
-    media_name_hint: Se vuoto, viene usato il nome del file.
     media_alt_text: Testo alternativo
     media_created: Media caricato con successo
     media_updated: Media aggiornato con successo

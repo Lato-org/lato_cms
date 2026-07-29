@@ -1,5 +1,7 @@
 module LatoCms
   class Media < ApplicationRecord
+    attr_accessor :actions
+
     include LatoSpaces::Associable
     include LatoSpaces::AssociableRequired
     include LatoSpaces::AssociableUnique

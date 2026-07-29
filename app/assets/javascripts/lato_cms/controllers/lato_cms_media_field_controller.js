@@ -7,7 +7,7 @@ import { Controller } from '@hotwired/stimulus'
 // which writes the selection back here via a `lato-cms:media-selected`
 // event correlated by this field's own turbo-frame id.
 export default class extends Controller {
-  static targets = ['grid', 'emptyMsg', 'validationAnchor']
+  static targets = ['grid', 'addTile', 'validationAnchor']
   static values = { kind: String, multiple: Boolean, frameId: String, hiddenName: String, fieldId: String }
 
   connect () {
@@ -59,12 +59,10 @@ export default class extends Controller {
   onMediaSelected (event) {
     if (event.detail.frameId !== this.frameIdValue) return
 
-    if (this.multipleValue) {
-      event.detail.items.forEach(item => this.appendItem(item))
-    } else {
-      this.gridTarget.innerHTML = ''
-      this.appendItem(event.detail.items[0])
+    if (!this.multipleValue) {
+      this.itemTiles().forEach(tile => tile.remove())
     }
+    event.detail.items.forEach(item => this.appendItem(item))
 
     this.syncEmptyAndValidation()
   }
@@ -82,7 +80,7 @@ export default class extends Controller {
     )
     if (!field) return
 
-    this.gridTarget.innerHTML = ''
+    this.itemTiles().forEach(tile => tile.remove())
     field.attachments.forEach(attachment => this.appendItem({
       id: attachment.media_id,
       name: attachment.name,
@@ -97,7 +95,7 @@ export default class extends Controller {
     if (!item || this.gridTarget.querySelector(`[data-media-id="${item.id}"]`)) return
 
     const wrapper = document.createElement('div')
-    wrapper.className = 'lato-cms-media-field__item'
+    wrapper.className = 'lato-cms-media-field__tile lato-cms-media-field__item'
     wrapper.dataset.mediaId = item.id
     if (this.multipleValue) {
       wrapper.draggable = true
@@ -106,31 +104,37 @@ export default class extends Controller {
     }
 
     wrapper.innerHTML = `
-      <div class="lato-cms-media-field__preview">${this.previewMarkup(item)}</div>
-      <div class="lato-cms-file-field__info"><span>${item.name}</span></div>
-      <input type="hidden" name="${this.hiddenNameValue}" value="${item.id}">
-      <button type="button" class="lato-cms-attachment-field__remove" data-action="lato-cms-media-field#remove">
-        <i class="bi bi-trash"></i>
-      </button>`
+      ${this.previewMarkup(item)}
+      <div class="lato-cms-media-field__overlay">
+        <span class="lato-cms-media-field__name">${item.name}</span>
+      </div>
+      <button type="button" class="lato-cms-media-field__remove" data-action="lato-cms-media-field#remove">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <input type="hidden" name="${this.hiddenNameValue}" value="${item.id}">`
 
-    this.gridTarget.appendChild(wrapper)
+    this.gridTarget.insertBefore(wrapper, this.addTileTarget)
   }
 
   previewMarkup (item) {
     if (this.kindValue === 'video') {
-      const poster = item.posterUrl ? ` poster="${item.posterUrl}"` : ''
-      return `<video controls preload="metadata" class="lato-cms-media-field__player" src="${item.url}"${poster}></video>`
+      return `<video muted preload="metadata" class="lato-cms-media-field__player" src="${item.url}"></video>
+        <i class="bi bi-play-circle-fill lato-cms-media-field__badge"></i>`
     }
     if (item.thumbnailUrl || item.url) {
       return `<img src="${item.thumbnailUrl || item.url}" class="lato-cms-media-field__thumb">`
     }
-    return '<i class="bi bi-paperclip fs-3"></i>'
+    return '<div class="lato-cms-media-field__icon"><i class="bi bi-paperclip"></i></div>'
+  }
+
+  itemTiles () {
+    return Array.from(this.gridTarget.querySelectorAll('.lato-cms-media-field__item'))
   }
 
   syncEmptyAndValidation () {
-    const hasItems = this.gridTarget.children.length > 0
+    const hasItems = this.itemTiles().length > 0
 
-    if (this.hasEmptyMsgTarget) this.emptyMsgTarget.classList.toggle('d-none', hasItems)
+    if (!this.multipleValue) this.addTileTarget.classList.toggle('d-none', hasItems)
     if (this.hasValidationAnchorTarget) {
       this.validationAnchorTarget.value = hasItems ? '1' : ''
       this.validationAnchorTarget.required = this.element.dataset.fieldRequired === 'true' && !hasItems

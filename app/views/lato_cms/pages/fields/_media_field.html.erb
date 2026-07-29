@@ -30,11 +30,28 @@
     <% current_media.each do |m| %>
       <%= render partial: 'lato_cms/pages/fields/media_item', locals: { media: m, kind: kind, hidden_name: hidden_name, multiple: multiple } %>
     <% end %>
-  </div>
 
-  <% if current_media.empty? %>
-    <p class="text-muted small mb-2" data-lato-cms-media-field-target="emptyMsg"><%= t('lato_cms.field_media_empty') %></p>
-  <% end %>
+    <%# The empty state AND the "add more" affordance for multi-value fields —
+        a single dashed tile living inside the grid, hidden (not removed) for
+        single-value fields once something is selected, so the field-side JS
+        only ever has to toggle a class rather than rebuild this node. %>
+    <%# Deliberately NOT using the shared `lato-action` trigger convention here:
+        it opens frames by hoping Turbo's own click handling notices a
+        just-inserted <turbo-frame> before driving a full-page visit, which
+        loses that race for this link. `openPicker` below prevents the
+        default navigation itself and sets the frame's `src` explicitly
+        (Turbo's documented, non-racy way to trigger a frame-scoped fetch). %>
+    <%= link_to lato_cms.media_picker_action_path(frame_id: frame_id, multiple: multiple, type: picker_type),
+          class: "lato-cms-media-field__tile lato-cms-media-field__tile--add#{' d-none' if !multiple && current_media.any?}",
+          data: {
+            lato_cms_media_field_target: 'addTile',
+            action: 'click->lato-cms-media-field#openPicker',
+            action_title: t('lato_cms.media_picker_title'), action_size: 'lg'
+          } do %>
+      <i class="bi bi-images"></i>
+      <span><%= t('lato_cms.media_choose_from_library') %></span>
+    <% end %>
+  </div>
 
   <%# Real-but-hidden input anchors the browser's native required-validation
       bubble (a display:none required input fails silently as "not
@@ -42,18 +59,4 @@
   <input type="text" class="visually-hidden" value="<%= current_media.first&.id %>"
     data-lato-cms-media-field-target="validationAnchor"
     <%= 'required' if required && current_media.empty? %>>
-
-  <%# Deliberately NOT using the shared `lato-action` trigger convention here:
-      it opens frames by hoping Turbo's own click handling notices a
-      just-inserted <turbo-frame> before driving a full-page visit, which
-      loses that race for this link. `openPicker` below prevents the
-      default navigation itself and sets the frame's `src` explicitly
-      (Turbo's documented, non-racy way to trigger a frame-scoped fetch). %>
-  <%= link_to lato_cms.media_picker_action_path(frame_id: frame_id, multiple: multiple, type: picker_type),
-        class: 'btn btn-sm btn-outline-secondary', data: {
-          action: 'click->lato-cms-media-field#openPicker',
-          action_title: t('lato_cms.media_picker_title'), action_size: 'lg'
-        } do %>
-    <i class="bi bi-images me-1"></i><%= t('lato_cms.media_choose_from_library') %>
-  <% end %>
 </div>

@@ -38,7 +38,10 @@
         <% end %>
 
         <% if @media.empty? %>
-          <p class="text-muted"><%= t('lato_cms.media_picker_empty') %></p>
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-images fs-1 d-block mb-2"></i>
+            <%= t('lato_cms.media_picker_empty') %>
+          </div>
         <% else %>
           <div class="lato-cms-media-picker__grid mb-3" data-lato-cms-media-picker-target="grid">
             <% @media.each do |media| %>
@@ -72,19 +75,19 @@
 
       <div class="tab-pane fade" id="lato-cms-media-picker-upload">
         <div data-lato-cms-media-picker-target="uploadNotice"></div>
-        <%= form_with url: lato_cms.media_create_action_path, scope: :media, data: { lato_cms_media_picker_target: 'uploadForm', action: 'submit->lato-cms-media-picker#upload' } do |form| %>
-          <div class="mb-3">
-            <%= form.label :file, class: 'form-label' %>
-            <%= form.file_field :file, class: 'form-control', required: true %>
-          </div>
-          <div class="mb-3">
-            <%= form.label :name, class: 'form-label' %>
-            <%= form.text_field :name, class: 'form-control' %>
-          </div>
-          <div class="mb-3">
-            <%= form.label :alt_text, t('lato_cms.media_alt_text'), class: 'form-label' %>
-            <%= form.text_field :alt_text, class: 'form-control' %>
-          </div>
+        <%# Name/alt text are intentionally not collected here: they default
+            to the filename on upload and are only ever edited afterwards
+            from the Media library's own edit form.
+            `model:` (not `scope: :media`) so the form binds to a real new
+            record — `scope:` alone falls back to the controller's `@media`
+            (the browse tab's paginated collection), and an
+            ActiveRecord::Relation delegates an unrecognized `#name` call to
+            its model class, silently pre-filling a `:name` field with the
+            literal string "LatoCms::Media" (bit us once already here). %>
+        <%= form_with model: LatoCms::Media.new, url: lato_cms.media_create_action_path, data: {
+          lato_cms_media_picker_target: 'uploadForm', action: 'submit->lato-cms-media-picker#upload'
+        } do |form| %>
+          <%= lato_form_item_input_file_dropzone form, :file, accept: { 'image' => 'image/*', 'video' => 'video/*' }[params[:type]] %>
           <div class="d-flex justify-content-end">
             <button type="submit" class="btn btn-success"><%= t('lato_cms.media_upload_cta') %></button>
           </div>
