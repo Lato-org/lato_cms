@@ -15,28 +15,30 @@
       <%= lato_form_item_input_text form, :name, required: true %>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label"><%= t('lato_cms.media_alt_text') %></label>
+    <% if media.image? %>
+      <div class="mb-3">
+        <label class="form-label"><%= t('lato_cms.media_alt_text') %></label>
 
-      <ul class="nav nav-tabs">
-        <% LatoCms.config.locales.each_with_index do |locale, index| %>
-          <li class="nav-item">
-            <button class="nav-link <%= 'active' if index.zero? %>" data-bs-toggle="tab"
-              data-bs-target="#<%= dom_id(media, "alt_text_#{locale}_pane") %>" type="button">
-              <%= locale_to_flag(locale) %> <%= locale.to_s.upcase %>
-            </button>
-          </li>
-        <% end %>
-      </ul>
+        <ul class="nav nav-tabs">
+          <% LatoCms.config.locales.each_with_index do |locale, index| %>
+            <li class="nav-item">
+              <button class="nav-link <%= 'active' if index.zero? %>" data-bs-toggle="tab"
+                data-bs-target="#<%= dom_id(media, "alt_text_#{locale}_pane") %>" type="button">
+                <%= locale_to_flag(locale) %> <%= locale.to_s.upcase %>
+              </button>
+            </li>
+          <% end %>
+        </ul>
 
-      <div class="tab-content border border-top-0 rounded-bottom p-3">
-        <% LatoCms.config.locales.each_with_index do |locale, index| %>
-          <div class="tab-pane fade <%= 'show active' if index.zero? %>" id="<%= dom_id(media, "alt_text_#{locale}_pane") %>">
-            <%= lato_form_item_input_text form, :"alt_text_#{locale}" %>
-          </div>
-        <% end %>
+        <div class="tab-content border border-top-0 rounded-bottom p-3">
+          <% LatoCms.config.locales.each_with_index do |locale, index| %>
+            <div class="tab-pane fade <%= 'show active' if index.zero? %>" id="<%= dom_id(media, "alt_text_#{locale}_pane") %>">
+              <%= lato_form_item_input_text form, :"alt_text_#{locale}" %>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
+    <% end %>
 
     <div class="d-flex justify-content-end">
       <%= lato_form_submit form, t('lato_cms.cta_update'), class: %w[btn-success] %>

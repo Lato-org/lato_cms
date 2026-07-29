@@ -270,6 +270,24 @@ fields:
   Deleting a media item still referenced by a field is blocked until it's removed from every field using it.
 </p>
 
+<p>
+  Alt text is translatable: it's only shown for image media, and the edit form has one tab per locale
+  configured in <code>LatoCms.config.locales</code>. Each locale's text is independent &mdash; leaving one
+  blank doesn't affect the others.
+</p>
+
+<pre><code>image = LatoCms::Media.find(12)
+image.alt_text(:en)              # =&gt; "A dog running on the beach"
+image.alt_text(:it)               # =&gt; nil, if the Italian tab was left blank
+image.alt_text_translations       # =&gt; { "en" =&gt; "A dog running on the beach" }</code></pre>
+
+<p>
+  <code>image.alt_text</code> without an explicit locale resolves against <code>I18n.locale</code>. When a
+  media item is read off a page's field (<code>page_field.attachments</code> in the JSON API), its alt text
+  resolves against that <strong>page's own locale</strong> instead, so a multi-locale API response always
+  gets the right language regardless of the server's current <code>I18n.locale</code>.
+</p>
+
 <h3 id="image-sizes">Image sizes</h3>
 
 <p>
