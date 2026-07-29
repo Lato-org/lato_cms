@@ -36,11 +36,13 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "regenerate_alt_text_action is unavailable without an LLM configured" do
-    media = create_media
+    with_llm_unconfigured do
+      media = create_media
 
-    post lato_cms.media_regenerate_alt_text_action_url(media), headers: { "Accept" => "application/json" }
+      post lato_cms.media_regenerate_alt_text_action_url(media), headers: { "Accept" => "application/json" }
 
-    assert_response :unprocessable_entity
+      assert_response :unprocessable_entity
+    end
   end
 
   test "regenerate_alt_text_action is unavailable for non-image media even with an LLM configured" do
@@ -50,6 +52,20 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
       post lato_cms.media_regenerate_alt_text_action_url(media), headers: { "Accept" => "application/json" }
 
       assert_response :unprocessable_entity
+    end
+  end
+
+  test "regenerate_alt_text_action starts a Lato::Operation instead of running inline" do
+    with_llm_configured do
+      media = create_media
+
+      assert_difference -> { Lato::Operation.count }, 1 do
+        post lato_cms.media_regenerate_alt_text_action_url(media)
+      end
+
+      operation = Lato::Operation.last
+      assert_equal "LatoCms::GenerateAltTextJob", operation.active_job_name
+      assert_redirected_to lato.operation_path(operation)
     end
   end
 
@@ -114,6 +130,19 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     config.llm_api_url = "https://api.example.com/v1"
     config.llm_model = "gpt-4o-mini"
     config.llm_api_key = "sk-test"
+    yield
+  ensure
+    config.llm_api_url, config.llm_model, config.llm_api_key = original
+  end
+
+  # Explicitly clears LLM config for the duration of the block, rather than
+  # assuming it's already unconfigured: the host app's own initializer may
+  # set real credentials (e.g. for manual/local testing), which would
+  # otherwise make "not configured" tests flaky and fire real API calls.
+  def with_llm_unconfigured
+    config = LatoCms.config
+    original = [config.llm_api_url, config.llm_model, config.llm_api_key]
+    config.llm_api_url = config.llm_model = config.llm_api_key = nil
     yield
   ensure
     config.llm_api_url, config.llm_model, config.llm_api_key = original

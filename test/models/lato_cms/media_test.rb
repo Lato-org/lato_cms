@@ -97,12 +97,14 @@ module LatoCms
     end
 
     test "generate_alt_text! is a no-op when no LLM is configured" do
-      media = build_media
-      media.save!
+      with_llm_unconfigured do
+        media = build_media
+        media.save!
 
-      media.generate_alt_text!
+        media.generate_alt_text!
 
-      assert_empty media.alt_text_translations
+        assert_empty media.alt_text_translations
+      end
     end
 
     test "generate_alt_text! is a no-op for non-image media" do
@@ -157,6 +159,16 @@ module LatoCms
       end
     end
 
+    test "generate_alt_text! re-raises when raise_on_error is true, for the Operation-driven manual regenerate" do
+      with_llm_configured do
+        media = build_media
+        media.save!
+        media.define_singleton_method(:request_alt_text_completion) { |_locales| raise "boom" }
+
+        assert_raises(RuntimeError) { media.generate_alt_text!(raise_on_error: true) }
+      end
+    end
+
     private
 
     def build_media(name: nil, filename: "example_image.png", content_type: "image/png", attach: true)
@@ -175,6 +187,19 @@ module LatoCms
       config.llm_api_url = "https://api.example.com/v1"
       config.llm_model = "gpt-4o-mini"
       config.llm_api_key = "sk-test"
+      yield
+    ensure
+      config.llm_api_url, config.llm_model, config.llm_api_key = original
+    end
+
+    # Explicitly clears LLM config for the duration of the block, rather than
+    # assuming it's already unconfigured: the host app's own initializer may
+    # set real credentials (e.g. for manual/local testing), which would
+    # otherwise make "not configured" tests flaky and fire real API calls.
+    def with_llm_unconfigured
+      config = LatoCms.config
+      original = [config.llm_api_url, config.llm_model, config.llm_api_key]
+      config.llm_api_url = config.llm_model = config.llm_api_key = nil
       yield
     ensure
       config.llm_api_url, config.llm_model, config.llm_api_key = original

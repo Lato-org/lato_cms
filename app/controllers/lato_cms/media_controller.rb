@@ -62,21 +62,27 @@ module LatoCms
       end
     end
 
-    # Synchronous (unlike the automatic post-upload job): an explicit admin
-    # action expects an immediate result, and it's a single LLM call.
+    # Runs as a Lato::Operation (see GenerateAltTextJob) rather than inline:
+    # an LLM call can take a while, and blocking the request risks timing it
+    # out. The admin instead lands on a live progress page.
     def regenerate_alt_text_action
       @media = query_media.find(params[:id])
 
-      respond_to do |format|
-        if @media.image? && LatoCms.config.llm_configured?
-          @media.generate_alt_text!
-          format.html { redirect_to lato_cms.media_update_path(@media), notice: t('lato_cms.media_alt_text_regenerated') }
-          format.json { render json: @media }
-        else
+      unless @media.image? && LatoCms.config.llm_configured?
+        respond_to do |format|
           message = t('lato_cms.media_alt_text_regenerate_unavailable')
           format.html { redirect_to lato_cms.media_update_path(@media), alert: message }
           format.json { render json: { error: message }, status: :unprocessable_entity }
         end
+        return
+      end
+
+      operation = Lato::Operation.generate('LatoCms::GenerateAltTextJob', { media_id: @media.id }, @session.user_id)
+
+      if operation.start
+        redirect_to lato.operation_path(operation)
+      else
+        redirect_to lato_cms.media_update_path(@media), alert: t('lato_cms.media_alt_text_regenerate_failed')
       end
     end
 

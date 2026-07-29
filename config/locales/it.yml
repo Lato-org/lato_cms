@@ -78,6 +78,8 @@ it:
     component_clone_translate_confirm: "Sostituire i campi di questa componente con copie tradotte dalla pagina in %{lang}?"
     component_cloned: Componente clonata con successo
     component_clone_failed: Impossibile clonare la componente
+    component_clone_translate_failed: I campi sono stati clonati, ma non è stato possibile avviare la traduzione
+    component_clone_translated: Campi tradotti con successo
     component_state_saving: Aggiornamento in corso...
     component_state_saved: Stato aggiornato
     component_state_save_error: Errore durante aggiornamento stato
@@ -102,6 +104,7 @@ it:
     media_alt_text_regenerate_confirm: "Il testo alternativo attuale in ogni lingua verrà sostituito con uno generato dall'AI. Continuare?"
     media_alt_text_regenerated: Testo alternativo rigenerato
     media_alt_text_regenerate_unavailable: Il testo alternativo può essere rigenerato solo per le immagini e solo se è configurato un LLM
+    media_alt_text_regenerate_failed: Impossibile avviare la rigenerazione del testo alternativo
     media_created: Media caricato con successo
     media_updated: Media aggiornato con successo
     media_deleted: Media eliminato con successo

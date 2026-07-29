@@ -310,7 +310,10 @@ end</code></pre>
 
 <p>
   A <em>Regenerate with AI</em> button on the media edit form (shown only for images, and only when an LLM
-  is configured) re-runs generation on demand, overwriting the current text in every locale.
+  is configured) re-runs generation on demand, overwriting the current text in every locale. Unlike the
+  automatic post-upload run, this one is triggered by an admin waiting on it, so it runs as a
+  <code>Lato::Operation</code> instead: the admin is taken to a live progress screen rather than the request
+  blocking (and potentially timing out) on the LLM call.
 </p>
 
 <h3 id="image-sizes">Image sizes</h3>
@@ -468,8 +471,15 @@ image_url = image&.url</code></pre>
   Everything else &mdash; select/multiselect/boolean/number/date/color/json/custom values, and
   media (including its alt text) &mdash; is left exactly as a plain clone would leave it: media
   alt text is translated independently by its own per-locale generation, not as part of
-  cloning a page. Best effort: if the LLM call fails, the fields are still cloned, just
-  untranslated, same as a plain clone.
+  cloning a page.
+</p>
+
+<p>
+  The clone itself is instant, as always. Only the translation step &mdash; the actual LLM call &mdash; runs as
+  a <code>Lato::Operation</code> (see the <a href="#media-library">alt text</a> section above), landing the
+  admin on a live progress screen instead of blocking the request. If the LLM call fails, the operation
+  reports the failure, but the fields are still cloned (just untranslated) since that part already
+  committed synchronously before the translation step ever started.
 </p>
 
 <p>Read a page's translations in the application or from the JSON API:</p>

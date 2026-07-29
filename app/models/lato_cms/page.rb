@@ -77,6 +77,46 @@ module LatoCms
       true
     end
 
+    # Translates a component's free-text fields (see
+    # LatoCms::PageField::TRANSLATABLE_FIELD_TYPES) into this page's own
+    # locale via the configured LLM, in one batched call, overwriting their
+    # values in place. Used by PagesController#clone_component_action's
+    # "Clone & translate" option, as the async half run via
+    # LatoCms::TranslateComponentFieldsJob (a Lato::Operation): the fields
+    # themselves are already cloned by the time this runs, synchronously,
+    # so a failure here never loses the clone, only the translation. Raises
+    # on failure (LLM unreachable, malformed/short response) rather than
+    # swallowing it, since the admin is watching the operation's progress
+    # and a silent no-op would misreport success.
+    def translate_component_fields!(template_component_id)
+      targets = fields.where(template_component_id: template_component_id).reject(&:repeater_order?)
+        .select { |f| LatoCms::PageField::TRANSLATABLE_FIELD_TYPES.include?(f.field_type) && f.value.present? }
+      return if targets.empty?
+
+      content = LatoCms::LlmClient.chat(messages: [{ role: 'user', content: self.class.translate_fields_prompt(targets, locale) }])
+      translated = self.class.parse_translated_field_values(content, targets.size)
+      raise "The LLM response couldn't be parsed into #{targets.size} translated value(s)" if translated.blank?
+
+      targets.each_with_index { |field, index| field.update_column(:value, translated[index]) if translated[index].present? }
+    end
+
+    def self.translate_fields_prompt(fields, target_locale)
+      "Translate each string in this JSON array into #{target_locale} (language code). Preserve any HTML " \
+      "tags exactly as-is, translate only the visible text. Respond with a JSON array of the same length " \
+      "and in the same order, translated strings only, no markdown, no explanation.\n\n#{fields.map(&:value).to_json}"
+    end
+
+    def self.parse_translated_field_values(content, expected_count)
+      return [] if content.blank?
+
+      parsed = JSON.parse(content[/\[.*\]/m] || content)
+      return [] unless parsed.is_a?(Array) && parsed.size == expected_count
+
+      parsed.map(&:to_s)
+    rescue JSON::ParserError
+      []
+    end
+
     def template
       LatoCms::TemplateManager.find_template(template_id)
     end

@@ -1,7 +1,7 @@
 <% media ||= LatoCms::Media.new %>
 
 <%= turbo_frame_tag dom_id(media, 'form') do %>
-  <%= form_with model: media, url: lato_cms.media_update_action_path(media), method: :patch, data: { turbo_frame: '_self', controller: 'lato-form' } do |form| %>
+  <%= form_with model: media, url: lato_cms.media_update_action_path(media), method: :patch, data: { turbo_frame: '_self', controller: 'lato-form lato-cms-reload-on-modal-close' } do |form| %>
     <%= lato_form_notices class: %w[mb-3] %>
     <%= lato_form_errors media, class: %w[mb-3] %>
 
@@ -22,7 +22,13 @@
           <% if LatoCms.config.llm_configured? %>
             <%= link_to t('lato_cms.media_alt_text_regenerate'), lato_cms.media_regenerate_alt_text_action_path(media),
               class: 'btn btn-sm btn-outline-secondary',
-              data: { turbo_method: :post, turbo_confirm: t('lato_cms.media_alt_text_regenerate_confirm') } %>
+              data: {
+                lato_action_target: 'trigger',
+                turbo_method: :post,
+                turbo_frame: 'lato_operation',
+                turbo_confirm: t('lato_cms.media_alt_text_regenerate_confirm'),
+                action_title: t('lato_cms.media_alt_text_regenerate')
+              } %>
           <% end %>
         </div>
 

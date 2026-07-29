@@ -78,6 +78,8 @@ en:
     component_clone_translate_confirm: "Replace this component's fields with translated copies from the %{lang} page?"
     component_cloned: Component cloned successfully
     component_clone_failed: Failed to clone component
+    component_clone_translate_failed: Fields were cloned, but failed to start translation
+    component_clone_translated: Fields translated successfully
     component_state_saving: Updating...
     component_state_saved: State updated
     component_state_save_error: Failed to update state
@@ -102,6 +104,7 @@ en:
     media_alt_text_regenerate_confirm: "This will overwrite the current alt text in every language with a new AI-generated one. Continue?"
     media_alt_text_regenerated: Alt text regenerated
     media_alt_text_regenerate_unavailable: Alt text can only be regenerated for images, and only when an LLM is configured
+    media_alt_text_regenerate_failed: Failed to start alt text regeneration
     media_created: Media uploaded successfully
     media_updated: Media updated successfully
     media_deleted: Media deleted successfully

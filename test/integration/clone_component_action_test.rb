@@ -1,6 +1,8 @@
 require "test_helper"
 
 class CloneComponentActionTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   def setup
     @user = lato_users(:user)
     @group = LatoSpaces::Group.create!(name: "Clone component group")
@@ -25,6 +27,34 @@ class CloneComponentActionTest < ActionDispatch::IntegrationTest
     assert_equal source_field.value, target_field("example_string").value
   end
 
+  test "translate: true clones synchronously and translates via a Lato::Operation" do
+    build_field(@source, field_id: "example_string", value: "Hello")
+    build_field(@source, field_id: "example_textarea", value: "Hello there")
+    build_field(@source, field_id: "example_select", value: "option_2")
+
+    with_llm_configured do
+      stub_llm_chat('["Ciao", "Ciao a te"]') do
+        assert_difference -> { Lato::Operation.count }, 1 do
+          perform_enqueued_jobs do
+            post lato_cms.pages_clone_component_action_url(@target, "all_fields"),
+              params: { source_page_id: @source.id, translate: true }
+          end
+        end
+      end
+    end
+
+    operation = Lato::Operation.last
+    assert_equal "LatoCms::TranslateComponentFieldsJob", operation.active_job_name
+    assert_redirected_to lato.operation_path(operation)
+    assert operation.completed_status?
+
+    # The clone itself already happened synchronously, before the operation
+    # even existed — translation only overwrites the free-text fields.
+    assert_equal "Ciao", target_field("example_string").value
+    assert_equal "Ciao a te", target_field("example_textarea").value
+    assert_equal "option_2", target_field("example_select").value # untouched: not free text
+  end
+
   test "keeps referencing the same shared Media without touching its alt text" do
     media = LatoCms::Media.new(name: "Photo", lato_spaces_group_id: @group.id)
     media.file.attach(io: file_fixture("example_image.png").open, filename: "example_image.png", content_type: "image/png")
@@ -35,61 +65,44 @@ class CloneComponentActionTest < ActionDispatch::IntegrationTest
     field.replace_media!([media.id])
 
     with_llm_configured do
-      stub_llm_chat('["Translated"]') do
+      perform_enqueued_jobs do
         post lato_cms.pages_clone_component_action_url(@target, "all_fields"),
-          params: { source_page_id: @source.id, translate: true },
-          headers: { "Accept" => "application/json" }
+          params: { source_page_id: @source.id, translate: true }
       end
     end
 
-    assert_response :success
     assert_equal [media.id], target_field("example_image").media.reload.pluck(:id)
     assert_equal "A photo", media.reload.alt_text(:en)
   end
 
-  test "with translate: true, translates only free-text fields and leaves the rest verbatim" do
-    build_field(@source, field_id: "example_string", value: "Hello")
-    build_field(@source, field_id: "example_textarea", value: "Hello there")
-    build_field(@source, field_id: "example_select", value: "option_2")
-
-    with_llm_configured do
-      stub_llm_chat('["Ciao", "Ciao a te"]') do
-        post lato_cms.pages_clone_component_action_url(@target, "all_fields"),
-          params: { source_page_id: @source.id, translate: true },
-          headers: { "Accept" => "application/json" }
-      end
-    end
-
-    assert_response :success
-    assert_equal "Ciao", target_field("example_string").value
-    assert_equal "Ciao a te", target_field("example_textarea").value
-    assert_equal "option_2", target_field("example_select").value # untouched: not free text
-  end
-
-  test "falls back to a verbatim clone when the LLM request fails" do
+  test "the clone survives even when the translation step fails" do
     build_field(@source, field_id: "example_string", value: "Hello")
 
     with_llm_configured do
       stub_llm_chat_error do
-        post lato_cms.pages_clone_component_action_url(@target, "all_fields"),
-          params: { source_page_id: @source.id, translate: true },
-          headers: { "Accept" => "application/json" }
+        perform_enqueued_jobs do
+          post lato_cms.pages_clone_component_action_url(@target, "all_fields"),
+            params: { source_page_id: @source.id, translate: true }
+        end
       end
     end
 
-    assert_response :success
+    assert Lato::Operation.last.failed_status?
     assert_equal "Hello", target_field("example_string").value
   end
 
   test "translate: true has no effect when no LLM is configured" do
-    build_field(@source, field_id: "example_string", value: "Hello")
+    with_llm_unconfigured do
+      build_field(@source, field_id: "example_string", value: "Hello")
 
-    post lato_cms.pages_clone_component_action_url(@target, "all_fields"),
-      params: { source_page_id: @source.id, translate: true },
-      headers: { "Accept" => "application/json" }
+      post lato_cms.pages_clone_component_action_url(@target, "all_fields"),
+        params: { source_page_id: @source.id, translate: true },
+        headers: { "Accept" => "application/json" }
 
-    assert_response :success
-    assert_equal "Hello", target_field("example_string").value
+      assert_response :success
+      assert_equal "Hello", target_field("example_string").value
+      assert_equal 0, Lato::Operation.count
+    end
   end
 
   private
@@ -118,6 +131,19 @@ class CloneComponentActionTest < ActionDispatch::IntegrationTest
     config.llm_api_url = "https://api.example.com/v1"
     config.llm_model = "gpt-4o-mini"
     config.llm_api_key = "sk-test"
+    yield
+  ensure
+    config.llm_api_url, config.llm_model, config.llm_api_key = original
+  end
+
+  # Explicitly clears LLM config for the duration of the block, rather than
+  # assuming it's already unconfigured: the host app's own initializer may
+  # set real credentials (e.g. for manual/local testing), which would
+  # otherwise make "not configured" tests flaky and fire real API calls.
+  def with_llm_unconfigured
+    config = LatoCms.config
+    original = [config.llm_api_url, config.llm_model, config.llm_api_key]
+    config.llm_api_url = config.llm_model = config.llm_api_key = nil
     yield
   ensure
     config.llm_api_url, config.llm_model, config.llm_api_key = original

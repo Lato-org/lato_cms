@@ -133,22 +133,29 @@ module LatoCms
       Rails.logger.warn("LatoCms: failed to generate video poster for media #{id}: #{e.message}")
     end
 
-    # Best effort: asks the configured OpenAI-compatible LLM for alt text in
-    # every configured locale and merges it in (existing translations for
-    # locales the LLM didn't return, or that it's re-run for, are kept/
-    # replaced individually). Any failure is logged, the image keeps working
-    # without alt text. No-op unless an LLM is configured (see
+    # Asks the configured OpenAI-compatible LLM for alt text in every
+    # configured locale and merges it in (existing translations for locales
+    # the LLM didn't return, or that it's re-run for, are kept/replaced
+    # individually). No-op unless an LLM is configured (see
     # LatoCms::Config#llm_configured?) and this media is an image.
-    def generate_alt_text!
+    #
+    # Best effort by default (`raise_on_error: false`): any failure is logged
+    # and swallowed, since the automatic post-upload call site (see
+    # GenerateAltTextJob) must never break the upload over a flaky LLM. The
+    # manual "Regenerate with AI" action runs as a Lato::Operation the admin
+    # is actively watching, so it passes `raise_on_error: true` to have
+    # failures surface there instead of disappearing silently.
+    def generate_alt_text!(raise_on_error: false)
       return unless image? && file.attached? && LatoCms.config.llm_configured?
 
       translations = fetch_alt_text_translations
-      return if translations.blank?
+      raise 'The LLM returned no usable alt text' if translations.blank?
 
       self.alt_text_translations = alt_text_translations.merge(translations)
       save!
     rescue StandardError => e
       Rails.logger.warn("LatoCms: failed to generate alt text for media #{id}: #{e.message}")
+      raise if raise_on_error
     end
 
     # Fixed small variant used across admin UI (Media index, picker grid, field
@@ -222,7 +229,7 @@ module LatoCms
     end
 
     def enqueue_alt_text_generation
-      LatoCms::GenerateAltTextJob.perform_later(id)
+      LatoCms::GenerateAltTextJob.perform_later(media_id: id)
     end
 
     def fetch_alt_text_translations

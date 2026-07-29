@@ -153,16 +153,37 @@ module LatoCms
       @page = query_pages.find(params[:id])
       source = @page.translations.find_by(id: params[:source_page_id])
       template_component_id = params[:template_component_id].to_s
-      translate = ActiveModel::Type::Boolean.new.cast(params[:translate])
+      translate = ActiveModel::Type::Boolean.new.cast(params[:translate]) && LatoCms.config.llm_configured?
 
-      respond_to do |format|
-        if source && clone_component_fields(source, @page, template_component_id, translate: translate)
-          format.html { redirect_to lato_cms.pages_show_path(@page), notice: t('lato_cms.component_cloned') }
-          format.json { render json: { message: t('lato_cms.component_cloned') } }
-        else
+      unless source && clone_component_fields(source, @page, template_component_id)
+        respond_to do |format|
           format.html { redirect_to lato_cms.pages_show_path(@page), alert: t('lato_cms.component_clone_failed') }
           format.json { render json: { error: t('lato_cms.component_clone_failed') }, status: :unprocessable_entity }
         end
+        return
+      end
+
+      unless translate
+        respond_to do |format|
+          format.html { redirect_to lato_cms.pages_show_path(@page), notice: t('lato_cms.component_cloned') }
+          format.json { render json: { message: t('lato_cms.component_cloned') } }
+        end
+        return
+      end
+
+      # The clone above already happened synchronously and succeeded; only the
+      # translation step (a real network call to the LLM) runs as a
+      # Lato::Operation, so it can never block this request or time it out.
+      operation = Lato::Operation.generate(
+        'LatoCms::TranslateComponentFieldsJob',
+        { page_id: @page.id, template_component_id: template_component_id },
+        @session.user_id
+      )
+
+      if operation.start
+        redirect_to lato.operation_path(operation)
+      else
+        redirect_to lato_cms.pages_show_path(@page), alert: t('lato_cms.component_clone_translate_failed')
       end
     end
 
@@ -219,20 +240,21 @@ module LatoCms
     # Replaces the target page's fields for a component with copies of the source
     # page's fields for the same component. Media references are shared (not
     # duplicated), so a cloned video field's poster stays correct for free.
-    # Media's own alt text is untouched here regardless of `translate` — it's
-    # translated independently by its own LLM job (see LatoCms::Media), not as
-    # part of cloning a page's fields.
-    def clone_component_fields(source, target, template_component_id, translate: false)
+    # Media's own alt text is untouched here — it's translated independently
+    # by its own LLM job (see LatoCms::Media), not as part of cloning a
+    # page's fields. Translation, when requested, is a separate async step
+    # (see clone_component_action) on top of this already-committed clone.
+    def clone_component_fields(source, target, template_component_id)
       # Components are template-specific: only clone between pages using the same template.
       return false unless source.template_id == target.template_id
 
       source_fields = source.fields.select { |f| f.template_component_id == template_component_id }
       return false if source_fields.empty?
 
-      cloned_fields = target.transaction do
+      target.transaction do
         target.fields.where(template_component_id: template_component_id).destroy_all
 
-        source_fields.map do |src|
+        source_fields.each do |src|
           field = target.fields.create!(
             template_id: target.template_id,
             template_component_id: src.template_component_id,
@@ -241,50 +263,10 @@ module LatoCms
             value: src.value
           )
           field.replace_media!(src.media.pluck(:id))
-          field
         end
       end
 
-      translate_component_fields!(cloned_fields, target.locale) if translate && LatoCms.config.llm_configured?
-
       true
-    end
-
-    # Best effort, on top of an already-successful clone: translates the
-    # free-text fields (see LatoCms::PageField::TRANSLATABLE_FIELD_TYPES) in
-    # one batched LLM call and overwrites their values in place. Any failure
-    # (LLM unreachable, malformed/short response) is logged and simply leaves
-    # the fields as verbatim clones in the source language — never worse than
-    # a plain clone.
-    def translate_component_fields!(cloned_fields, target_locale)
-      fields = cloned_fields.reject(&:repeater_order?)
-        .select { |f| LatoCms::PageField::TRANSLATABLE_FIELD_TYPES.include?(f.field_type) && f.value.present? }
-      return if fields.empty?
-
-      content = LatoCms::LlmClient.chat(messages: [{ role: 'user', content: translate_fields_prompt(fields, target_locale) }])
-      translated = parse_translated_field_values(content, fields.size)
-      return if translated.blank?
-
-      fields.each_with_index { |field, index| field.update_column(:value, translated[index]) if translated[index].present? }
-    rescue StandardError => e
-      Rails.logger.warn("LatoCms: failed to translate cloned fields for page #{cloned_fields.first&.page_id}: #{e.message}")
-    end
-
-    def translate_fields_prompt(fields, target_locale)
-      "Translate each string in this JSON array into #{target_locale} (language code). Preserve any HTML " \
-      "tags exactly as-is, translate only the visible text. Respond with a JSON array of the same length " \
-      "and in the same order, translated strings only, no markdown, no explanation.\n\n#{fields.map(&:value).to_json}"
-    end
-
-    def parse_translated_field_values(content, expected_count)
-      return [] if content.blank?
-
-      parsed = JSON.parse(content[/\[.*\]/m] || content)
-      return [] unless parsed.is_a?(Array) && parsed.size == expected_count
-
-      parsed.map(&:to_s)
-    rescue JSON::ParserError
-      []
     end
 
     def save_repeater_fields(template_component, component, repeater_items, repeater_order, errors)
