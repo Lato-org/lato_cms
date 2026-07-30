@@ -10,6 +10,7 @@
      lato_cms_field_input_name(field_id, 'media_ids', input_name_prefix: local_assigns[:input_name_prefix], multiple: true) :
      lato_cms_field_input_name(field_id, 'media_id', input_name_prefix: local_assigns[:input_name_prefix]) %>
 <% picker_type = kind == 'file' ? nil : kind %>
+<% wide = !multiple && %w[image video].include?(kind) %>
 
 <label class="form-label">
   <%= label %><%= ' *' if required %>
@@ -42,7 +43,7 @@
         default navigation itself and sets the frame's `src` explicitly
         (Turbo's documented, non-racy way to trigger a frame-scoped fetch). %>
     <%= link_to lato_cms.media_picker_action_path(frame_id: frame_id, multiple: multiple, type: picker_type),
-          class: "lato-cms-media-field__tile lato-cms-media-field__tile--add#{' d-none' if !multiple && current_media.any?}",
+          class: "lato-cms-media-field__tile lato-cms-media-field__tile--add#{' lato-cms-media-field__tile--wide' if wide}#{' d-none' if !multiple && current_media.any?}",
           data: {
             lato_cms_media_field_target: 'addTile',
             action: 'click->lato-cms-media-field#openPicker',

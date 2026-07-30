@@ -94,8 +94,10 @@ export default class extends Controller {
   appendItem (item) {
     if (!item || this.gridTarget.querySelector(`[data-media-id="${item.id}"]`)) return
 
+    const wide = !this.multipleValue && ['image', 'video'].includes(this.kindValue)
+
     const wrapper = document.createElement('div')
-    wrapper.className = 'lato-cms-media-field__tile lato-cms-media-field__item'
+    wrapper.className = `lato-cms-media-field__tile lato-cms-media-field__item${wide ? ' lato-cms-media-field__tile--wide' : ''}`
     wrapper.dataset.mediaId = item.id
     if (this.multipleValue) {
       wrapper.draggable = true
@@ -118,8 +120,7 @@ export default class extends Controller {
 
   previewMarkup (item) {
     if (this.kindValue === 'video') {
-      return `<video muted preload="metadata" class="lato-cms-media-field__player" src="${item.url}"></video>
-        <i class="bi bi-play-circle-fill lato-cms-media-field__badge"></i>`
+      return `<video controls preload="metadata" class="lato-cms-media-field__player" src="${item.url}"></video>`
     }
     if (item.thumbnailUrl || item.url) {
       return `<img src="${item.thumbnailUrl || item.url}" class="lato-cms-media-field__thumb">`

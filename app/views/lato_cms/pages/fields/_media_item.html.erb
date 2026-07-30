@@ -1,4 +1,5 @@
-<div class="lato-cms-media-field__tile lato-cms-media-field__item"
+<% wide = !multiple && %w[image video].include?(kind) %>
+<div class="lato-cms-media-field__tile lato-cms-media-field__item<%= ' lato-cms-media-field__tile--wide' if wide %>"
      data-media-id="<%= media.id %>"
      data-lato-cms-media-field-target="item"
      <% if multiple %>
@@ -7,8 +8,7 @@
        data-action="dragstart->lato-cms-media-reorder#onDragStart dragend->lato-cms-media-reorder#onDragEnd"
      <% end %>>
   <% if kind == 'video' %>
-    <video muted preload="metadata" class="lato-cms-media-field__player" src="<%= media.url %>"></video>
-    <i class="bi bi-play-circle-fill lato-cms-media-field__badge"></i>
+    <video controls preload="metadata" class="lato-cms-media-field__player" src="<%= media.url %>"></video>
   <% elsif media.thumbnail_url %>
     <img src="<%= media.thumbnail_url %>" class="lato-cms-media-field__thumb" alt="<%= media.alt_text %>">
   <% else %>
