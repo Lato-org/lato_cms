@@ -2,45 +2,46 @@ import { Controller } from '@hotwired/stimulus'
 
 export default class extends Controller {
   connect () {
-    this.handleShown = this.handleShown.bind(this)
-    this.handleHidden = this.handleHidden.bind(this)
+    this.handleToggle = this.handleToggle.bind(this)
 
-    this.element.addEventListener('shown.bs.collapse', this.handleShown)
-    this.element.addEventListener('hidden.bs.collapse', this.handleHidden)
+    this.element.addEventListener('shown.bs.collapse', this.handleToggle)
+    this.element.addEventListener('hidden.bs.collapse', this.handleToggle)
 
     window.requestAnimationFrame(() => {
-      this.broadcastInitiallyOpenComponent()
+      this.broadcastCurrentSelection()
     })
   }
 
   disconnect () {
-    this.element.removeEventListener('shown.bs.collapse', this.handleShown)
-    this.element.removeEventListener('hidden.bs.collapse', this.handleHidden)
+    this.element.removeEventListener('shown.bs.collapse', this.handleToggle)
+    this.element.removeEventListener('hidden.bs.collapse', this.handleToggle)
   }
 
-  handleShown (event) {
-    this.broadcastForCollapse(event.target)
+  // Repeater items are nested collapses, so their events bubble up here, and
+  // opening one item closes its sibling: the events alone don't tell what ends
+  // up open. Read the selection off the DOM once it has settled instead.
+  handleToggle () {
+    window.requestAnimationFrame(() => {
+      this.broadcastCurrentSelection()
+    })
   }
 
-  // Repeater items are nested collapses without a template component id, and
-  // their events bubble up here: closing one would otherwise deselect the
-  // component that is still open. Same guard `broadcastForCollapse` applies.
-  handleHidden (event) {
-    if (!event.target.dataset.templateComponentId) return
+  // The open component, narrowed to the open repeater item when there is one.
+  broadcastCurrentSelection () {
+    const openComponent = this.element.querySelector('.accordion-collapse.show')
+    if (!openComponent) {
+      this.broadcastClosedComponent()
+      return
+    }
 
-    this.broadcastClosedComponent()
-  }
-
-  broadcastInitiallyOpenComponent () {
-    const openCollapse = this.element.querySelector('.accordion-collapse.show')
-    if (!openCollapse) return
-
-    this.broadcastForCollapse(openCollapse)
+    const openItem = openComponent.querySelector('.collapse.show[data-repeater-item-id]')
+    this.broadcastForCollapse(openItem || openComponent)
   }
 
   broadcastForCollapse (collapseElement) {
     const templateComponentId = collapseElement.dataset.templateComponentId
     const componentId = collapseElement.dataset.componentId
+    const repeaterItemId = collapseElement.dataset.repeaterItemId
 
     if (!templateComponentId) return
 
@@ -48,7 +49,8 @@ export default class extends Controller {
       detail: {
         id: templateComponentId,
         templateComponentId,
-        componentId
+        componentId,
+        repeaterItemId: repeaterItemId || null
       }
     }))
   }
@@ -58,7 +60,8 @@ export default class extends Controller {
       detail: {
         id: null,
         templateComponentId: null,
-        componentId: null
+        componentId: null,
+        repeaterItemId: null
       }
     }))
   }

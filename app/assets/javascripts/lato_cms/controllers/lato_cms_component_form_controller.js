@@ -66,11 +66,14 @@ export default class extends Controller {
     const templateComponentId = openCollapse.dataset.templateComponentId
     if (!templateComponentId) return
 
+    const openItem = openCollapse.querySelector('.collapse.show[data-repeater-item-id]')
+
     document.dispatchEvent(new CustomEvent('lato-cms:component-change', {
       detail: {
         id: templateComponentId,
         templateComponentId,
-        componentId: openCollapse.dataset.componentId
+        componentId: openCollapse.dataset.componentId,
+        repeaterItemId: openItem?.dataset.repeaterItemId || null
       }
     }))
   }

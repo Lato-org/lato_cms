@@ -14,7 +14,11 @@
     </button>
   </div>
 
-  <div id="<%= collapse_id %>" class="collapse <%= 'show' if expanded %>" data-bs-parent="#<%= parent_id %>">
+  <%# The component ids travel on the item collapse too, so the live preview can
+      highlight the single item being edited (see lato_cms_component_accordion_controller). %>
+  <div id="<%= collapse_id %>" class="collapse <%= 'show' if expanded %>" data-bs-parent="#<%= parent_id %>"
+      data-template-component-id="<%= tc[:template_component_id] %>" data-component-id="<%= tc[:component_id] %>"
+      data-repeater-item-id="<%= item_id %>">
     <div class="card-body pb-2">
       <% tc[:fields].each do |field_id, field_config| %>
         <% page_field = item_fields[field_id.to_s] %>
