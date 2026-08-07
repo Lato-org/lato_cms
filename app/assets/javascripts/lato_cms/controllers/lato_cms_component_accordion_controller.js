@@ -22,7 +22,12 @@ export default class extends Controller {
     this.broadcastForCollapse(event.target)
   }
 
-  handleHidden () {
+  // Repeater items are nested collapses without a template component id, and
+  // their events bubble up here: closing one would otherwise deselect the
+  // component that is still open. Same guard `broadcastForCollapse` applies.
+  handleHidden (event) {
+    if (!event.target.dataset.templateComponentId) return
+
     this.broadcastClosedComponent()
   }
 
