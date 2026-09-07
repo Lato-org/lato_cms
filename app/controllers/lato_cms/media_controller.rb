@@ -10,7 +10,7 @@ module LatoCms
         query_media.order(created_at: :desc),
         columns: %i[name media_type actions],
         sortable_columns: %i[name media_type created_at],
-        searchable_columns: %i[name alt_text],
+        searchable_columns: %i[name alt_text title],
         default_sort_by: 'created_at|DESC',
         pagination: 20
       )
@@ -62,27 +62,30 @@ module LatoCms
       end
     end
 
-    # Runs as a Lato::Operation (see GenerateAltTextJob) rather than inline:
-    # an LLM call can take a while, and blocking the request risks timing it
-    # out. The admin instead lands on a live progress page.
-    def regenerate_alt_text_action
+    # Regenerates one translatable attribute (alt_text or title, see the
+    # route constraint) with the LLM. Runs as a Lato::Operation (see
+    # GenerateMediaTextJob) rather than inline: an LLM call can take a while,
+    # and blocking the request risks timing it out. The admin instead lands on
+    # a live progress page.
+    def regenerate_text_action
       @media = query_media.find(params[:id])
+      attribute = params[:attribute].to_s
 
-      unless @media.image? && LatoCms.config.llm_configured?
+      unless @media.image? && LatoCms.config.llm_generates?(attribute)
         respond_to do |format|
-          message = t('lato_cms.media_alt_text_regenerate_unavailable')
+          message = t("lato_cms.media_text_regenerate_unavailable")
           format.html { redirect_to lato_cms.media_update_path(@media), alert: message }
           format.json { render json: { error: message }, status: :unprocessable_entity }
         end
         return
       end
 
-      operation = Lato::Operation.generate('LatoCms::GenerateAltTextJob', { media_id: @media.id }, @session.user_id)
+      operation = Lato::Operation.generate("LatoCms::GenerateMediaTextJob", { media_id: @media.id, attributes: [attribute] }, @session.user_id)
 
       if operation.start
         redirect_to lato.operation_path(operation)
       else
-        redirect_to lato_cms.media_update_path(@media), alert: t('lato_cms.media_alt_text_regenerate_failed')
+        redirect_to lato_cms.media_update_path(@media), alert: t("lato_cms.media_text_regenerate_failed")
       end
     end
 
@@ -106,7 +109,7 @@ module LatoCms
     private
 
     def create_params
-      params.require(:media).permit(:file, :name, :alt_text)
+      params.require(:media).permit(:file, :name, :alt_text, :title)
     end
 
     # :file is intentionally not permitted here: the underlying file is
@@ -114,8 +117,8 @@ module LatoCms
     # many pages, so replacing it in place would silently change what renders
     # everywhere it's referenced). A different file means a new Media.
     def update_params
-      alt_text_keys = LatoCms.config.locales.map { |locale| :"alt_text_#{locale}" }
-      params.require(:media).permit(:name, *alt_text_keys)
+      translation_keys = LatoCms::Media::TRANSLATABLE_ATTRIBUTES.product(LatoCms.config.locales).map { |attribute, locale| :"#{attribute}_#{locale}" }
+      params.require(:media).permit(:name, *translation_keys)
     end
   end
 end

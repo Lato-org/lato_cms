@@ -141,6 +141,7 @@ module LatoCms
         media_id: m.id,
         name: m.name,
         alt_text: m.alt_text(page.locale),
+        title: m.title(page.locale),
         filename: m.filename,
         content_type: m.file.attached? ? m.file.content_type : nil,
         byte_size: m.file.attached? ? m.file.byte_size : nil,

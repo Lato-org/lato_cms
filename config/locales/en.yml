@@ -101,11 +101,12 @@ en:
     media_update_title: Edit media
     media_open_original: Open the original file in a new tab
     media_alt_text: Alt text
-    media_alt_text_regenerate: Regenerate with AI
-    media_alt_text_regenerate_confirm: "This will overwrite the current alt text in every language with a new AI-generated one. Continue?"
-    media_alt_text_regenerated: Alt text regenerated
-    media_alt_text_regenerate_unavailable: Alt text can only be regenerated for images, and only when an LLM is configured
-    media_alt_text_regenerate_failed: Failed to start alt text regeneration
+    media_title: Title
+    media_text_regenerate: Regenerate with AI
+    media_text_regenerate_confirm: "This will overwrite the current %{field} in every language with a new AI-generated one. Continue?"
+    media_text_regenerated: Text regenerated
+    media_text_regenerate_unavailable: AI generation is only available for images, and only when an LLM is configured and enabled for this field
+    media_text_regenerate_failed: Failed to start AI generation
     media_created: Media uploaded successfully
     media_updated: Media updated successfully
     media_deleted: Media deleted successfully

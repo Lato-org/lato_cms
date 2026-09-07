@@ -1,0 +1,41 @@
+<%# One tab per configured locale for a translatable Media attribute
+    (alt_text/title), with its own "Regenerate with AI" button when the LLM
+    is configured and enabled for that attribute. Images only: the LLM has
+    to look at the file to describe it. %>
+<% label = t("lato_cms.media_#{attribute}") %>
+
+<div class="mb-3">
+  <div class="d-flex align-items-center justify-content-between">
+    <label class="form-label mb-0"><%= label %></label>
+    <% if media.image? && LatoCms.config.llm_generates?(attribute) %>
+      <%= link_to t("lato_cms.media_text_regenerate"), lato_cms.media_regenerate_text_action_path(media, attribute: attribute),
+        class: "btn btn-sm btn-outline-secondary",
+        data: {
+          lato_action_target: "trigger",
+          turbo_method: :post,
+          turbo_frame: "lato_operation",
+          turbo_confirm: t("lato_cms.media_text_regenerate_confirm", field: label.downcase),
+          action_title: "#{t('lato_cms.media_text_regenerate')} - #{label}"
+        } %>
+    <% end %>
+  </div>
+
+  <ul class="nav nav-tabs">
+    <% LatoCms.config.locales.each_with_index do |locale, index| %>
+      <li class="nav-item">
+        <button class="nav-link <%= 'active' if index.zero? %>" data-bs-toggle="tab"
+          data-bs-target="#<%= dom_id(media, "#{attribute}_#{locale}_pane") %>" type="button">
+          <%= locale_to_flag(locale) %> <%= locale.to_s.upcase %>
+        </button>
+      </li>
+    <% end %>
+  </ul>
+
+  <div class="tab-content border border-top-0 rounded-bottom p-3">
+    <% LatoCms.config.locales.each_with_index do |locale, index| %>
+      <div class="tab-pane fade <%= 'show active' if index.zero? %>" id="<%= dom_id(media, "#{attribute}_#{locale}_pane") %>">
+        <%= lato_form_item_input_text form, :"#{attribute}_#{locale}" %>
+      </div>
+    <% end %>
+  </div>
+</div>

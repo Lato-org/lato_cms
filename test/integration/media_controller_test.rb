@@ -21,11 +21,11 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "image", body["media_type"]
   end
 
-  test "update_action edits name and per-locale alt_text but not the file" do
+  test "update_action edits name and per-locale alt_text/title but not the file" do
     media = create_media
 
     patch lato_cms.media_update_action_url(media),
-      params: { media: { name: "New name", alt_text_en: "New alt", alt_text_it: "Nuovo alt" } },
+      params: { media: { name: "New name", alt_text_en: "New alt", alt_text_it: "Nuovo alt", title_en: "New title" } },
       headers: { "Accept" => "application/json" }
 
     assert_response :success
@@ -33,39 +33,64 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "New name", media.name
     assert_equal "New alt", media.alt_text(:en)
     assert_equal "Nuovo alt", media.alt_text(:it)
+    assert_equal "New title", media.title(:en)
   end
 
-  test "regenerate_alt_text_action is unavailable without an LLM configured" do
+  test "regenerate_text_action is unavailable without an LLM configured" do
     with_llm_unconfigured do
       media = create_media
 
-      post lato_cms.media_regenerate_alt_text_action_url(media), headers: { "Accept" => "application/json" }
+      post lato_cms.media_regenerate_text_action_url(media, attribute: "alt_text"), headers: { "Accept" => "application/json" }
 
       assert_response :unprocessable_entity
     end
   end
 
-  test "regenerate_alt_text_action is unavailable for non-image media even with an LLM configured" do
+  test "regenerate_text_action is unavailable for non-image media even with an LLM configured" do
     with_llm_configured do
       media = create_media(filename: "example_video.mp4", content_type: "video/mp4")
 
-      post lato_cms.media_regenerate_alt_text_action_url(media), headers: { "Accept" => "application/json" }
+      post lato_cms.media_regenerate_text_action_url(media, attribute: "alt_text"), headers: { "Accept" => "application/json" }
 
       assert_response :unprocessable_entity
     end
   end
 
-  test "regenerate_alt_text_action starts a Lato::Operation instead of running inline" do
+  test "regenerate_text_action is unavailable for an attribute switched off in config" do
+    with_llm_configured(llm_generate_title: false) do
+      media = create_media
+
+      post lato_cms.media_regenerate_text_action_url(media, attribute: "title"), headers: { "Accept" => "application/json" }
+
+      assert_response :unprocessable_entity
+    end
+  end
+
+  test "regenerate_text_action starts a Lato::Operation instead of running inline" do
     with_llm_configured do
       media = create_media
 
       assert_difference -> { Lato::Operation.count }, 1 do
-        post lato_cms.media_regenerate_alt_text_action_url(media)
+        post lato_cms.media_regenerate_text_action_url(media, attribute: "alt_text")
       end
 
       operation = Lato::Operation.last
-      assert_equal "LatoCms::GenerateAltTextJob", operation.active_job_name
+      assert_equal "LatoCms::GenerateMediaTextJob", operation.active_job_name
       assert_redirected_to lato.operation_path(operation)
+    end
+  end
+
+  test "update renders an alt text and a title tab set, each with its own AI regenerate button" do
+    with_llm_configured do
+      media = create_media
+
+      get lato_cms.media_update_url(media)
+
+      assert_response :success
+      assert_includes response.body, "media[alt_text_en]"
+      assert_includes response.body, "media[title_en]"
+      assert_includes response.body, lato_cms.media_regenerate_text_action_path(media, attribute: "alt_text")
+      assert_includes response.body, lato_cms.media_regenerate_text_action_path(media, attribute: "title")
     end
   end
 
@@ -149,15 +174,17 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def with_llm_configured
+  # Configures a fake LLM for the block, optionally overriding any other
+  # llm_* setting (e.g. `llm_generate_title: false`), restoring everything
+  # afterwards.
+  def with_llm_configured(**overrides)
     config = LatoCms.config
-    original = [config.llm_api_url, config.llm_model, config.llm_api_key]
-    config.llm_api_url = "https://api.example.com/v1"
-    config.llm_model = "gpt-4o-mini"
-    config.llm_api_key = "sk-test"
+    settings = { llm_api_url: "https://api.example.com/v1", llm_model: "gpt-4o-mini", llm_api_key: "sk-test" }.merge(overrides)
+    original = settings.keys.index_with { |key| config.public_send(key) }
+    settings.each { |key, value| config.public_send("#{key}=", value) }
     yield
   ensure
-    config.llm_api_url, config.llm_model, config.llm_api_key = original
+    original&.each { |key, value| config.public_send("#{key}=", value) }
   end
 
   # Explicitly clears LLM config for the duration of the block, rather than

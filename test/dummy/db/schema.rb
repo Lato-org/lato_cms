@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -44,6 +44,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_120000) do
     t.datetime "created_at", null: false
     t.string "media_type", default: "file", null: false
     t.string "name", null: false
+    t.text "title"
     t.datetime "updated_at", null: false
     t.index ["media_type"], name: "index_lato_cms_media_on_media_type"
   end

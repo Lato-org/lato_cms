@@ -101,11 +101,12 @@ it:
     media_update_title: Modifica media
     media_open_original: Apri il file originale in una nuova scheda
     media_alt_text: Testo alternativo
-    media_alt_text_regenerate: Rigenera con AI
-    media_alt_text_regenerate_confirm: "Il testo alternativo attuale in ogni lingua verrà sostituito con uno generato dall'AI. Continuare?"
-    media_alt_text_regenerated: Testo alternativo rigenerato
-    media_alt_text_regenerate_unavailable: Il testo alternativo può essere rigenerato solo per le immagini e solo se è configurato un LLM
-    media_alt_text_regenerate_failed: Impossibile avviare la rigenerazione del testo alternativo
+    media_title: Titolo
+    media_text_regenerate: Rigenera con AI
+    media_text_regenerate_confirm: "Il %{field} attuale in ogni lingua verrà sostituito con uno generato dall'AI. Continuare?"
+    media_text_regenerated: Testo rigenerato
+    media_text_regenerate_unavailable: La generazione AI è disponibile solo per le immagini e solo se un LLM è configurato e abilitato per questo campo
+    media_text_regenerate_failed: Impossibile avviare la generazione AI
     media_created: Media caricato con successo
     media_updated: Media aggiornato con successo
     media_deleted: Media eliminato con successo

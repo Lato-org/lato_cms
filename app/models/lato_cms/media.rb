@@ -10,14 +10,23 @@ module LatoCms
 
     MEDIA_TYPES = %w[image video document file].freeze
 
-    # alt_text is stored as a single JSON-serialized {locale => text} hash in
-    # the `alt_text` column (kept as one column rather than a translations
-    # table since it's the only translatable attribute Media has). `alt_text`
-    # itself is overridden below to read/write the current I18n.locale's
-    # entry; `alt_text_en`, `alt_text_it`, etc. (one per configured locale)
-    # are handled dynamically so forms can render/submit them like any other
-    # attribute without predefining a method per locale.
-    ALT_TEXT_ACCESSOR = /\Aalt_text_(?<locale>[a-z]{2}(?:_[A-Z]{2})?)(?<setter>=)?\z/
+    # alt_text and title are each stored as a single JSON-serialized
+    # {locale => text} hash in their own text column (kept inline rather than
+    # in a translations table since these are Media's only translatable
+    # attributes). `alt_text`/`title` themselves are overridden below to
+    # read/write the current I18n.locale's entry; `alt_text_en`, `title_it`,
+    # etc. (one per configured locale) are handled dynamically so forms can
+    # render/submit them like any other attribute without predefining a
+    # method per locale.
+    TRANSLATABLE_ATTRIBUTES = %w[alt_text title].freeze
+    TRANSLATION_ACCESSOR = /\A(?<attribute>#{TRANSLATABLE_ATTRIBUTES.join("|")})_(?<locale>[a-z]{2}(?:_[A-Z]{2})?)(?<setter>=)?\z/
+
+    TRANSLATABLE_ATTRIBUTES.each do |attribute|
+      define_method(attribute) { |locale = I18n.locale| translations_of(attribute)[locale.to_s].presence }
+      define_method("#{attribute}=") { |value| write_translation(attribute, I18n.locale, value) }
+      define_method("#{attribute}_translations") { translations_of(attribute) }
+      define_method("#{attribute}_translations=") { |hash| self[attribute] = hash.stringify_keys.to_json }
+    end
 
     has_one_attached :file
     has_one_attached :poster_file
@@ -32,7 +41,7 @@ module LatoCms
     before_validation :set_media_type, on: :create
 
     after_create_commit :enqueue_poster_generation, if: :video?
-    after_create_commit :enqueue_alt_text_generation, if: -> { image? && LatoCms.config.llm_configured? }
+    after_create_commit :enqueue_text_generation, if: -> { image? && LatoCms.config.llm_media_attributes.any? }
 
     scope :of_type, ->(type) { where(media_type: type) if type.present? }
 
@@ -73,37 +82,33 @@ module LatoCms
       file.filename.to_s if file.attached?
     end
 
-    def alt_text(locale = I18n.locale)
-      alt_text_translations[locale.to_s].presence
-    end
-
-    def alt_text=(value)
-      self.alt_text_translations = alt_text_translations.merge(I18n.locale.to_s => value)
-    end
-
-    def alt_text_translations
-      JSON.parse(self[:alt_text].presence || '{}')
+    def translations_of(attribute)
+      JSON.parse(self[attribute].presence || "{}")
     rescue JSON::ParserError
       {}
     end
 
-    def alt_text_translations=(hash)
-      self[:alt_text] = hash.stringify_keys.to_json
-    end
-
     def method_missing(name, *args)
-      match = ALT_TEXT_ACCESSOR.match(name.to_s)
+      match = TRANSLATION_ACCESSOR.match(name.to_s)
       return super unless match
 
       if match[:setter]
-        self.alt_text_translations = alt_text_translations.merge(match[:locale] => args.first)
+        write_translation(match[:attribute], match[:locale], args.first)
       else
-        alt_text_translations[match[:locale]].presence
+        translations_of(match[:attribute])[match[:locale]].presence
       end
     end
 
     def respond_to_missing?(name, include_private = false)
-      ALT_TEXT_ACCESSOR.match?(name.to_s) || super
+      TRANSLATION_ACCESSOR.match?(name.to_s) || super
+    end
+
+    # Frontend URLs of the pages using this media through any field: the
+    # absolute URLs handed to the LLM as `{urls}` prompt context, so the model
+    # can see where the image is shown. Pages without a frontend URL are left
+    # out. Empty right after upload, since nothing references a new media yet.
+    def usage_urls
+      LatoCms::Page.where(id: page_fields.select(:page_id)).where.not(frontend_url: [nil, ""]).distinct.order(:frontend_url).pluck(:frontend_url)
     end
 
     def url
@@ -133,29 +138,50 @@ module LatoCms
       Rails.logger.warn("LatoCms: failed to generate video poster for media #{id}: #{e.message}")
     end
 
-    # Asks the configured OpenAI-compatible LLM for alt text in every
-    # configured locale and merges it in (existing translations for locales
-    # the LLM didn't return, or that it's re-run for, are kept/replaced
-    # individually). No-op unless an LLM is configured (see
-    # LatoCms::Config#llm_configured?) and this media is an image.
+    # Asks the configured OpenAI-compatible LLM for `attribute` (alt_text or
+    # title) in every configured locale and merges it in (existing
+    # translations for locales the LLM didn't return are kept, the rest are
+    # replaced individually). No-op unless the LLM is configured and enabled
+    # for that attribute (see LatoCms::Config#llm_generates?) and this media
+    # is an image, since the LLM has to look at the file.
     #
     # Best effort by default (`raise_on_error: false`): any failure is logged
     # and swallowed, since the automatic post-upload call site (see
-    # GenerateAltTextJob) must never break the upload over a flaky LLM. The
-    # manual "Regenerate with AI" action runs as a Lato::Operation the admin
-    # is actively watching, so it passes `raise_on_error: true` to have
+    # GenerateMediaTextJob) must never break the upload over a flaky LLM. The
+    # manual "Regenerate with AI" actions run as a Lato::Operation the admin
+    # is actively watching, so they pass `raise_on_error: true` to have
     # failures surface there instead of disappearing silently.
-    def generate_alt_text!(raise_on_error: false)
-      return unless image? && file.attached? && LatoCms.config.llm_configured?
+    def generate_text!(attribute, raise_on_error: false)
+      attribute = attribute.to_s
+      raise ArgumentError, "unknown translatable attribute: #{attribute}" unless TRANSLATABLE_ATTRIBUTES.include?(attribute)
+      return unless image? && file.attached? && LatoCms.config.llm_generates?(attribute)
 
-      translations = fetch_alt_text_translations
-      raise 'The LLM returned no usable alt text' if translations.blank?
+      begin
+        translations = parse_translations(request_completion(llm_prompt(attribute)))
+        raise "The LLM returned no usable #{attribute.humanize.downcase}" if translations.blank?
 
-      self.alt_text_translations = alt_text_translations.merge(translations)
-      save!
-    rescue StandardError => e
-      Rails.logger.warn("LatoCms: failed to generate alt text for media #{id}: #{e.message}")
-      raise if raise_on_error
+        public_send("#{attribute}_translations=", translations_of(attribute).merge(translations))
+        save!
+      rescue StandardError => e
+        Rails.logger.warn("LatoCms: failed to generate #{attribute} for media #{id}: #{e.message}")
+        raise if raise_on_error
+      end
+    end
+
+    # Full prompt sent for `attribute`: the custom-or-default task prompt (see
+    # LatoCms::Config#llm_prompt) with {languages}/{urls} substituted, plus the
+    # engine's fixed response-format contract, appended here rather than left
+    # to the prompt so parsing never depends on how a custom prompt is worded.
+    def llm_prompt(attribute)
+      variables = {
+        "languages" => llm_locales.join(", "),
+        "urls" => usage_urls.presence&.join(", ") || "none"
+      }
+      placeholders = /\{(#{LatoCms::Config::LLM_PROMPT_VARIABLES.join("|")})\}/
+      task = LatoCms.config.llm_prompt(attribute).gsub(placeholders) { variables[Regexp.last_match(1)] }
+
+      "#{task}\n\nRespond with a single JSON object only, no markdown, no extra text, with exactly these " \
+      "keys: #{llm_locales.join(", ")}. Each value is the text written in that language."
     end
 
     # Fixed small variant used across admin UI (Media index, picker grid, field
@@ -212,6 +238,8 @@ module LatoCms
         name: name,
         alt_text: alt_text,
         alt_text_translations: alt_text_translations,
+        title: title,
+        title_translations: title_translations,
         media_type: media_type,
         filename: filename,
         content_type: file.attached? ? file.content_type : nil,
@@ -243,41 +271,36 @@ module LatoCms
       LatoCms::GenerateVideoPosterJob.perform_later(id)
     end
 
-    def enqueue_alt_text_generation
-      LatoCms::GenerateAltTextJob.perform_later(media_id: id)
+    def enqueue_text_generation
+      LatoCms::GenerateMediaTextJob.perform_later(media_id: id)
     end
 
-    def fetch_alt_text_translations
-      locales = LatoCms.config.locales.map(&:to_s)
-      content = request_alt_text_completion(locales)
-      parse_alt_text_response(content, locales)
+    def write_translation(attribute, locale, value)
+      public_send("#{attribute}_translations=", translations_of(attribute).merge(locale.to_s => value))
+    end
+
+    def llm_locales
+      LatoCms.config.locales.map(&:to_s)
     end
 
     # Sends the image as a base64 data URI rather than a URL: the file may be
     # stored on a service (or behind auth) the LLM can't reach, so this works
     # regardless of storage backend or app visibility settings.
-    def request_alt_text_completion(locales)
+    def request_completion(prompt)
       LatoCms::LlmClient.chat(messages: [{
-        role: 'user',
+        role: "user",
         content: [
-          { type: 'text', text: alt_text_prompt(locales) },
-          { type: 'image_url', image_url: { url: "data:#{file.content_type};base64,#{Base64.strict_encode64(file.download)}" } }
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: "data:#{file.content_type};base64,#{Base64.strict_encode64(file.download)}" } }
         ]
       }])
     end
 
-    def alt_text_prompt(locales)
-      "Write a concise, descriptive alt text for this image, for the HTML <img alt> attribute " \
-      "(accessibility use, not a caption). Respond with a single JSON object only, no markdown, " \
-      "no extra text, with exactly these keys: #{locales.join(', ')}. Each value is the alt text " \
-      "written in that language."
-    end
-
-    def parse_alt_text_response(content, locales)
+    def parse_translations(content)
       return {} if content.blank?
 
       parsed = JSON.parse(content[/\{.*\}/m] || content)
-      parsed.slice(*locales).transform_values(&:to_s)
+      parsed.slice(*llm_locales).transform_values(&:to_s)
     rescue JSON::ParserError
       {}
     end

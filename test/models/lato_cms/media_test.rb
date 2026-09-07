@@ -96,76 +96,158 @@ module LatoCms
       refute media.poster_file.attached?
     end
 
-    test "generate_alt_text! is a no-op when no LLM is configured" do
+    test "title is stored per locale like alt_text and exposed in as_json" do
+      media = build_media
+      media.save!
+
+      media.title_en = "Dog on the beach"
+      media.title_it = "Cane in spiaggia"
+      media.save!
+      media.reload
+
+      assert_equal "Dog on the beach", media.title(:en)
+      assert_equal "Cane in spiaggia", media.title(:it)
+      assert_nil media.title(:fr)
+      assert_equal({ "en" => "Dog on the beach", "it" => "Cane in spiaggia" }, media.as_json[:title_translations])
+    end
+
+    test "usage_urls lists the frontend URLs of the pages using the media, without duplicates or blank URLs" do
+      media = build_media
+      media.save!
+      build_field.replace_media!([media.id])
+      with_url = build_field(frontend_url: "https://example.com/about")
+      with_url.replace_media!([media.id])
+      # Same media on two fields of the same page must yield the URL once.
+      with_url.page.fields.create!(template_id: "homepage", template_component_id: "all_fields", component_id: "all_fields_example", field_id: "example_gallery")
+        .replace_media!([media.id])
+
+      assert_equal ["https://example.com/about"], media.usage_urls
+    end
+
+    test "llm_prompt substitutes {languages} and {urls} and appends the JSON response contract" do
+      with_llm_configured do
+        media = build_media
+        media.save!
+        build_field(frontend_url: "https://example.com/about").replace_media!([media.id])
+        languages = LatoCms.config.locales.join(", ")
+
+        prompt = media.llm_prompt(:alt_text)
+
+        assert_includes prompt, "languages: #{languages}"
+        assert_includes prompt, "https://example.com/about"
+        assert_includes prompt, "exactly these keys: #{languages}"
+        refute_includes prompt, "{languages}"
+        refute_includes prompt, "{urls}"
+      end
+    end
+
+    test "llm_prompt uses the custom prompt from config when set, with 'none' as urls for unused media" do
+      with_llm_configured(llm_title_prompt: "Title it in {languages}; shown at {urls}") do
+        media = build_media
+        media.save!
+
+        assert_includes media.llm_prompt(:title), "Title it in #{LatoCms.config.locales.join(', ')}; shown at none"
+      end
+    end
+
+    test "generate_text! is a no-op when no LLM is configured" do
       with_llm_unconfigured do
         media = build_media
         media.save!
 
-        media.generate_alt_text!
+        media.generate_text!(:alt_text)
 
         assert_empty media.alt_text_translations
       end
     end
 
-    test "generate_alt_text! is a no-op for non-image media" do
+    test "generate_text! is a no-op for non-image media" do
       with_llm_configured do
         media = build_media(filename: "example_video.mp4", content_type: "video/mp4")
         media.save!
         called = false
-        media.define_singleton_method(:request_alt_text_completion) { |_locales| called = true; "{}" }
+        media.define_singleton_method(:request_completion) { |_prompt| called = true; "{}" }
 
-        media.generate_alt_text!
+        media.generate_text!(:alt_text)
 
         refute called
         assert_empty media.alt_text_translations
       end
     end
 
-    test "generate_alt_text! merges the per-locale translations returned by the LLM" do
+    test "generate_text! is a no-op for an attribute switched off in config" do
+      with_llm_configured(llm_generate_title: false) do
+        media = build_media
+        media.save!
+        called = false
+        media.define_singleton_method(:request_completion) { |_prompt| called = true; "{}" }
+
+        media.generate_text!(:title)
+
+        refute called
+        assert_empty media.title_translations
+      end
+    end
+
+    test "generate_text! rejects unknown attributes" do
+      assert_raises(ArgumentError) { build_media.generate_text!(:name) }
+    end
+
+    test "generate_text! merges the per-locale translations returned by the LLM, per attribute" do
       with_llm_configured do
         media = build_media
         media.save!
-        media.define_singleton_method(:request_alt_text_completion) do |_locales|
-          { en: "A cat on a windowsill", it: "Un gatto sul davanzale" }.to_json
+        media.alt_text_fr = "Un chat"
+        media.save!
+        media.define_singleton_method(:request_completion) do |prompt|
+          if prompt.include?("alt text")
+            { en: "A cat on a windowsill", it: "Un gatto sul davanzale" }.to_json
+          else
+            { en: "Cat", it: "Gatto" }.to_json
+          end
         end
 
-        media.generate_alt_text!
+        media.generate_text!(:alt_text)
+        media.generate_text!(:title)
         media.reload
 
         assert_equal "A cat on a windowsill", media.alt_text(:en)
         assert_equal "Un gatto sul davanzale", media.alt_text(:it)
+        assert_equal "Un chat", media.alt_text(:fr), "locales the LLM didn't return are kept"
+        assert_equal "Cat", media.title(:en)
+        assert_equal "Gatto", media.title(:it)
       end
     end
 
-    test "generate_alt_text! ignores malformed LLM output without raising" do
+    test "generate_text! ignores malformed LLM output without raising" do
       with_llm_configured do
         media = build_media
         media.save!
-        media.define_singleton_method(:request_alt_text_completion) { |_locales| "not json" }
+        media.define_singleton_method(:request_completion) { |_prompt| "not json" }
 
-        assert_nothing_raised { media.generate_alt_text! }
+        assert_nothing_raised { media.generate_text!(:alt_text) }
         assert_empty media.alt_text_translations
       end
     end
 
-    test "generate_alt_text! degrades gracefully when the LLM request fails" do
+    test "generate_text! degrades gracefully when the LLM request fails" do
       with_llm_configured do
         media = build_media
         media.save!
-        media.define_singleton_method(:request_alt_text_completion) { |_locales| raise "boom" }
+        media.define_singleton_method(:request_completion) { |_prompt| raise "boom" }
 
-        assert_nothing_raised { media.generate_alt_text! }
+        assert_nothing_raised { media.generate_text!(:alt_text) }
         assert_empty media.alt_text_translations
       end
     end
 
-    test "generate_alt_text! re-raises when raise_on_error is true, for the Operation-driven manual regenerate" do
+    test "generate_text! re-raises when raise_on_error is true, for the Operation-driven manual regenerate" do
       with_llm_configured do
         media = build_media
         media.save!
-        media.define_singleton_method(:request_alt_text_completion) { |_locales| raise "boom" }
+        media.define_singleton_method(:request_completion) { |_prompt| raise "boom" }
 
-        assert_raises(RuntimeError) { media.generate_alt_text!(raise_on_error: true) }
+        assert_raises(RuntimeError) { media.generate_text!(:alt_text, raise_on_error: true) }
       end
     end
 
@@ -181,15 +263,17 @@ module LatoCms
       @group ||= LatoSpaces::Group.create!(name: "Media test group")
     end
 
-    def with_llm_configured
+    # Configures a fake LLM for the block, optionally overriding any other
+    # llm_* setting (e.g. `llm_generate_title: false`), restoring everything
+    # afterwards.
+    def with_llm_configured(**overrides)
       config = LatoCms.config
-      original = [config.llm_api_url, config.llm_model, config.llm_api_key]
-      config.llm_api_url = "https://api.example.com/v1"
-      config.llm_model = "gpt-4o-mini"
-      config.llm_api_key = "sk-test"
+      settings = { llm_api_url: "https://api.example.com/v1", llm_model: "gpt-4o-mini", llm_api_key: "sk-test" }.merge(overrides)
+      original = settings.keys.index_with { |key| config.public_send(key) }
+      settings.each { |key, value| config.public_send("#{key}=", value) }
       yield
     ensure
-      config.llm_api_url, config.llm_model, config.llm_api_key = original
+      original&.each { |key, value| config.public_send("#{key}=", value) }
     end
 
     # Explicitly clears LLM config for the duration of the block, rather than
@@ -205,8 +289,8 @@ module LatoCms
       config.llm_api_url, config.llm_model, config.llm_api_key = original
     end
 
-    def build_field
-      page = Page.create!(title: "Media test page", locale: "en", template_id: "homepage", lato_spaces_group_id: group.id)
+    def build_field(frontend_url: nil)
+      page = Page.create!(title: "Media test page", locale: "en", template_id: "homepage", frontend_url: frontend_url, lato_spaces_group_id: group.id)
       page.fields.create!(
         template_id: "homepage",
         template_component_id: "all_fields",
