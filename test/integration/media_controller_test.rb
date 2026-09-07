@@ -69,6 +69,26 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index paginates 20 per page, like pages" do
+    22.times { |i| create_media(name: "Paginated #{format('%02d', i + 1)}") }
+
+    get lato_cms.media_url
+    assert_response :success
+    assert_equal 20, rendered_media_names.count
+
+    get lato_cms.media_url(default_page: 2)
+    assert_equal 2, rendered_media_names.count
+  end
+
+  test "update renders a large preview linking to the original file" do
+    media = create_media
+
+    get lato_cms.media_update_url(media)
+    assert_response :success
+    assert_includes response.body, media.preview_url
+    assert_includes response.body, media.url
+  end
+
   test "picker_action filters by type and search query" do
     image = create_media(name: "Sunset photo")
     video = create_media(filename: "example_video.mp4", content_type: "video/mp4", name: "Intro video")
@@ -112,6 +132,11 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     media.file.attach(io: file_fixture(filename).open, filename: filename, content_type: content_type)
     media.save!
     media
+  end
+
+  # Names as rendered in the index rows, to count what a page actually lists.
+  def rendered_media_names
+    response.body.scan(/Paginated \d{2}/).uniq
   end
 
   def build_field

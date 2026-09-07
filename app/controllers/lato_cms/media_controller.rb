@@ -12,7 +12,7 @@ module LatoCms
         sortable_columns: %i[name media_type created_at],
         searchable_columns: %i[name alt_text],
         default_sort_by: 'created_at|DESC',
-        pagination: 24
+        pagination: 20
       )
     end
 

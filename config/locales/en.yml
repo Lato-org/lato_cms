@@ -99,6 +99,7 @@ en:
     media_create_title: Upload media
     media_create_cta: Upload
     media_update_title: Edit media
+    media_open_original: Open the original file in a new tab
     media_alt_text: Alt text
     media_alt_text_regenerate: Regenerate with AI
     media_alt_text_regenerate_confirm: "This will overwrite the current alt text in every language with a new AI-generated one. Continue?"

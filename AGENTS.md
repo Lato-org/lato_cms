@@ -30,7 +30,7 @@ Admins can:
 - Ruby via `rbenv`.
 - Install gems: `bundle`.
 - Migrate dummy DB: `rails db:migrate`.
-- Seed dummy DB: `rails db:seed`.
+- Seed dummy DB: `rails db:seed` (admin user `admin@mail.com` / `Password1!`, a `Demo` spaces group and 27 sample media generated with libvips).
 - Start dev stack: `foreman start -f Procfile.dev`.
 
 ## Main commands

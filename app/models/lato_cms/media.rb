@@ -172,6 +172,21 @@ module LatoCms
       nil
     end
 
+    # Large uncropped variant for the admin detail view, where the 200x200
+    # square thumbnail is too small to actually judge the image. Falls back to
+    # the original blob when the file can't be processed (e.g. SVG).
+    def preview_url
+      return nil unless image? && file.attached?
+      return url unless file.variable?
+
+      Rails.application.routes.url_helpers.rails_representation_path(
+        file.variant(resize_to_limit: [1200, 1200]), only_path: true
+      )
+    rescue StandardError => e
+      Rails.logger.error("LatoCms: Failed to build preview for media #{id}: #{e.message}")
+      url
+    end
+
     # Builds a map of { size_name => variant_url } from a field's `settings.sizes`
     # config. The config is field-owned (different fields can request different
     # crops of the same reused Media); the mechanics live here since Media owns

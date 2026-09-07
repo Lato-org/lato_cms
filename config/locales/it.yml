@@ -99,6 +99,7 @@ it:
     media_create_title: Carica media
     media_create_cta: Carica
     media_update_title: Modifica media
+    media_open_original: Apri il file originale in una nuova scheda
     media_alt_text: Testo alternativo
     media_alt_text_regenerate: Rigenera con AI
     media_alt_text_regenerate_confirm: "Il testo alternativo attuale in ogni lingua verrà sostituito con uno generato dall'AI. Continuare?"
