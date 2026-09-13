@@ -101,13 +101,19 @@ module LatoCms
       end
     end
 
-    def lato_cms_render_field(field_id:, field_config:, page_field:, input_name_prefix: nil, dom_id_prefix: nil)
+    # `persisted_field_id` is the id the field is stored under — the same as
+    # `field_id` outside a repeater, `"<item_id>.<field_id>"` inside one. Media
+    # fields need it to recognize their own entry in the save response: matching on
+    # `field_id` alone would make every item of a repeater find the first one.
+    def lato_cms_render_field(field_id:, field_config:, page_field:, input_name_prefix: nil, dom_id_prefix: nil,
+      persisted_field_id: nil)
       render resolve_lato_cms_field_partial(field_config),
         field_id: field_id,
         field_config: field_config,
         page_field: page_field,
         input_name_prefix: input_name_prefix,
-        dom_id_prefix: dom_id_prefix
+        dom_id_prefix: dom_id_prefix,
+        persisted_field_id: persisted_field_id.presence || field_id
     rescue ActionView::MissingTemplate => e
       content_tag(:div, class: 'alert alert-danger mb-0') do
         "Field '#{field_id}' render error: #{e.message}"

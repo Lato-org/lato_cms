@@ -75,8 +75,12 @@ export default class extends Controller {
   afterSave (event) {
     if (!event.detail.success) return
 
+    // Matched on the persisted id only: inside a repeater every item shares the
+    // same `field_id` ("poster"), so falling back to it made each item find the
+    // first one and repaint itself — hidden input included — with that item's
+    // media. The next save then stored it for real.
     const field = (event.detail.data?.fields || []).find(
-      f => f.persisted_field_id === this.fieldIdValue || f.field_id === this.fieldIdValue
+      f => f.persisted_field_id === this.fieldIdValue
     )
     if (!field) return
 

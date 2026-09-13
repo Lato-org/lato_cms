@@ -21,7 +21,7 @@
      data-lato-cms-media-field-multiple-value="<%= multiple %>"
      data-lato-cms-media-field-frame-id-value="<%= frame_id %>"
      data-lato-cms-media-field-hidden-name-value="<%= hidden_name %>"
-     data-lato-cms-media-field-field-id-value="<%= field_id %>"
+     data-lato-cms-media-field-field-id-value="<%= local_assigns[:persisted_field_id].presence || field_id %>"
      data-field-required="<%= required %>">
 
   <div class="lato-cms-media-field__grid mb-2"
