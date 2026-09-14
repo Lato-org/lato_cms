@@ -1,48 +1,54 @@
 <% media ||= LatoCms::Media.new %>
+<% tab_id = dom_id(media, 'tab') %>
 
 <%= turbo_frame_tag dom_id(media, 'form') do %>
-  <%= form_with model: media, url: lato_cms.media_update_action_path(media), method: :patch, data: { turbo_frame: '_self', controller: 'lato-form lato-cms-reload-on-modal-close' } do |form| %>
-    <%= lato_form_notices class: %w[mb-3] %>
-    <%= lato_form_errors media, class: %w[mb-3] %>
-
-    <%# Preview: images/videos get a large view (the index thumbnail is too small
-        to judge a file by), everything else keeps the small type icon. %>
-    <div class="mb-3">
-      <% if media.image? %>
-        <%= link_to media.url, target: '_blank', rel: 'noopener', title: t('lato_cms.media_open_original'),
-          class: 'd-block bg-light rounded overflow-hidden' do %>
-          <%= image_tag media.preview_url, class: 'd-block mx-auto', style: 'max-width: 100%; max-height: 420px;', alt: media.alt_text %>
-        <% end %>
-      <% elsif media.video? %>
-        <video controls preload="metadata" class="d-block w-100 rounded bg-black" style="max-height: 420px;" src="<%= media.url %>"></video>
-      <% end %>
-
-      <div class="d-flex align-items-center gap-2 mt-2">
-        <% unless media.image? || media.video? %>
-          <%= lato_cms_media_thumb(media, size: 64) %>
-        <% end %>
-        <span class="text-muted small"><%= media.filename %></span>
-      </div>
-    </div>
-
-    <div class="mb-3">
-      <%= lato_form_item_label form, :name %>
-      <%= lato_form_item_input_text form, :name, required: true %>
-    </div>
-
-    <% if media.image? %>
-      <%= render "lato_cms/media/translations_field", form: form, media: media, attribute: "alt_text" %>
+  <%# Two tabs: the metadata form, and the file swap — same media, but editing
+      its name is a local change while replacing its file edits every page
+      using it, so they don't share a submit button. %>
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#<%= tab_id %>_details" type="button">
+        <%= t('lato_cms.media_update_tab_details') %>
+      </button>
+    </li>
+    <% if lato_cms_admin? %>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#<%= tab_id %>_replace" type="button">
+          <%= t('lato_cms.media_replace_file_title') %>
+        </button>
+      </li>
     <% end %>
-    <%= render "lato_cms/media/translations_field", form: form, media: media, attribute: "title" %>
+  </ul>
 
-    <%= render 'lato_cms/media/usages', media: media %>
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="<%= tab_id %>_details">
+      <%= form_with model: media, url: lato_cms.media_update_action_path(media), method: :patch, data: { turbo_frame: '_self', controller: 'lato-form lato-cms-reload-on-modal-close' } do |form| %>
+        <%= lato_form_notices class: %w[mb-3] %>
+        <%= lato_form_errors media, class: %w[mb-3] %>
 
-    <div class="d-flex justify-content-end">
-      <%= lato_form_submit form, t('lato_cms.cta_update'), class: %w[btn-success] %>
+        <%= render 'lato_cms/media/preview', media: media %>
+
+        <div class="mb-3">
+          <%= lato_form_item_label form, :name %>
+          <%= lato_form_item_input_text form, :name, required: true %>
+        </div>
+
+        <% if media.image? %>
+          <%= render "lato_cms/media/translations_field", form: form, media: media, attribute: "alt_text" %>
+        <% end %>
+        <%= render "lato_cms/media/translations_field", form: form, media: media, attribute: "title" %>
+
+        <div class="d-flex justify-content-between align-items-center">
+          <%= link_to t('lato_cms.media_usages_show_cta'), lato_cms.media_show_path(media), class: 'btn btn-link px-0' %>
+          <%= lato_form_submit form, t('lato_cms.cta_update'), class: %w[btn-success] %>
+        </div>
+      <% end %>
     </div>
-  <% end %>
 
-  <% if lato_cms_admin? %>
-    <%= render 'lato_cms/media/form_replace_file', media: media %>
-  <% end %>
+    <% if lato_cms_admin? %>
+      <div class="tab-pane fade" id="<%= tab_id %>_replace">
+        <%= render 'lato_cms/media/form_replace_file', media: media %>
+      </div>
+    <% end %>
+  </div>
 <% end %>

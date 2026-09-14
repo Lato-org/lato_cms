@@ -44,17 +44,28 @@ module LatoCms
       content_tag(:span, media.media_type, class: 'badge bg-secondary')
     end
 
-    # Index actions cell: edit metadata + delete (delete gated to admins, same
-    # convention as pages).
+    # Index actions cell: detail page + edit metadata + delete (delete gated to
+    # admins, same convention as pages). Delete is rendered inert while the
+    # media is still referenced: the action would be refused server-side
+    # anyway, so the button says why instead of failing after the fact.
     def lato_cms_media_actions(media)
       content_tag(:div, class: 'btn-group btn-group-sm') do
+        concat link_to(t('lato_cms.cta_show'), lato_cms.media_show_path(media), class: 'btn btn-primary')
         concat link_to(t('lato_cms.cta_edit'), lato_cms.media_update_path(media), class: 'btn btn-secondary',
           data: { lato_action_target: 'trigger', turbo_frame: dom_id(media, 'form'), action_title: t('lato_cms.media_update_title') })
-        if lato_cms_admin?
-          concat link_to(t('lato_cms.cta_delete'), lato_cms.media_destroy_action_path(media), class: 'btn btn-danger',
-            data: { turbo_method: 'DELETE', turbo_confirm: t('lato_cms.cta_delete_confirm') })
-        end
+        concat lato_cms_media_delete_action(media) if lato_cms_admin?
       end
+    end
+
+    private
+
+    def lato_cms_media_delete_action(media)
+      usage_count = media.usage_count
+      return link_to(t('lato_cms.cta_delete'), lato_cms.media_destroy_action_path(media), class: 'btn btn-danger',
+        data: { turbo_method: 'DELETE', turbo_confirm: t('lato_cms.cta_delete_confirm') }) if usage_count.zero?
+
+      content_tag(:span, t('lato_cms.cta_delete'), class: 'btn btn-danger disabled',
+        title: t('lato_cms.media_delete_in_use', count: usage_count), data: { controller: 'lato-tooltip' })
     end
   end
 end

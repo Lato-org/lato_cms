@@ -150,16 +150,58 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], field.media.reload.pluck(:id)
   end
 
-  test "update lists the pages where the media is used" do
+  test "show lists the pages where the media is used" do
     media = create_media
     field = build_field
     field.replace_media!([media.id])
 
-    get lato_cms.media_update_url(media)
+    get lato_cms.media_show_url(media)
 
     assert_response :success
     assert_includes response.body, "Media controller page"
     assert_includes response.body, lato_cms.pages_show_path(field.page)
+  end
+
+  test "show reports an unused media instead of an empty list" do
+    get lato_cms.media_show_url(create_media)
+
+    assert_response :success
+    assert_includes response.body, I18n.t("lato_cms.media_usages_empty")
+  end
+
+  test "update offers both the details and the replace file tab" do
+    media = create_media
+
+    get lato_cms.media_update_url(media)
+
+    assert_response :success
+    assert_includes response.body, I18n.t("lato_cms.media_update_tab_details")
+    assert_includes response.body, lato_cms.media_replace_file_action_path(media)
+  end
+
+  test "index filters out used media when asked for unused ones" do
+    used = create_media(name: "Used media")
+    unused = create_media(name: "Unused media")
+    build_field.replace_media!([used.id])
+
+    get lato_cms.media_url(usage: "unused")
+
+    assert_response :success
+    assert_includes response.body, unused.name
+    refute_includes response.body, used.name
+  end
+
+  test "index renders the delete action inert for a media still in use" do
+    media = create_media(name: "Busy media")
+    build_field.replace_media!([media.id])
+
+    get lato_cms.media_url
+
+    assert_response :success
+    # The destroy path is the show path with another verb, so the marker of a
+    # live delete button is the turbo method, not the href.
+    refute_includes response.body, 'data-turbo-method="DELETE"'
+    assert_includes response.body, I18n.t("lato_cms.media_delete_in_use", count: 1)
   end
 
   test "replace_file_action swaps the file keeping the same record and its usages" do

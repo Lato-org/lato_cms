@@ -1,6 +1,14 @@
 <%= lato_page_head t('lato_cms.media_index_title'), [{ label: t('lato_cms.media_index_title') }] %>
 
 <div class="card">
+  <div class="card-header d-flex gap-2">
+    <%= link_to lato_cms.media_path, class: "btn btn-sm #{params[:usage].blank? ? 'btn-primary' : 'btn-outline-secondary'}" do %>
+      <i class="bi bi-images me-1"></i><%= t('lato_cms.media_filter_all') %>
+    <% end %>
+    <%= link_to lato_cms.media_path(usage: 'unused'), class: "btn btn-sm #{params[:usage] == 'unused' ? 'btn-primary' : 'btn-outline-secondary'}" do %>
+      <i class="bi bi-unlink me-1"></i><%= t('lato_cms.media_filter_unused') %>
+    <% end %>
+  </div>
   <div class="card-body">
     <%= lato_index @media,
       custom_actions: {

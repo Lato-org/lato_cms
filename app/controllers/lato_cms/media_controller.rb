@@ -6,8 +6,13 @@ module LatoCms
     before_action :authenticate_lato_cms_admin, only: ADMIN_ONLY_ACTIONS
 
     def index
+      media = query_media
+      # "Unused" = no page field references it at all: the only media that can
+      # be deleted, so it's worth being able to list just those.
+      media = media.where.missing(:page_field_media) if params[:usage] == 'unused'
+
       @media = lato_index_collection(
-        query_media.order(created_at: :desc),
+        media.order(created_at: :desc),
         columns: %i[name media_type usages actions],
         sortable_columns: %i[name media_type created_at],
         searchable_columns: %i[name alt_text title],
@@ -24,6 +29,13 @@ module LatoCms
       media = media.where('LOWER(lato_cms_media.name) LIKE :q', q: "%#{params[:q].to_s.downcase}%") if params[:q].present?
 
       @media = media.order(created_at: :desc).page(params[:page]).per(24)
+    end
+
+    # Read-only detail page: the media's own data plus where it's used. Kept
+    # apart from the edit form, which is a modal from the index and has no room
+    # for a usage list.
+    def show
+      @media = query_media.find(params[:id])
     end
 
     def create
@@ -105,7 +117,7 @@ module LatoCms
 
       respond_to do |format|
         if file.present? && @media.replace_file!(file)
-          format.html { redirect_to lato_cms.media_update_path(@media), notice: t('lato_cms.media_file_replaced') }
+          format.html { redirect_to lato_cms.media_show_path(@media), notice: t('lato_cms.media_file_replaced') }
           format.json { render json: @media }
         else
           message = t('lato_cms.media_file_replace_failed')

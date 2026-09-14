@@ -1,0 +1,19 @@
+<%# Images and videos get a large view (the index thumbnail is too small to
+    judge a file by), everything else keeps the small type icon. %>
+<div class="mb-3">
+  <% if media.image? %>
+    <%= link_to media.url, target: '_blank', rel: 'noopener', title: t('lato_cms.media_open_original'),
+      class: 'd-block bg-light rounded overflow-hidden' do %>
+      <%= image_tag media.preview_url, class: 'd-block mx-auto', style: 'max-width: 100%; max-height: 420px;', alt: media.alt_text %>
+    <% end %>
+  <% elsif media.video? %>
+    <video controls preload="metadata" class="d-block w-100 rounded bg-black" style="max-height: 420px;" src="<%= media.url %>"></video>
+  <% end %>
+
+  <div class="d-flex align-items-center gap-2 mt-2">
+    <% unless media.image? || media.video? %>
+      <%= lato_cms_media_thumb(media, size: 64) %>
+    <% end %>
+    <%= link_to media.filename, media.url, target: '_blank', rel: 'noopener', class: 'text-muted small' %>
+  </div>
+</div>

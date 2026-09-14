@@ -125,6 +125,12 @@ it:
     media_upload_cta: Carica
     media_upload_processing: Elaborazione...
     media_usages_title: Utilizzato in
+    media_filter_all: Tutti
+    media_filter_unused: Senza utilizzi
+    media_summary_title: Dettagli media
+    media_type_label: Tipo
+    media_update_tab_details: Dettagli
+    media_usages_show_cta: Vedi dove è utilizzato
     media_usages_empty: Questo media non è ancora utilizzato in nessuna pagina.
     media_usages_none: Non utilizzato
     media_usages_count:

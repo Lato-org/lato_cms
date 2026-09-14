@@ -125,6 +125,12 @@ en:
     media_upload_cta: Upload
     media_upload_processing: Processing...
     media_usages_title: Used in
+    media_filter_all: All
+    media_filter_unused: Unused
+    media_summary_title: Media details
+    media_type_label: Type
+    media_update_tab_details: Details
+    media_usages_show_cta: See where it is used
     media_usages_empty: This media is not used in any page yet.
     media_usages_none: Unused
     media_usages_count:

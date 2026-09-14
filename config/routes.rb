@@ -30,6 +30,7 @@ LatoCms::Engine.routes.draw do
     get 'picker', to: 'media#picker_action', as: :media_picker_action
     get 'create', to: 'media#create', as: :media_create
     post 'create', to: 'media#create_action', as: :media_create_action
+    get ':id', to: 'media#show', as: :media_show
     get ':id/update', to: 'media#update', as: :media_update
     patch ':id/update', to: 'media#update_action', as: :media_update_action
     patch ':id/replace-file', to: 'media#replace_file_action', as: :media_replace_file_action

@@ -276,20 +276,21 @@ fields:
 <h4>Where a media item is used</h4>
 
 <p>
-  The library index shows how many page fields reference each media item, and the edit form lists those pages
-  by name (with a link to each one) together with the fields using the media there. A media item nothing
-  references is listed as unused.
+  The library index shows how many page fields reference each media item, and a filter lists only the unused
+  ones (the only ones that can be deleted &mdash; the delete action is inert while a media is still
+  referenced). Each media item also has a detail page: a read-only summary (preview, name, alt text and title
+  per locale) plus the list of pages using it, with a link to each one and the fields involved.
 </p>
 
 <h4>Replacing a file</h4>
 
 <p>
-  The edit form of a media item also offers <em>Replace file</em> (admins only): it uploads a new file over the
+  The edit form of a media item has a second tab, <em>Replace file</em> (admins only): it uploads a new file over the
   existing media item, keeping the same record, so every page and field already referencing it shows the new
   file. That's the point of the action &mdash; swapping a logo everywhere at once &mdash; and its danger, which
   is why the form states how many fields are affected and asks for a confirmation. The previous file is deleted,
   and <code>media_type</code> is re-inferred from the new one. Metadata (name, alt text, title) is kept: to change
-  it, use the fields above. Uploading a file from the library's <em>Upload</em> action, as before, always creates a
+  it, use the <em>Details</em> tab. Uploading a file from the library's <em>Upload</em> action, as before, always creates a
   separate media item instead.
 </p>
 
