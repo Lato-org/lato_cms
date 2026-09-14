@@ -179,6 +179,25 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, lato_cms.media_replace_file_action_path(media)
   end
 
+  # The Spaces association joins lato_spaces_groups, which also has a `name`
+  # column: the generic index search builds unqualified SQL, so searching the
+  # media library raised "ambiguous column name: name".
+  test "index search matches name, alt text and title" do
+    hit = create_media(name: "Sunset over the sea")
+    other = create_media(name: "Mountain road")
+    hit.update!(alt_text_en: "A beach at dusk")
+
+    get lato_cms.media_url(default_search: "sunset")
+    assert_response :success
+    assert_includes response.body, hit.name
+    refute_includes response.body, other.name
+
+    get lato_cms.media_url(default_search: "dusk")
+    assert_response :success
+    assert_includes response.body, hit.name
+    refute_includes response.body, other.name
+  end
+
   test "index filters out used media when asked for unused ones" do
     used = create_media(name: "Used media")
     unused = create_media(name: "Unused media")

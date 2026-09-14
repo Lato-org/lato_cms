@@ -45,6 +45,20 @@ module LatoCms
 
     scope :of_type, ->(type) { where(media_type: type) if type.present? }
 
+    # Hook picked up by lato's `lato_index_collection` in place of its generic
+    # search, whose SQL leaves column names unqualified. The Spaces association
+    # joins lato_spaces_groups, which also has a `name` column, so that generic
+    # search was ambiguous SQL and the media library's search box raised
+    # ("ambiguous column name: name" on SQLite, the same error on Postgres).
+    # Qualifying every column here fixes it; alt_text/title are matched as the
+    # raw JSON they're stored as, so a hit in any locale counts.
+    scope :lato_index_search, ->(search) {
+      term = "%#{search.to_s.downcase.strip}%"
+      columns = %w[name alt_text title].map { |column| "LOWER(#{table_name}.#{column}) LIKE :term" }
+
+      where(columns.join(" OR "), term: term)
+    }
+
     def self.infer_media_type(content_type)
       content_type = content_type.to_s
       return 'image' if content_type.start_with?('image/')
