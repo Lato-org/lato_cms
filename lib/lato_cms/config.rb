@@ -3,8 +3,19 @@ module LatoCms
   # This class contains the default configuration of the engine.
   ##
   class Config
-    attr_accessor :locales, :templates_path, :admin_roles, :llm_api_url, :llm_model, :llm_api_key,
-                  :llm_generate_alt_text, :llm_generate_title, :llm_alt_text_prompt, :llm_title_prompt
+    attr_accessor :locales, :templates_path, :admin_roles, :media_url_mode, :llm_api_url, :llm_model,
+                  :llm_api_key, :llm_generate_alt_text, :llm_generate_title, :llm_alt_text_prompt,
+                  :llm_title_prompt
+
+    # How the URLs of media files are built (see LatoCms::Media#url).
+    # - :redirect — Rails answers 302 with a signed URL that expires; on a
+    #   remote service (S3 and friends) the file then comes from the service
+    #   itself, which is what you want there.
+    # - :proxy — the file is served through the app, with no redirect and with
+    #   `Cache-Control: public, immutable`, so browsers and any cache in front
+    #   can keep it. On a disk service this is strictly better: the redirect
+    #   costs a second request and its target can be cached by nobody.
+    MEDIA_URL_MODES = %i[redirect proxy].freeze
 
     # Placeholders substituted at request time in both default and custom LLM
     # prompts (see LatoCms::Media#llm_prompt):
@@ -37,6 +48,11 @@ module LatoCms
       # (create, update, delete) and translation links.
       @admin_roles = { none: 0, operator: 1, admin: 2 }
 
+      # Default is :redirect, which is how it always worked: switching the way
+      # every media URL is built is a decision for the host app, not something
+      # an upgrade should do on its own. See MEDIA_URL_MODES.
+      @media_url_mode = :redirect
+
       # Optional OpenAI-compatible endpoint used to auto-generate alt text and
       # title for uploaded images (see LatoCms::Media#generate_text!). All
       # three must be set for the feature to activate; unset by default.
@@ -54,6 +70,10 @@ module LatoCms
       # LLM_PROMPT_VARIABLES placeholders.
       @llm_alt_text_prompt = nil
       @llm_title_prompt = nil
+    end
+
+    def media_url_proxy?
+      media_url_mode.to_sym == :proxy
     end
 
     def llm_configured?

@@ -43,6 +43,31 @@ import "lato_cms/application";
 // ....
 ```
 
+## Media URLs
+
+By default a media URL is an Active Storage **redirect** URL: Rails answers 302 with a
+signed address that expires. On a remote service (S3 and friends) that is what you want —
+the file then comes from the service itself.
+
+On a **disk** service it is the wrong trade: the redirect costs a second request, and its
+target is served `private, must-revalidate`, so no browser, proxy or CDN can keep it. A
+video of a few dozen MB is then downloaded again on every visit, from a thread of your app
+server. Switch the mode:
+
+```ruby
+LatoCms.configure do |config|
+  config.media_url_mode = :proxy
+end
+```
+
+Media URLs (the blob and every variant) then point at Active Storage's proxy controller:
+no redirect, and `Cache-Control: public, immutable`, which a cache in front of the app can
+actually use. The address carries the signature of the blob, so a replaced file is a
+different address and can never be served stale.
+
+Both modes ask for an `inline` disposition: a media of the library is content to show, and
+the default for a video would otherwise turn opening its address into a download.
+
 ## Development
 
 Clone repository, install dependencies, run migrations and start:

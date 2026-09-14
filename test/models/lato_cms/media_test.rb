@@ -251,7 +251,44 @@ module LatoCms
       end
     end
 
+    test "urls redirect by default" do
+      media = build_media
+      media.save!
+
+      assert_match %r{/rails/active_storage/blobs/redirect/}, media.url
+      assert_match %r{/rails/active_storage/representations/redirect/}, media.thumbnail_url
+    end
+
+    test "proxy mode builds proxy urls for the blob and its variants" do
+      media = build_media
+      media.save!
+
+      with_media_url_mode(:proxy) do
+        assert_match %r{/rails/active_storage/blobs/proxy/}, media.url
+        assert_match %r{/rails/active_storage/representations/proxy/}, media.thumbnail_url
+        assert_match %r{/rails/active_storage/representations/proxy/}, media.preview_url
+        assert_match %r{/rails/active_storage/representations/proxy/}, media.variant_urls("full" => { "width" => 100 })["full"]
+      end
+    end
+
+    test "video urls are inline in both modes" do
+      media = build_media(filename: "example_video.mp4", content_type: "video/mp4")
+      media.save!
+
+      assert_includes media.url, "disposition=inline"
+      with_media_url_mode(:proxy) { assert_includes media.url, "disposition=inline" }
+    end
+
     private
+
+    # The mode is global config, so a test that flips it has to put it back.
+    def with_media_url_mode(mode)
+      original = LatoCms.config.media_url_mode
+      LatoCms.config.media_url_mode = mode
+      yield
+    ensure
+      LatoCms.config.media_url_mode = original
+    end
 
     def build_media(name: nil, filename: "example_image.png", content_type: "image/png", attach: true)
       media = Media.new(name: name, lato_spaces_group_id: group.id)

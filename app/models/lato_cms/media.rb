@@ -154,11 +154,27 @@ module LatoCms
     end
 
     def url
-      Rails.application.routes.url_helpers.rails_blob_path(file, only_path: true) if file.attached?
+      attachment_url(file) if file.attached?
     end
 
     def poster_url
-      Rails.application.routes.url_helpers.rails_blob_path(poster_file, only_path: true) if poster_file.attached?
+      attachment_url(poster_file) if poster_file.attached?
+    end
+
+    # The URL of an attachment or of one of its variants, in the mode the host
+    # app asked for (see LatoCms::Config::MEDIA_URL_MODES).
+    #
+    # `inline` in both modes: a media of the library is content to show — a
+    # picture in a page, a video in a player — and the default disposition of a
+    # video is `attachment`, which turns opening its address into a download.
+    # Whoever wants a download asks for it explicitly, as the panel does.
+    def attachment_url(attachable)
+      helpers = Rails.application.routes.url_helpers
+      if LatoCms.config.media_url_proxy?
+        helpers.rails_storage_proxy_path(attachable, only_path: true, disposition: :inline)
+      else
+        helpers.rails_blob_path(attachable, only_path: true, disposition: :inline)
+      end
     end
 
     # Swaps the underlying file while keeping the same record, so every field
@@ -248,9 +264,7 @@ module LatoCms
     def thumbnail_url
       return nil unless image? && file.attached? && file.variable?
 
-      Rails.application.routes.url_helpers.rails_representation_path(
-        file.variant(resize_to_fill: [200, 200]), only_path: true
-      )
+      attachment_url(file.variant(resize_to_fill: [200, 200]))
     rescue StandardError => e
       Rails.logger.error("LatoCms: Failed to build thumbnail for media #{id}: #{e.message}")
       nil
@@ -263,9 +277,7 @@ module LatoCms
       return nil unless image? && file.attached?
       return url unless file.variable?
 
-      Rails.application.routes.url_helpers.rails_representation_path(
-        file.variant(resize_to_limit: [1200, 1200]), only_path: true
-      )
+      attachment_url(file.variant(resize_to_limit: [1200, 1200]))
     rescue StandardError => e
       Rails.logger.error("LatoCms: Failed to build preview for media #{id}: #{e.message}")
       url
@@ -278,12 +290,11 @@ module LatoCms
     def variant_urls(sizes_config)
       return {} if sizes_config.blank? || !sizes_config.respond_to?(:each_pair) || !file.attached? || !file.variable?
 
-      url_helpers = Rails.application.routes.url_helpers
       sizes_config.each_with_object({}) do |(name, opts), acc|
         transformation = self.class.variant_transformation(opts)
         next if transformation.blank?
 
-        acc[name] = url_helpers.rails_representation_path(file.variant(transformation), only_path: true)
+        acc[name] = attachment_url(file.variant(transformation))
       end
     rescue StandardError => e
       Rails.logger.error("LatoCms: Failed to build image variants for media #{id}: #{e.message}")
