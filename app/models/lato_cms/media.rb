@@ -45,6 +45,26 @@ module LatoCms
 
     scope :of_type, ->(type) { where(media_type: type) if type.present? }
 
+    # Media missing `attribute` (alt_text or title) in at least one configured
+    # locale — the ones worth going back to fill in. Alt text exists only for
+    # images, so that filter is scoped to them; a title is editable on every
+    # media type.
+    #
+    # Filtered in Ruby rather than SQL: the translations live as a JSON blob in
+    # a text column, and "blank in one locale" is not a predicate any adapter
+    # can express without guessing at that serialization (a stored empty string
+    # counts as missing too). Only the id and the one column are loaded.
+    scope :missing_translation, ->(attribute) {
+      attribute = attribute.to_s
+      next none unless TRANSLATABLE_ATTRIBUTES.include?(attribute)
+
+      candidates = attribute == "alt_text" ? where(media_type: "image") : all
+      locales = LatoCms.config.locales
+      incomplete = candidates.select(:id, attribute).reject { |media| locales.all? { |locale| media.public_send(attribute, locale).present? } }
+
+      candidates.where(id: incomplete.map(&:id))
+    }
+
     # Hook picked up by lato's `lato_index_collection` in place of its generic
     # search, whose SQL leaves column names unqualified. The Spaces association
     # joins lato_spaces_groups, which also has a `name` column, so that generic

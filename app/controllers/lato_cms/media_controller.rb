@@ -10,6 +10,7 @@ module LatoCms
       # "Unused" = no page field references it at all: the only media that can
       # be deleted, so it's worth being able to list just those.
       media = media.where.missing(:page_field_media) if params[:usage] == 'unused'
+      media = media.missing_translation(params[:missing]) if LatoCms::Media::TRANSLATABLE_ATTRIBUTES.include?(params[:missing])
 
       @media = lato_index_collection(
         media.order(created_at: :desc),

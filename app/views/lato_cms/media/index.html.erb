@@ -1,12 +1,21 @@
 <%= lato_page_head t('lato_cms.media_index_title'), [{ label: t('lato_cms.media_index_title') }] %>
 
 <div class="card">
-  <div class="card-header d-flex gap-2">
-    <%= link_to lato_cms.media_path, class: "btn btn-sm #{params[:usage].blank? ? 'btn-primary' : 'btn-outline-secondary'}" do %>
-      <i class="bi bi-images me-1"></i><%= t('lato_cms.media_filter_all') %>
-    <% end %>
-    <%= link_to lato_cms.media_path(usage: 'unused'), class: "btn btn-sm #{params[:usage] == 'unused' ? 'btn-primary' : 'btn-outline-secondary'}" do %>
-      <i class="bi bi-unlink me-1"></i><%= t('lato_cms.media_filter_unused') %>
+  <%# Mutually exclusive shortcuts to the media worth acting on: the ones that
+      can be deleted, and the ones still missing a translation. %>
+  <% filters = [
+       { label: t('lato_cms.media_filter_all'), icon: 'bi-images', params: {} },
+       { label: t('lato_cms.media_filter_unused'), icon: 'bi-unlink', params: { usage: 'unused' } }
+     ] + LatoCms::Media::TRANSLATABLE_ATTRIBUTES.map do |attribute|
+       { label: t("lato_cms.media_filter_missing_#{attribute}"), icon: 'bi-translate', params: { missing: attribute } }
+     end %>
+  <% current = { usage: params[:usage].presence, missing: params[:missing].presence }.compact %>
+
+  <div class="card-header d-flex flex-wrap gap-2">
+    <% filters.each do |filter| %>
+      <%= link_to lato_cms.media_path(filter[:params]), class: "btn btn-sm #{filter[:params] == current ? 'btn-primary' : 'btn-outline-secondary'}" do %>
+        <i class="bi <%= filter[:icon] %> me-1"></i><%= filter[:label] %>
+      <% end %>
     <% end %>
   </div>
   <div class="card-body">

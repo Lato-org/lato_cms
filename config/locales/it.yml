@@ -127,6 +127,8 @@ it:
     media_usages_title: Utilizzato in
     media_filter_all: Tutti
     media_filter_unused: Senza utilizzi
+    media_filter_missing_alt_text: Senza alt text
+    media_filter_missing_title: Senza title
     media_summary_title: Dettagli media
     media_type_label: Tipo
     media_update_tab_details: Dettagli
