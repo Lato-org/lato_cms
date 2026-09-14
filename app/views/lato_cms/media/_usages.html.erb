@@ -1,0 +1,24 @@
+<%# Where this media is actually rendered: a media is shared, so this is the
+    blast radius of replacing its file or deleting it. %>
+<% usages = media.usages %>
+
+<div class="mb-3">
+  <label class="form-label"><%= t('lato_cms.media_usages_title') %></label>
+
+  <% if usages.empty? %>
+    <p class="text-muted small mb-0"><%= t('lato_cms.media_usages_empty') %></p>
+  <% else %>
+    <ul class="list-group list-group-flush border rounded">
+      <% usages.each do |page, fields| %>
+        <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+          <div>
+            <%= link_to page.title, lato_cms.pages_show_path(page), class: 'text-decoration-none' %>
+            <span class="badge bg-secondary ms-1"><%= page.locale %></span>
+            <div class="text-muted small"><%= fields.map(&:field_name).uniq.join(', ') %></div>
+          </div>
+          <%= link_to t('lato_cms.cta_edit'), lato_cms.pages_show_path(page), class: 'btn btn-sm btn-outline-secondary' %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

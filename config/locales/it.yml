@@ -3,6 +3,8 @@ it:
     attributes:
       lato/user:
         lato_cms_admin_role: Ruolo Lato CMS
+      lato_cms/media:
+        usages: Utilizzi
   lato_cms:
     admin_roles:
       none: Nessun accesso
@@ -121,6 +123,22 @@ it:
     media_picker_selected_label: selezionati
     media_search_placeholder: Cerca media...
     media_upload_cta: Carica
+    media_upload_processing: Elaborazione...
+    media_usages_title: Utilizzato in
+    media_usages_empty: Questo media non è ancora utilizzato in nessuna pagina.
+    media_usages_none: Non utilizzato
+    media_usages_count:
+      one: "%{count} utilizzo"
+      other: "%{count} utilizzi"
+    media_replace_file_title: Sostituisci file
+    media_replace_file_description:
+      zero: "Carica un nuovo file al posto di quello attuale, mantenendo lo stesso media. Questo media non è ancora utilizzato."
+      one: "Carica un nuovo file al posto di quello attuale, mantenendo lo stesso media: il %{count} campo che lo utilizza mostrerà il nuovo file."
+      other: "Carica un nuovo file al posto di quello attuale, mantenendo lo stesso media: i %{count} campi che lo utilizzano mostreranno il nuovo file."
+    media_replace_file_cta: Sostituisci file
+    media_replace_file_confirm: "Il file attuale verrà sostituito ovunque questo media sia utilizzato. Continuare?"
+    media_file_replaced: File sostituito con successo
+    media_file_replace_failed: Impossibile sostituire il file
     media_type_all: Tutti
     media_type_image: Immagini
     media_type_video: Video

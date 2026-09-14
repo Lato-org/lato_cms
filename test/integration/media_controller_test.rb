@@ -150,6 +150,44 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], field.media.reload.pluck(:id)
   end
 
+  test "update lists the pages where the media is used" do
+    media = create_media
+    field = build_field
+    field.replace_media!([media.id])
+
+    get lato_cms.media_update_url(media)
+
+    assert_response :success
+    assert_includes response.body, "Media controller page"
+    assert_includes response.body, lato_cms.pages_show_path(field.page)
+  end
+
+  test "replace_file_action swaps the file keeping the same record and its usages" do
+    media = create_media
+    field = build_field
+    field.replace_media!([media.id])
+    original_blob_id = media.file.blob.id
+
+    patch lato_cms.media_replace_file_action_url(media),
+      params: { media: { file: fixture_file_upload("example_video.mp4", "video/mp4") } },
+      headers: { "Accept" => "application/json" }
+
+    assert_response :success
+    media.reload
+    refute_equal original_blob_id, media.file.blob.id
+    assert_equal "example_video.mp4", media.filename
+    assert_equal "video", media.media_type
+    assert_equal [media.id], field.media.reload.pluck(:id)
+  end
+
+  test "replace_file_action without a file is rejected" do
+    media = create_media
+
+    patch lato_cms.media_replace_file_action_url(media), headers: { "Accept" => "application/json" }
+
+    assert_response :unprocessable_entity
+  end
+
   private
 
   def create_media(name: nil, filename: "example_image.png", content_type: "image/png")

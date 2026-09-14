@@ -30,6 +30,16 @@ module LatoCms
       end
     end
 
+    # Index usages cell: how many page fields reference this media, so the
+    # admin sees at a glance which files are actually in use (the detail is in
+    # the edit form, which lists the pages).
+    def lato_cms_media_usages(media)
+      count = media.usage_count
+      return content_tag(:span, t('lato_cms.media_usages_none'), class: 'text-muted small') if count.zero?
+
+      content_tag(:span, t('lato_cms.media_usages_count', count: count), class: 'badge bg-info text-dark')
+    end
+
     def lato_cms_media_media_type(media)
       content_tag(:span, media.media_type, class: 'badge bg-secondary')
     end

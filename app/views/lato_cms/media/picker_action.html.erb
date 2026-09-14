@@ -84,12 +84,17 @@
             ActiveRecord::Relation delegates an unrecognized `#name` call to
             its model class, silently pre-filling a `:name` field with the
             literal string "LatoCms::Media" (bit us once already here). %>
+        <%# Uploaded over XHR by `lato-cms-upload` (progress bar) instead of a
+            plain submit; the picker only reacts to the result events. %>
         <%= form_with model: LatoCms::Media.new, url: lato_cms.media_create_action_path, data: {
-          lato_cms_media_picker_target: 'uploadForm', action: 'submit->lato-cms-media-picker#upload'
+          controller: 'lato-cms-upload',
+          action: 'submit->lato-cms-upload#submit lato-cms:upload-complete->lato-cms-media-picker#uploadCompleted lato-cms:upload-error->lato-cms-media-picker#uploadFailed',
+          lato_cms_upload_processing_label_value: t('lato_cms.media_upload_processing')
         } do |form| %>
           <%= lato_form_item_input_file_dropzone form, :file, accept: { 'image' => 'image/*', 'video' => 'video/*' }[params[:type]] %>
+          <%= render 'lato_cms/media/upload_progress' %>
           <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-success"><%= t('lato_cms.media_upload_cta') %></button>
+            <button type="submit" class="btn btn-success" data-lato-cms-upload-target="submit"><%= t('lato_cms.media_upload_cta') %></button>
           </div>
         <% end %>
       </div>

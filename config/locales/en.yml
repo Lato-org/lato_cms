@@ -3,6 +3,8 @@ en:
     attributes:
       lato/user:
         lato_cms_admin_role: Lato CMS role
+      lato_cms/media:
+        usages: Usages
   lato_cms:
     admin_roles:
       none: No access
@@ -121,6 +123,22 @@ en:
     media_picker_selected_label: selected
     media_search_placeholder: Search media...
     media_upload_cta: Upload
+    media_upload_processing: Processing...
+    media_usages_title: Used in
+    media_usages_empty: This media is not used in any page yet.
+    media_usages_none: Unused
+    media_usages_count:
+      one: "%{count} usage"
+      other: "%{count} usages"
+    media_replace_file_title: Replace file
+    media_replace_file_description:
+      zero: "Uploads a new file in place of the current one, keeping the same media record. This media is not used yet."
+      one: "Uploads a new file in place of the current one, keeping the same media record: the %{count} page field using it will show the new file."
+      other: "Uploads a new file in place of the current one, keeping the same media record: the %{count} page fields using it will show the new file."
+    media_replace_file_cta: Replace file
+    media_replace_file_confirm: "The current file will be replaced everywhere this media is used. Continue?"
+    media_file_replaced: File replaced successfully
+    media_file_replace_failed: Failed to replace the file
     media_type_all: All
     media_type_image: Images
     media_type_video: Videos

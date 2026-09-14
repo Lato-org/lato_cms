@@ -1,9 +1,21 @@
 <% media ||= LatoCms::Media.new %>
 
 <%= turbo_frame_tag dom_id(media, 'form') do %>
-  <%= form_with model: media, url: lato_cms.media_create_action_path, data: { turbo_frame: '_self', controller: 'lato-form' } do |form| %>
+  <%# Submitted over XHR (see lato-cms-upload) to show upload progress; the
+      `notify` flag asks the JSON branch to leave a flash for the page we
+      navigate to once the upload is done. %>
+  <%= form_with model: media, url: lato_cms.media_create_action_path, data: {
+    turbo_frame: '_self',
+    controller: 'lato-form lato-cms-upload',
+    action: 'submit->lato-cms-upload#submit',
+    lato_cms_upload_redirect_url_value: lato_cms.media_path,
+    lato_cms_upload_processing_label_value: t('lato_cms.media_upload_processing')
+  } do |form| %>
     <%= lato_form_notices class: %w[mb-3] %>
     <%= lato_form_errors media, class: %w[mb-3] %>
+    <%= hidden_field_tag :notify, true %>
+
+    <div data-lato-cms-upload-target="notice"></div>
 
     <%# Name/alt text are edited afterwards from this same list's "edit"
         action — they default to the filename on upload, so there's nothing
@@ -13,8 +25,10 @@
       <%= lato_form_item_input_file_dropzone form, :file %>
     </div>
 
+    <%= render 'lato_cms/media/upload_progress' %>
+
     <div class="d-flex justify-content-end">
-      <%= lato_form_submit form, t('lato_cms.media_create_cta'), class: %w[btn-success] %>
+      <%= lato_form_submit form, t('lato_cms.media_create_cta'), class: %w[btn-success], data: { lato_cms_upload_target: 'submit' } %>
     </div>
   <% end %>
 <% end %>

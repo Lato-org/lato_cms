@@ -1,0 +1,32 @@
+<%# Swaps the file behind an existing media: every page using it renders the
+    new file. Deliberately separate from the metadata form (different action,
+    admin only, destructive across every usage). %>
+<div class="card border-warning mt-4">
+  <div class="card-header">
+    <h3 class="fs-6 mb-0"><%= t('lato_cms.media_replace_file_title') %></h3>
+  </div>
+  <div class="card-body">
+    <p class="text-muted small">
+      <%= t('lato_cms.media_replace_file_description', count: media.usage_count) %>
+    </p>
+
+    <%= form_with model: media, url: lato_cms.media_replace_file_action_path(media), method: :patch, data: {
+      controller: 'lato-cms-upload',
+      action: 'submit->lato-cms-upload#submit',
+      lato_cms_upload_redirect_url_value: lato_cms.media_update_path(media),
+      lato_cms_upload_processing_label_value: t('lato_cms.media_upload_processing'),
+      lato_cms_upload_confirm_value: t('lato_cms.media_replace_file_confirm')
+    } do |form| %>
+      <div data-lato-cms-upload-target="notice"></div>
+
+      <%= lato_form_item_input_file_dropzone form, :file %>
+      <%= render 'lato_cms/media/upload_progress' %>
+
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-warning" data-lato-cms-upload-target="submit">
+          <%= t('lato_cms.media_replace_file_cta') %>
+        </button>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -6,7 +6,7 @@ import { Controller } from '@hotwired/stimulus'
 // `lato-cms:media-selected` event on `document`, correlated by the picker's
 // own turbo-frame id (unique per field instance, even inside a repeater).
 export default class extends Controller {
-  static targets = ['grid', 'item', 'selectedCount', 'confirmButton', 'uploadForm', 'uploadNotice']
+  static targets = ['grid', 'item', 'selectedCount', 'confirmButton', 'uploadNotice']
   static values = { multiple: Boolean, selectedLabel: String }
 
   connect () {
@@ -41,22 +41,11 @@ export default class extends Controller {
     this.closeModal()
   }
 
-  async upload (event) {
-    event.preventDefault()
-
-    const form = event.currentTarget
-    const response = await fetch(form.action, {
-      method: 'POST',
-      headers: { Accept: 'application/json' },
-      body: new FormData(form)
-    })
-    const data = await response.json()
-
-    if (!response.ok) {
-      this.uploadNoticeTarget.innerHTML = `<div class="alert alert-danger">${Object.values(data).flat().join(', ')}</div>`
-      return
-    }
-
+  // Result of the XHR upload driven by `lato-cms-upload` (which owns the
+  // request and its progress bar); this only turns the created media into a
+  // selection.
+  uploadCompleted (event) {
+    const data = event.detail
     const item = {
       id: data.id,
       name: data.name,
@@ -74,8 +63,11 @@ export default class extends Controller {
 
     this.pending.set(item.id, item)
     this.updateSelectionUi()
-    form.reset()
     this.uploadNoticeTarget.innerHTML = `<div class="alert alert-success">${item.name}</div>`
+  }
+
+  uploadFailed (event) {
+    this.uploadNoticeTarget.innerHTML = `<div class="alert alert-danger">${event.detail.message}</div>`
   }
 
   buildItemFromElement (element) {

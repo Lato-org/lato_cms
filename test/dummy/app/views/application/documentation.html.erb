@@ -264,10 +264,33 @@ fields:
 
 <p>
   A media item's <code>name</code>, alt text and title are edited from the library's own edit form, not from the
-  upload dialog &mdash; on upload, <code>name</code> defaults to the filename. Replacing the underlying file
-  of an existing media item isn't supported: uploading a different file always creates a new media item, so
-  that changing what a shared media item points to never silently changes it everywhere it's already in use.
+  upload dialog &mdash; on upload, <code>name</code> defaults to the filename.
   Deleting a media item still referenced by a field is blocked until it's removed from every field using it.
+</p>
+
+<p>
+  Uploads (from the library and from the picker's <em>Upload new</em> tab alike) show a progress bar with the
+  real upload percentage, so large videos don't look like a frozen page.
+</p>
+
+<h4>Where a media item is used</h4>
+
+<p>
+  The library index shows how many page fields reference each media item, and the edit form lists those pages
+  by name (with a link to each one) together with the fields using the media there. A media item nothing
+  references is listed as unused.
+</p>
+
+<h4>Replacing a file</h4>
+
+<p>
+  The edit form of a media item also offers <em>Replace file</em> (admins only): it uploads a new file over the
+  existing media item, keeping the same record, so every page and field already referencing it shows the new
+  file. That's the point of the action &mdash; swapping a logo everywhere at once &mdash; and its danger, which
+  is why the form states how many fields are affected and asks for a confirmation. The previous file is deleted,
+  and <code>media_type</code> is re-inferred from the new one. Metadata (name, alt text, title) is kept: to change
+  it, use the fields above. Uploading a file from the library's <em>Upload</em> action, as before, always creates a
+  separate media item instead.
 </p>
 
 <p>

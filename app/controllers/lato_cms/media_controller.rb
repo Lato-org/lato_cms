@@ -1,6 +1,6 @@
 module LatoCms
   class MediaController < ApplicationController
-    ADMIN_ONLY_ACTIONS = %i[destroy_action].freeze
+    ADMIN_ONLY_ACTIONS = %i[replace_file_action destroy_action].freeze
 
     before_action { active_sidebar(:lato_cms_media) }
     before_action :authenticate_lato_cms_admin, only: ADMIN_ONLY_ACTIONS
@@ -8,7 +8,7 @@ module LatoCms
     def index
       @media = lato_index_collection(
         query_media.order(created_at: :desc),
-        columns: %i[name media_type actions],
+        columns: %i[name media_type usages actions],
         sortable_columns: %i[name media_type created_at],
         searchable_columns: %i[name alt_text title],
         default_sort_by: 'created_at|DESC',
@@ -35,6 +35,12 @@ module LatoCms
 
       respond_to do |format|
         if @media.save
+          # The JSON branch serves XHR uploads (progress bar, see
+          # lato_cms_upload_controller.js). `notify` is sent only by forms that
+          # navigate somewhere afterwards, so the flash lands on that page; the
+          # media picker uploads in place and asks for no flash.
+          flash[:notice] = t('lato_cms.media_created') if params[:notify].present?
+
           format.html { redirect_to lato_cms.media_path, notice: t('lato_cms.media_created') }
           format.json { render json: @media }
         else
@@ -89,6 +95,34 @@ module LatoCms
       end
     end
 
+    # Replaces the file of an existing media in place, so every page already
+    # using it picks up the new file. Kept out of `update_action` (and off
+    # `update_params`) on purpose: this is a destructive, admin-only edit to
+    # every usage at once, not a metadata change.
+    def replace_file_action
+      @media = query_media.find(params[:id])
+      file = params.dig(:media, :file)
+
+      respond_to do |format|
+        if file.present? && @media.replace_file!(file)
+          format.html { redirect_to lato_cms.media_update_path(@media), notice: t('lato_cms.media_file_replaced') }
+          format.json { render json: @media }
+        else
+          message = t('lato_cms.media_file_replace_failed')
+          format.html { redirect_to lato_cms.media_update_path(@media), alert: message }
+          format.json { render json: { error: message }, status: :unprocessable_entity }
+        end
+      end
+    rescue StandardError => e
+      Rails.logger.error("LatoCms: failed to replace file for media #{params[:id]}: #{e.message}")
+      message = t('lato_cms.media_file_replace_failed')
+
+      respond_to do |format|
+        format.html { redirect_to lato_cms.media_update_path(@media), alert: message }
+        format.json { render json: { error: message }, status: :unprocessable_entity }
+      end
+    end
+
     def destroy_action
       @media = query_media.find(params[:id])
       in_use = @media.usage_count.positive?
@@ -112,10 +146,10 @@ module LatoCms
       params.require(:media).permit(:file, :name, :alt_text, :title)
     end
 
-    # :file is intentionally not permitted here: the underlying file is
-    # immutable once a Media exists (it can be reused by many fields across
-    # many pages, so replacing it in place would silently change what renders
-    # everywhere it's referenced). A different file means a new Media.
+    # :file is intentionally not permitted here: a media can be reused by many
+    # fields across many pages, so swapping its file silently changes what
+    # renders everywhere it's referenced. That swap is possible, but only
+    # through the explicit, admin-only `replace_file_action`.
     def update_params
       translation_keys = LatoCms::Media::TRANSLATABLE_ATTRIBUTES.product(LatoCms.config.locales).map { |attribute, locale| :"#{attribute}_#{locale}" }
       params.require(:media).permit(:name, *translation_keys)

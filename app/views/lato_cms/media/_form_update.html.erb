@@ -35,8 +35,14 @@
     <% end %>
     <%= render "lato_cms/media/translations_field", form: form, media: media, attribute: "title" %>
 
+    <%= render 'lato_cms/media/usages', media: media %>
+
     <div class="d-flex justify-content-end">
       <%= lato_form_submit form, t('lato_cms.cta_update'), class: %w[btn-success] %>
     </div>
+  <% end %>
+
+  <% if lato_cms_admin? %>
+    <%= render 'lato_cms/media/form_replace_file', media: media %>
   <% end %>
 <% end %>

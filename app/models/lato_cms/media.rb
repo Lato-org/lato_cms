@@ -78,6 +78,14 @@ module LatoCms
       page_field_media.count
     end
 
+    # Every page field referencing this media, grouped by page (sorted by page
+    # title). Drives the "used in" list in the admin: a media is shared, so
+    # both deleting it and replacing its file are edits to every page listed
+    # here, and the admin has to see that before doing either.
+    def usages
+      page_fields.includes(:page).group_by(&:page).sort_by { |page, _fields| page.title.to_s.downcase }
+    end
+
     def filename
       file.filename.to_s if file.attached?
     end
@@ -117,6 +125,22 @@ module LatoCms
 
     def poster_url
       Rails.application.routes.url_helpers.rails_blob_path(poster_file, only_path: true) if poster_file.attached?
+    end
+
+    # Swaps the underlying file while keeping the same record, so every field
+    # already referencing this media renders the new file: the point of the
+    # action (replace a logo everywhere at once) and its danger at the same
+    # time. Active Storage purges the previous blob on attach, the stale video
+    # poster is dropped explicitly, and media_type is re-inferred since the
+    # new file can be of a different kind. Variants need no cleanup: they are
+    # derived from the blob, so the old ones die with it.
+    def replace_file!(new_file)
+      file.attach(new_file)
+      poster_file.purge if poster_file.attached?
+      update!(media_type: self.class.infer_media_type(file.content_type))
+      enqueue_poster_generation if video?
+
+      true
     end
 
     # Best effort: generates a poster from the video via Active Storage previews
