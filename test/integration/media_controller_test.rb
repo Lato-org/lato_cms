@@ -169,6 +169,17 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, I18n.t("lato_cms.media_usages_empty")
   end
 
+  test "show serves a video behind its poster, loading no video bytes upfront" do
+    media = create_media(filename: "example_video.mp4", content_type: "video/mp4")
+    media.poster_file.attach(io: file_fixture("example_image.png").open, filename: "poster.png", content_type: "image/png")
+
+    get lato_cms.media_show_url(media)
+
+    assert_response :success
+    assert_includes response.body, %(poster="#{media.poster_url}")
+    assert_includes response.body, %(preload="none")
+  end
+
   test "update offers both the details and the replace file tab" do
     media = create_media
 
@@ -208,6 +219,33 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, unused.name
     refute_includes response.body, used.name
+  end
+
+  test "index lists images missing an alt text in any locale" do
+    complete = create_media(name: "Fully described")
+    partial = create_media(name: "Half described")
+    LatoCms.config.locales.each { |locale| complete.public_send("alt_text_#{locale}=", "alt"); complete.public_send("title_#{locale}=", "title") }
+    complete.save!
+    partial.update!(alt_text_en: "only english")
+
+    get lato_cms.media_url(missing: "alt_text")
+
+    assert_response :success
+    assert_includes response.body, partial.name
+    refute_includes response.body, complete.name
+  end
+
+  test "index lists media missing a title, images or not" do
+    document = create_media(name: "Untitled doc", filename: "example_video.mp4", content_type: "video/mp4")
+    titled = create_media(name: "Titled image")
+    LatoCms.config.locales.each { |locale| titled.public_send("title_#{locale}=", "title") }
+    titled.save!
+
+    get lato_cms.media_url(missing: "title")
+
+    assert_response :success
+    assert_includes response.body, document.name
+    refute_includes response.body, titled.name
   end
 
   test "index renders the delete action inert for a media still in use" do

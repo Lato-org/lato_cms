@@ -11,34 +11,39 @@
   <%# Two columns from lg up (preview left, data right), stacked below: the
       preview is the thing you look at first, the metadata the thing you read
       next to it. %>
-  <div class="card-body row g-4">
-    <div class="col-lg-5">
-      <%= render 'lato_cms/media/preview', media: @media %>
-    </div>
+  <div class="card-body">
+    <%# The row stays inside the card body: `row` carries a negative top margin
+        for its gutters, which on the body itself ate the card's own padding
+        and pushed the preview against the header. %>
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <%= render 'lato_cms/media/preview', media: @media %>
+      </div>
 
-    <dl class="col-lg-7 row mb-0">
-      <dt class="col-sm-3"><%= LatoCms::Media.human_attribute_name(:name) %></dt>
-      <dd class="col-sm-9"><%= @media.name %></dd>
+      <dl class="col-lg-7 row mb-0">
+        <dt class="col-sm-3"><%= LatoCms::Media.human_attribute_name(:name) %></dt>
+        <dd class="col-sm-9"><%= @media.name %></dd>
 
-      <dt class="col-sm-3"><%= t('lato_cms.media_type_label') %></dt>
-      <dd class="col-sm-9"><%= lato_cms_media_media_type(@media) %></dd>
+        <dt class="col-sm-3"><%= t('lato_cms.media_type_label') %></dt>
+        <dd class="col-sm-9"><%= lato_cms_media_media_type(@media) %></dd>
 
-      <%# Alt text is image-only, mirroring the edit form. Both are translatable:
+        <%# Alt text is image-only, mirroring the edit form. Both are translatable:
           one row per configured locale, blanks included, so a missing
           translation is visible instead of just absent. %>
-      <% attributes = @media.image? ? LatoCms::Media::TRANSLATABLE_ATTRIBUTES : %w[title] %>
-      <% attributes.each do |attribute| %>
-        <dt class="col-sm-3"><%= t("lato_cms.media_#{attribute}") %></dt>
-        <dd class="col-sm-9">
-          <% LatoCms.config.locales.each do |locale| %>
-            <div class="d-flex gap-2">
-              <span class="badge bg-secondary align-self-start"><%= locale.to_s.upcase %></span>
-              <span><%= @media.public_send(attribute, locale).presence || content_tag(:span, '—', class: 'text-muted') %></span>
-            </div>
-          <% end %>
-        </dd>
-      <% end %>
-    </dl>
+        <% attributes = @media.image? ? LatoCms::Media::TRANSLATABLE_ATTRIBUTES : %w[title] %>
+        <% attributes.each do |attribute| %>
+          <dt class="col-sm-3"><%= t("lato_cms.media_#{attribute}") %></dt>
+          <dd class="col-sm-9">
+            <% LatoCms.config.locales.each do |locale| %>
+              <div class="d-flex gap-2">
+                <span class="badge bg-secondary align-self-start"><%= locale.to_s.upcase %></span>
+                <span><%= @media.public_send(attribute, locale).presence || content_tag(:span, '—', class: 'text-muted') %></span>
+              </div>
+            <% end %>
+          </dd>
+        <% end %>
+      </dl>
+    </div>
   </div>
 </div>
 
