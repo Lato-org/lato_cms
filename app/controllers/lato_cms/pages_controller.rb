@@ -114,7 +114,12 @@ module LatoCms
       respond_to do |format|
         if errors.empty?
           format.html { redirect_to lato_cms.pages_show_path(@page), notice: t('lato_cms.fields_saved') }
-          format.json { render json: { message: t('lato_cms.fields_saved'), fields: @page.fields.reload.map(&:as_json) } }
+          # Only the saved component's fields: the editor repaints its media
+          # fields from this list, matching them by persisted field id, which is
+          # unique within a component but not across the page (two components
+          # can both have an "image" field). Handing it the whole page let a
+          # field adopt another component's media, and the next save stored it.
+          format.json { render json: { message: t('lato_cms.fields_saved'), fields: @page.fields.reload.select { |field| field.template_component_id == template_component_id.to_s }.map(&:as_json) } }
         else
           error_messages = errors.map { |e| "#{e[:field_id]}: #{e[:errors].join(', ')}" }.join('; ')
           format.html { redirect_to lato_cms.pages_show_path(@page), alert: error_messages }

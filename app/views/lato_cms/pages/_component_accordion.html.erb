@@ -104,10 +104,20 @@
                 <% page_field = component_fields.find { |f| f.field_id == field_id } %>
 
                 <div class="mb-3">
+                  <%# The dom id prefix carries the template component: every
+                      component of the page is rendered at once, and two of them
+                      can expose the same field id (a template mounting one
+                      component twice, or two components both calling their
+                      image field "image"). Without it they shared input ids —
+                      and, for media fields, the picker frame id the selection
+                      event is correlated by, so a media picked in one component
+                      landed in the other as well. Input *names* stay
+                      component-agnostic: each form posts its own component. %>
                   <%= lato_cms_render_field(
                       field_id: field_id,
                       field_config: field_config,
-                      page_field: page_field
+                      page_field: page_field,
+                      dom_id_prefix: "fields_#{tc[:template_component_id]}_#{field_id}"
                     ) %>
                 </div>
               <% end %>

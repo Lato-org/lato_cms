@@ -8,6 +8,12 @@ components:
   all_fields:
     component_id: all_fields_example
     name: All Field Types Demo
+  # Same component mounted a second time: two non-repeater components on one
+  # page exposing the same field ids (`title`, `background_image`), which is how
+  # real templates look and where cross-component media bugs live.
+  secondary_hero:
+    component_id: hero
+    name: Secondary Hero
   feature_cards:
     component_id: feature_card
     name: Feature Cards

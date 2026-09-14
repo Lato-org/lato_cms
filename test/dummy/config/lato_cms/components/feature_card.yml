@@ -24,3 +24,7 @@ fields:
     name: Image
     type: image
     required: false
+  video:
+    name: Video
+    type: video
+    required: false
