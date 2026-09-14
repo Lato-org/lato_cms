@@ -6,8 +6,16 @@ export default class extends Controller {
   connect () {
     this.handleComponentChange = this.handleComponentChange.bind(this)
     this.handleIframeLoad = this.handleIframeLoad.bind(this)
+    this.handleMorph = this.handleMorph.bind(this)
 
     document.addEventListener('lato-cms:component-change', this.handleComponentChange)
+    // Actions that re-render the editor server-side (cloning a component from
+    // another locale, editing the page settings) redirect back to this same
+    // URL, which Turbo treats as a page refresh and applies by morphing. Morph
+    // leaves an unchanged <iframe> exactly as it is — the element is never
+    // recreated, so the preview kept showing pre-clone content until a manual
+    // reload. The refresh is asked for explicitly here.
+    document.addEventListener('turbo:morph', this.handleMorph)
 
     if (this.hasIframeTarget) {
       this.iframeTarget.addEventListener('load', this.handleIframeLoad)
@@ -26,6 +34,7 @@ export default class extends Controller {
 
   disconnect () {
     document.removeEventListener('lato-cms:component-change', this.handleComponentChange)
+    document.removeEventListener('turbo:morph', this.handleMorph)
 
     if (this.hasIframeTarget) {
       this.iframeTarget.removeEventListener('load', this.handleIframeLoad)
@@ -107,6 +116,10 @@ export default class extends Controller {
 
   handleIframeLoad () {
     this.postActiveComponent()
+  }
+
+  handleMorph () {
+    this.refresh()
   }
 
   syncInitiallyOpenComponent () {
