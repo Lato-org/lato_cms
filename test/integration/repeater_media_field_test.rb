@@ -47,6 +47,64 @@ class RepeaterMediaFieldTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-lato-cms-media-field-field-id-value="item-two.image"'
   end
 
+  # The mirror case of the bug above: emptying one item's media used to leave
+  # the editor repainting that item with whatever media the response listed
+  # first for the same bare field id — the still-filled second item.
+  test "clearing the first item's media leaves the second item's media alone" do
+    first_media = create_media
+    second_media = create_media
+    save_items(first_media.id, second_media.id)
+
+    # The editor drops the hidden input entirely when a media is removed, so
+    # the item's `image` key never reaches the server.
+    post lato_cms.pages_save_fields_action_url(@page),
+      params: {
+        template_component_id: "feature_cards",
+        component_id: "feature_card",
+        repeater_order: %w[item-one item-two],
+        repeater_items: {
+          "item-one" => { title: "One" },
+          "item-two" => { title: "Two", image: { media_id: second_media.id } }
+        }
+      },
+      as: :json
+
+    assert_response :success
+    assert_equal [], item_field("item-one").media.pluck(:id)
+    assert_equal [ second_media.id ], item_field("item-two").media.pluck(:id)
+
+    attachments = response.parsed_body["fields"].select { |f| f["field_id"] == "image" }
+      .to_h { |f| [ f["persisted_field_id"], f["attachments"].map { |a| a["media_id"] } ] }
+    assert_equal({ "item-one.image" => [], "item-two.image" => [ second_media.id ] }, attachments)
+  end
+
+  # The repeater's JS clones the <template> and swaps the literal "NEW_RECORD"
+  # for a fresh uuid. Every id in that markup must therefore carry the
+  # placeholder verbatim: it used to be downcased to "new_record" (by
+  # `parameterize`), so the swap missed it and every item added in one session
+  # shared a media picker frame id. The picker correlates its selection event
+  # by that id, so picking a media for one item filled all of them.
+  test "the new-item template keeps the NEW_RECORD placeholder in every id" do
+    get lato_cms.pages_show_url(@page)
+
+    assert_response :success
+    template = response.body[/<template data-lato-cms-repeater-target="template">.*?<\/template>/m]
+    assert template, "the repeater new-item template is missing"
+    assert_includes template, 'data-lato-cms-media-field-frame-id-value="media_picker_repeater_items_NEW_RECORD_image_media_picker"'
+    assert_includes template, 'id="repeater_items_NEW_RECORD_title_value"'
+    refute_includes template, "new_record"
+  end
+
+  test "saved items get a media picker frame id of their own" do
+    save_items(create_media.id, create_media.id)
+
+    get lato_cms.pages_show_url(@page)
+
+    assert_response :success
+    assert_includes response.body, 'data-lato-cms-media-field-frame-id-value="media_picker_repeater_items_item_one_image_media_picker"'
+    assert_includes response.body, 'data-lato-cms-media-field-frame-id-value="media_picker_repeater_items_item_two_image_media_picker"'
+  end
+
   private
 
   def save_items(first_media_id, second_media_id)

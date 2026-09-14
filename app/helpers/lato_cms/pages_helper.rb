@@ -126,9 +126,18 @@ module LatoCms
       multiple ? "#{name}[]" : name
     end
 
+    # Sanitizes only: `parameterize` also downcased, which silently broke the
+    # repeater's "NEW_RECORD" placeholder. The repeater JS swaps that literal
+    # for a fresh uuid when an item is added (see
+    # lato_cms_repeater_controller#add), but it never reached the JS as
+    # "NEW_RECORD" — it arrived lowercased inside every dom id and, worse,
+    # inside each media field's picker frame id. Every item added in one
+    # session therefore shared those ids, and since the picker correlates its
+    # selection event by frame id, choosing a media for one item dropped it
+    # into all of them at once.
     def lato_cms_field_dom_id(field_id, suffix = 'value', dom_id_prefix: nil)
       base = dom_id_prefix.presence || "fields_#{field_id}"
-      "#{base}_#{suffix}".parameterize(separator: '_')
+      "#{base}_#{suffix}".gsub(/[^a-zA-Z0-9_]/, '_')
     end
 
     private
