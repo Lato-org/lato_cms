@@ -7,7 +7,9 @@
       <%= image_tag media.preview_url, class: 'd-block mx-auto', style: 'max-width: 100%; max-height: 420px;', alt: media.alt_text %>
     <% end %>
   <% elsif media.video? %>
-    <video controls preload="metadata" class="d-block w-100 rounded bg-black" style="max-height: 420px;" src="<%= media.url %>"></video>
+    <%# Poster first, video bytes only on play (see the media field tile). %>
+    <video controls preload="<%= media.poster_url ? 'none' : 'metadata' %>" poster="<%= media.poster_url %>"
+      class="d-block w-100 rounded bg-black" style="max-height: 420px;" src="<%= media.url %>"></video>
   <% end %>
 
   <div class="d-flex align-items-center gap-2 mt-2">

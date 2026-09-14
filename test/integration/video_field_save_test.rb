@@ -57,6 +57,31 @@ class VideoFieldSaveTest < ActionDispatch::IntegrationTest
     assert_equal [], video_field.media.reload.pluck(:id)
   end
 
+  # A page can hold many video fields: preloading each one's metadata made
+  # opening the editor request every video file. With a poster there is
+  # something to show without any of those bytes.
+  test "the editor shows the poster and loads no video bytes until play" do
+    media = upload_video_media
+    media.poster_file.attach(io: file_fixture("example_image.png").open, filename: "poster.png", content_type: "image/png")
+    save_video_field(media_id: media.id)
+
+    get lato_cms.pages_show_url(@page)
+
+    assert_response :success
+    assert_includes response.body, %(poster="#{media.poster_url}")
+    assert_includes response.body, %(preload="none")
+  end
+
+  test "a video without a poster keeps preloading its metadata" do
+    media = upload_video_media
+    save_video_field(media_id: media.id)
+
+    get lato_cms.pages_show_url(@page)
+
+    assert_response :success
+    assert_includes response.body, %(preload="metadata")
+  end
+
   private
 
   def upload_video

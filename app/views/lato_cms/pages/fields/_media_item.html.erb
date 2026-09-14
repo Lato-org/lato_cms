@@ -8,7 +8,13 @@
        data-action="dragstart->lato-cms-media-reorder#onDragStart dragend->lato-cms-media-reorder#onDragEnd"
      <% end %>>
   <% if kind == 'video' %>
-    <video controls preload="metadata" class="lato-cms-media-field__player" src="<%= media.url %>"></video>
+    <%# With a poster the browser fetches nothing but that image until the admin
+        hits play: a page can hold many video fields, and preloading metadata
+        for each one meant every video file was requested just to open the
+        editor (enough of them and the players stall before they ever start).
+        Without a poster there's nothing else to show, so metadata it is. %>
+    <video controls preload="<%= media.poster_url ? 'none' : 'metadata' %>" poster="<%= media.poster_url %>"
+      class="lato-cms-media-field__player" src="<%= media.url %>"></video>
   <% elsif media.thumbnail_url %>
     <img src="<%= media.thumbnail_url %>" class="lato-cms-media-field__thumb" alt="<%= media.alt_text %>">
   <% else %>

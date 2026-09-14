@@ -123,8 +123,12 @@ export default class extends Controller {
   }
 
   previewMarkup (item) {
+    // Mirrors the server-rendered tile: with a poster nothing but that image is
+    // fetched until the admin hits play (a freshly uploaded video has none yet,
+    // its poster job runs in the background).
     if (this.kindValue === 'video') {
-      return `<video controls preload="metadata" class="lato-cms-media-field__player" src="${item.url}"></video>`
+      const poster = item.posterUrl || ''
+      return `<video controls preload="${poster ? 'none' : 'metadata'}" poster="${poster}" class="lato-cms-media-field__player" src="${item.url}"></video>`
     }
     if (item.thumbnailUrl || item.url) {
       return `<img src="${item.thumbnailUrl || item.url}" class="lato-cms-media-field__thumb">`
