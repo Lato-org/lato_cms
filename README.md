@@ -65,6 +65,14 @@ no redirect, and `Cache-Control: public, immutable`, which a cache in front of t
 actually use. The address carries the signature of the blob, so a replaced file is a
 different address and can never be served stale.
 
+⚠️ **`:proxy` needs something in front that splits byte ranges** — nginx with `slice`,
+or a CDN that does the same. Active Storage's proxy controller serves one range at a
+time, holding it in memory, and answers **416** to anything above
+`streaming_chunk_max_size` (100 MB by default). A `<video>` opens with `Range: bytes=0-`,
+that is the whole file: above that size the browser reads the 416 as "format not
+supported", and below it the app loads tens of MB into memory per request. With slices of
+1 MB neither happens. Without such a front, stay on `:redirect`.
+
 Both modes ask for an `inline` disposition: a media of the library is content to show, and
 the default for a video would otherwise turn opening its address into a download.
 
