@@ -33,6 +33,24 @@
           <%= lato_form_item_input_text form, :name, required: true %>
         </div>
 
+        <%# One action for every attribute the LLM is enabled for: the image
+            travels in the request, so asking per attribute uploaded the same
+            file once per attribute. %>
+        <% llm_attributes = media.image? ? LatoCms.config.llm_media_attributes : [] %>
+        <% if llm_attributes.any? %>
+          <div class="d-flex justify-content-end mb-2">
+            <%= link_to t("lato_cms.media_text_regenerate"), lato_cms.media_regenerate_text_action_path(media, attribute: "all"),
+              class: "btn btn-sm btn-outline-secondary",
+              data: {
+                lato_action_target: "trigger",
+                turbo_method: :post,
+                turbo_frame: "lato_operation",
+                turbo_confirm: t("lato_cms.media_text_regenerate_confirm", fields: llm_attributes.map { |attribute| t("lato_cms.media_#{attribute}").downcase }.join(", ")),
+                action_title: t("lato_cms.media_text_regenerate")
+              } %>
+          </div>
+        <% end %>
+
         <% if media.image? %>
           <%= render "lato_cms/media/translations_field", form: form, media: media, attribute: "alt_text" %>
         <% end %>

@@ -80,7 +80,9 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "update renders an alt text and a title tab set, each with its own AI regenerate button" do
+  # One button, not one per attribute: the image travels in the LLM request, so
+  # a call per attribute uploaded the same file twice.
+  test "update renders an alt text and a title tab set with a single AI regenerate action" do
     with_llm_configured do
       media = create_media
 
@@ -89,8 +91,21 @@ class MediaControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_includes response.body, "media[alt_text_en]"
       assert_includes response.body, "media[title_en]"
-      assert_includes response.body, lato_cms.media_regenerate_text_action_path(media, attribute: "alt_text")
-      assert_includes response.body, lato_cms.media_regenerate_text_action_path(media, attribute: "title")
+      assert_includes response.body, lato_cms.media_regenerate_text_action_path(media, attribute: "all")
+      refute_includes response.body, lato_cms.media_regenerate_text_action_path(media, attribute: "alt_text")
+    end
+  end
+
+  test "regenerate_text_action with `all` starts one operation for every enabled attribute" do
+    with_llm_configured do
+      media = create_media
+
+      assert_difference -> { Lato::Operation.count }, 1 do
+        post lato_cms.media_regenerate_text_action_url(media, attribute: "all")
+      end
+
+      operation = Lato::Operation.last
+      assert_equal %w[alt_text title], operation.active_job_input["attributes"]
     end
   end
 

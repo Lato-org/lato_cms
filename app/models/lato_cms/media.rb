@@ -212,50 +212,68 @@ module LatoCms
       Rails.logger.warn("LatoCms: failed to generate video poster for media #{id}: #{e.message}")
     end
 
-    # Asks the configured OpenAI-compatible LLM for `attribute` (alt_text or
-    # title) in every configured locale and merges it in (existing
-    # translations for locales the LLM didn't return are kept, the rest are
-    # replaced individually). No-op unless the LLM is configured and enabled
-    # for that attribute (see LatoCms::Config#llm_generates?) and this media
-    # is an image, since the LLM has to look at the file.
+    # Asks the configured OpenAI-compatible LLM for the given attributes
+    # (alt_text, title, or both) in every configured locale and merges the
+    # result in — existing translations for locales the LLM didn't return are
+    # kept, the rest are replaced individually. Attributes switched off in
+    # config are skipped; no-op unless the LLM is configured and this media is
+    # an image, since the model has to look at the file.
+    #
+    # All the requested attributes travel in ONE request: the image is the
+    # expensive part of the payload (it goes as a base64 data URI, see
+    # request_completion), so asking per attribute uploaded the same file twice
+    # and paid for it twice.
     #
     # Best effort by default (`raise_on_error: false`): any failure is logged
     # and swallowed, since the automatic post-upload call site (see
     # GenerateMediaTextJob) must never break the upload over a flaky LLM. The
-    # manual "Regenerate with AI" actions run as a Lato::Operation the admin
-    # is actively watching, so they pass `raise_on_error: true` to have
-    # failures surface there instead of disappearing silently.
-    def generate_text!(attribute, raise_on_error: false)
-      attribute = attribute.to_s
-      raise ArgumentError, "unknown translatable attribute: #{attribute}" unless TRANSLATABLE_ATTRIBUTES.include?(attribute)
-      return unless image? && file.attached? && LatoCms.config.llm_generates?(attribute)
+    # manual "Regenerate with AI" action runs as a Lato::Operation the admin is
+    # actively watching, so it passes `raise_on_error: true` to have failures
+    # surface there instead of disappearing silently.
+    def generate_texts!(attributes = LatoCms.config.llm_media_attributes, raise_on_error: false)
+      attributes = Array(attributes).map(&:to_s)
+      unknown = attributes - TRANSLATABLE_ATTRIBUTES
+      raise ArgumentError, "unknown translatable attribute: #{unknown.join(", ")}" if unknown.any?
+
+      attributes = attributes.select { |attribute| LatoCms.config.llm_generates?(attribute) }
+      return if attributes.empty? || !image? || !file.attached?
 
       begin
-        translations = parse_translations(request_completion(llm_prompt(attribute)))
-        raise "The LLM returned no usable #{attribute.humanize.downcase}" if translations.blank?
+        generated = parse_translations(request_completion(llm_prompt(*attributes)), attributes)
+        raise "The LLM returned no usable #{attributes.to_sentence}" if generated.blank?
 
-        public_send("#{attribute}_translations=", translations_of(attribute).merge(translations))
+        generated.each { |attribute, translations| public_send("#{attribute}_translations=", translations_of(attribute).merge(translations)) }
         save!
       rescue StandardError => e
-        Rails.logger.warn("LatoCms: failed to generate #{attribute} for media #{id}: #{e.message}")
+        Rails.logger.warn("LatoCms: failed to generate #{attributes.join(", ")} for media #{id}: #{e.message}")
         raise if raise_on_error
       end
     end
 
-    # Full prompt sent for `attribute`: the custom-or-default task prompt (see
-    # LatoCms::Config#llm_prompt) with {languages}/{urls} substituted, plus the
-    # engine's fixed response-format contract, appended here rather than left
-    # to the prompt so parsing never depends on how a custom prompt is worded.
-    def llm_prompt(attribute)
+    def generate_text!(attribute, raise_on_error: false)
+      generate_texts!([attribute], raise_on_error: raise_on_error)
+    end
+
+    # Full prompt sent for `attributes`: one custom-or-default task prompt per
+    # attribute (see LatoCms::Config#llm_prompt) with {languages}/{urls}
+    # substituted, plus the engine's fixed response-format contract, appended
+    # here rather than left to the prompts so parsing never depends on how a
+    # custom one is worded.
+    def llm_prompt(*attributes)
+      attributes = attributes.flatten.map(&:to_s).presence || LatoCms.config.llm_media_attributes.map(&:to_s)
       variables = {
         "languages" => llm_locales.join(", "),
         "urls" => usage_urls.presence&.join(", ") || "none"
       }
       placeholders = /\{(#{LatoCms::Config::LLM_PROMPT_VARIABLES.join("|")})\}/
-      task = LatoCms.config.llm_prompt(attribute).gsub(placeholders) { variables[Regexp.last_match(1)] }
+      tasks = attributes.map do |attribute|
+        task = LatoCms.config.llm_prompt(attribute).gsub(placeholders) { variables[Regexp.last_match(1)] }
+        "#{attribute}: #{task}"
+      end
 
-      "#{task}\n\nRespond with a single JSON object only, no markdown, no extra text, with exactly these " \
-      "keys: #{llm_locales.join(", ")}. Each value is the text written in that language."
+      "#{tasks.join("\n\n")}\n\nRespond with a single JSON object only, no markdown, no extra text, with exactly " \
+      "these keys: #{attributes.join(", ")}. Each value is an object with exactly these keys: " \
+      "#{llm_locales.join(", ")}, each holding the text written in that language."
     end
 
     # Fixed small variant used across admin UI (Media index, picker grid, field
@@ -365,11 +383,18 @@ module LatoCms
       }])
     end
 
-    def parse_translations(content)
+    # { attribute => { locale => text } }, keeping only what was asked for and
+    # what the app is configured to speak.
+    def parse_translations(content, attributes)
       return {} if content.blank?
 
       parsed = JSON.parse(content[/\{.*\}/m] || content)
-      parsed.slice(*llm_locales).transform_values(&:to_s)
+      parsed.slice(*attributes).each_with_object({}) do |(attribute, translations), result|
+        next unless translations.is_a?(Hash)
+
+        translations = translations.slice(*llm_locales).transform_values(&:to_s).compact_blank
+        result[attribute] = translations if translations.any?
+      end
     rescue JSON::ParserError
       {}
     end

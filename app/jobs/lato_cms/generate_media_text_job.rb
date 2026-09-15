@@ -1,9 +1,10 @@
 module LatoCms
   # Generates alt text and/or title for an image Media via an OpenAI-compatible
-  # LLM, one LLM call per attribute (each has its own prompt, see
-  # LatoCms::Config#llm_prompt). `attributes` defaults to every attribute
-  # enabled in config (the automatic post-upload run); the manual "Regenerate
-  # with AI" buttons pass the single attribute they sit next to.
+  # LLM in a single call, whatever the number of attributes: the image travels
+  # in the request, so one call per attribute meant uploading it twice (see
+  # Media#generate_texts!). `attributes` defaults to every attribute enabled in
+  # config, which is what both the automatic post-upload run and the
+  # "Regenerate with AI" action ask for.
   #
   # Doubles as a plain background job (post-upload call site, see
   # Media#enqueue_text_generation: fire-and-forget, best effort, never blocks
@@ -19,7 +20,7 @@ module LatoCms
       return unless media
 
       attributes = Array(params[:attributes]).presence || LatoCms.config.llm_media_attributes
-      attributes.each { |attribute| media.generate_text!(attribute, raise_on_error: operation?) }
+      media.generate_texts!(attributes, raise_on_error: operation?)
       save_operation_output_message(I18n.t("lato_cms.media_text_regenerated")) if operation?
     end
   end

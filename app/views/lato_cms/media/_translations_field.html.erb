@@ -1,24 +1,10 @@
 <%# One tab per configured locale for a translatable Media attribute
-    (alt_text/title), with its own "Regenerate with AI" button when the LLM
-    is configured and enabled for that attribute. Images only: the LLM has
-    to look at the file to describe it. %>
+    (alt_text/title). The "Regenerate with AI" action is not here: it covers
+    every enabled attribute in one LLM call (see _form_update). %>
 <% label = t("lato_cms.media_#{attribute}") %>
 
 <div class="mb-3">
-  <div class="d-flex align-items-center justify-content-between">
-    <label class="form-label mb-0"><%= label %></label>
-    <% if media.image? && LatoCms.config.llm_generates?(attribute) %>
-      <%= link_to t("lato_cms.media_text_regenerate"), lato_cms.media_regenerate_text_action_path(media, attribute: attribute),
-        class: "btn btn-sm btn-outline-secondary",
-        data: {
-          lato_action_target: "trigger",
-          turbo_method: :post,
-          turbo_frame: "lato_operation",
-          turbo_confirm: t("lato_cms.media_text_regenerate_confirm", field: label.downcase),
-          action_title: "#{t('lato_cms.media_text_regenerate')} - #{label}"
-        } %>
-    <% end %>
-  </div>
+  <label class="form-label"><%= label %></label>
 
   <ul class="nav nav-tabs">
     <% LatoCms.config.locales.each_with_index do |locale, index| %>

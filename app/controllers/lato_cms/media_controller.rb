@@ -81,16 +81,17 @@ module LatoCms
       end
     end
 
-    # Regenerates one translatable attribute (alt_text or title, see the
-    # route constraint) with the LLM. Runs as a Lato::Operation (see
-    # GenerateMediaTextJob) rather than inline: an LLM call can take a while,
-    # and blocking the request risks timing it out. The admin instead lands on
-    # a live progress page.
+    # Regenerates the translatable attributes (alt_text and title, or a single
+    # one — see the route constraint) with the LLM. Runs as a Lato::Operation
+    # (see GenerateMediaTextJob) rather than inline: an LLM call can take a
+    # while, and blocking the request risks timing it out. The admin instead
+    # lands on a live progress page.
     def regenerate_text_action
       @media = query_media.find(params[:id])
-      attribute = params[:attribute].to_s
+      attributes = params[:attribute] == "all" ? LatoCms.config.llm_media_attributes : [params[:attribute]]
+      attributes = attributes.map(&:to_s).select { |attribute| LatoCms.config.llm_generates?(attribute) }
 
-      unless @media.image? && LatoCms.config.llm_generates?(attribute)
+      unless @media.image? && attributes.any?
         respond_to do |format|
           message = t("lato_cms.media_text_regenerate_unavailable")
           format.html { redirect_to lato_cms.media_update_path(@media), alert: message }
@@ -99,7 +100,7 @@ module LatoCms
         return
       end
 
-      operation = Lato::Operation.generate("LatoCms::GenerateMediaTextJob", { media_id: @media.id, attributes: [attribute] }, @session.user_id)
+      operation = Lato::Operation.generate("LatoCms::GenerateMediaTextJob", { media_id: @media.id, attributes: attributes }, @session.user_id)
 
       if operation.start
         redirect_to lato.operation_path(operation)

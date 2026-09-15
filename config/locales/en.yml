@@ -105,7 +105,7 @@ en:
     media_alt_text: Alt text
     media_title: Title
     media_text_regenerate: Regenerate with AI
-    media_text_regenerate_confirm: "This will overwrite the current %{field} in every language with a new AI-generated one. Continue?"
+    media_text_regenerate_confirm: "This will overwrite the current values of %{fields} in every language with AI-generated ones. Continue?"
     media_text_regenerated: Text regenerated
     media_text_regenerate_unavailable: AI generation is only available for images, and only when an LLM is configured and enabled for this field
     media_text_regenerate_failed: Failed to start AI generation

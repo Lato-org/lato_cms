@@ -34,7 +34,7 @@ LatoCms::Engine.routes.draw do
     get ':id/update', to: 'media#update', as: :media_update
     patch ':id/update', to: 'media#update_action', as: :media_update_action
     patch ':id/replace-file', to: 'media#replace_file_action', as: :media_replace_file_action
-    post ':id/regenerate/:attribute', to: 'media#regenerate_text_action', as: :media_regenerate_text_action, constraints: { attribute: /alt_text|title/ }
+    post ':id/regenerate/:attribute', to: 'media#regenerate_text_action', as: :media_regenerate_text_action, constraints: { attribute: /alt_text|title|all/ }
     delete ':id', to: 'media#destroy_action', as: :media_destroy_action
   end
 end

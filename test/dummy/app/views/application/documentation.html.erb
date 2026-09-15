@@ -339,12 +339,13 @@ end</code></pre>
 <p>
   <code>llm_api_url</code>, <code>llm_model</code> and <code>llm_api_key</code> must all be set for the feature
   to activate (it's off by default). Once configured, uploading a new image queues a background job that
-  sends it to the LLM once per enabled attribute (<code>llm_generate_alt_text</code>,
-  <code>llm_generate_title</code>, both on by default) and writes back a translation for every locale in
-  <code>LatoCms.config.locales</code>. It only runs once, right after upload &mdash; it never overwrites text
+  sends it to the LLM <strong>once</strong>, asking for every enabled attribute
+  (<code>llm_generate_alt_text</code>, <code>llm_generate_title</code>, both on by default) in the same
+  request &mdash; the image itself is the bulk of the payload, so one call per attribute would upload it
+  twice &mdash; and writes back a translation for every locale in <code>LatoCms.config.locales</code>. It only runs once, right after upload &mdash; it never overwrites text
   an admin later edits by hand. Generation is best effort: any failure (LLM unreachable, malformed
-  response, ...) is logged and simply leaves the text as it was. Switching an attribute off skips both its
-  post-upload generation and its regenerate button.
+  response, ...) is logged and simply leaves the text as it was. Switching an attribute off leaves it out of
+  both the post-upload run and the regenerate action.
 </p>
 
 <p>
@@ -365,16 +366,16 @@ end</code></pre>
 
 <p>
   A prompt only needs to describe the task: the engine always appends its own response-format instruction
-  (a JSON object keyed by locale), so a custom prompt can't break parsing.
+  (a JSON object keyed by attribute, then by locale), so a custom prompt can't break parsing. The task
+  prompts of the enabled attributes travel together in that one request.
 </p>
 
 <p>
-  A <em>Regenerate with AI</em> button next to each of the alt text and title tab sets (shown only for
-  images, and only when the LLM is configured and enabled for that attribute) re-runs generation for that
-  attribute on demand, overwriting its current text in every locale. Unlike the automatic post-upload run,
-  this one is triggered by an admin waiting on it, so it runs as a <code>Lato::Operation</code> instead: the
-  admin is taken to a live progress screen rather than the request blocking (and potentially timing out)
-  on the LLM call.
+  A single <em>Regenerate with AI</em> button in the media edit form (shown only for images, and only when
+  the LLM is configured) re-runs generation for every enabled attribute on demand, overwriting their current
+  text in every locale &mdash; again in one call. Unlike the automatic post-upload run, this one is triggered
+  by an admin waiting on it, so it runs as a <code>Lato::Operation</code>: the admin is taken to a live
+  progress screen rather than the request blocking (and potentially timing out) on the LLM call.
 </p>
 
 <h3 id="image-sizes">Image sizes</h3>

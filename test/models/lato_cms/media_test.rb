@@ -193,29 +193,64 @@ module LatoCms
       assert_raises(ArgumentError) { build_media.generate_text!(:name) }
     end
 
-    test "generate_text! merges the per-locale translations returned by the LLM, per attribute" do
+    test "generate_texts! asks for every attribute in one request and merges what comes back" do
       with_llm_configured do
         media = build_media
         media.save!
         media.alt_text_fr = "Un chat"
         media.save!
+        prompts = []
         media.define_singleton_method(:request_completion) do |prompt|
-          if prompt.include?("alt text")
-            { en: "A cat on a windowsill", it: "Un gatto sul davanzale" }.to_json
-          else
-            { en: "Cat", it: "Gatto" }.to_json
-          end
+          prompts << prompt
+          {
+            alt_text: { en: "A cat on a windowsill", it: "Un gatto sul davanzale" },
+            title: { en: "Cat", it: "Gatto" }
+          }.to_json
         end
 
-        media.generate_text!(:alt_text)
-        media.generate_text!(:title)
+        media.generate_texts!
         media.reload
 
+        assert_equal 1, prompts.size, "the image must travel once, not once per attribute"
         assert_equal "A cat on a windowsill", media.alt_text(:en)
         assert_equal "Un gatto sul davanzale", media.alt_text(:it)
         assert_equal "Un chat", media.alt_text(:fr), "locales the LLM didn't return are kept"
         assert_equal "Cat", media.title(:en)
         assert_equal "Gatto", media.title(:it)
+      end
+    end
+
+    test "generate_texts! asks only for the attributes enabled in config" do
+      with_llm_configured(llm_generate_title: false) do
+        media = build_media
+        media.save!
+        prompt = nil
+        media.define_singleton_method(:request_completion) do |sent|
+          prompt = sent
+          { alt_text: { en: "A cat" }, title: { en: "Cat" } }.to_json
+        end
+
+        media.generate_texts!
+        media.reload
+
+        assert_includes prompt, "exactly these keys: alt_text"
+        refute_includes prompt, "title:"
+        assert_equal "A cat", media.alt_text(:en)
+        assert_empty media.title_translations, "an attribute switched off is ignored even if the LLM volunteers it"
+      end
+    end
+
+    test "generate_text! still targets a single attribute" do
+      with_llm_configured do
+        media = build_media
+        media.save!
+        media.define_singleton_method(:request_completion) { |_prompt| { alt_text: { en: "A cat" }, title: { en: "Cat" } }.to_json }
+
+        media.generate_text!(:alt_text)
+        media.reload
+
+        assert_equal "A cat", media.alt_text(:en)
+        assert_empty media.title_translations
       end
     end
 
