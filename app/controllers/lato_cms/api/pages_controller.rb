@@ -11,7 +11,10 @@ module LatoCms
       end
 
       def show
-        @page.fields.load
+        # PageField#as_json serializes both the through association and the
+        # Active Storage attachments. Preload the complete graph here so a
+        # page with many media fields does not issue one query per field/media.
+        @page.fields.includes(media: %i[file_attachment poster_file_attachment]).load
         render json: @page.as_json(include_fields: true)
       end
 
