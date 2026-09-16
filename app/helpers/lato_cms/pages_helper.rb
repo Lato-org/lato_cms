@@ -22,7 +22,7 @@ module LatoCms
     def lato_cms_page_actions(page, show_edit: false, show_delete: false, hide_show: false)
       btn_group = capture do
         content_tag(:div, class: 'btn-group btn-group-sm') do
-          concat(link_to(t('lato_cms.cta_show'), lato_cms.pages_show_path(page), class: 'btn btn-primary')) unless hide_show
+          concat(link_to(t('lato_cms.cta_edit'), lato_cms.pages_show_path(page), class: 'btn btn-primary')) unless hide_show
           if show_edit
             concat link_to(t('lato_cms.cta_edit'), lato_cms.pages_update_path(page), class: 'btn btn-secondary',
               data: { lato_action_target: 'trigger', turbo_frame: dom_id(page, 'form'), action_title: t('lato_cms.page_update_title') })
@@ -82,7 +82,7 @@ module LatoCms
             concat content_tag(:li, content_tag(:span, t('lato_cms.action_view_frontend'), class: 'dropdown-item disabled text-muted'))
           end
           unless hide_show
-            concat content_tag(:li, link_to(t('lato_cms.cta_show'), lato_cms.pages_show_path(page), class: 'dropdown-item'))
+            concat content_tag(:li, link_to(t('lato_cms.cta_edit'), lato_cms.pages_show_path(page), class: 'dropdown-item'))
           end
           if show_edit
             concat content_tag(:li, link_to(t('lato_cms.cta_edit'), lato_cms.pages_update_path(page), class: 'dropdown-item',
