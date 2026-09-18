@@ -68,6 +68,43 @@ body.controller-pages.action-show {
   }
 }
 
+// Mobile/tablet: two fixed columns don't fit, so preview and editor become
+// full-width stacked layers. The editor sits on top (pages must be editable by
+// default) and the existing sidebar toggle slides it away to reveal the preview.
+@media (max-width: 991.98px) {
+  .lato-cms-advanced-editor__row--active {
+    position: fixed;
+
+    > .lato-cms-advanced-editor__preview-col {
+      position: absolute;
+      inset: 0;
+    }
+
+    > .lato-cms-advanced-editor__editor-col {
+      position: absolute;
+      inset: 0;
+      flex: none;
+      width: 100%;
+
+      > .card {
+        border-left: none !important;
+      }
+
+      // Single-panel layout: collapsing means swapping to the preview, not
+      // shrinking a column next to it.
+      &.lato-cms-advanced-editor__editor-col--collapsed {
+        display: none;
+      }
+    }
+
+    // Toolbars hold many controls: let them wrap instead of overflowing.
+    .card-header {
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
+    }
+  }
+}
+
 // Tab to re-open the sidebar when collapsed
 .lato-cms-advanced-editor__reopen-btn {
   position: fixed;
@@ -316,6 +353,19 @@ body.controller-pages.action-show {
 .lato-cms-media-field__item:hover .lato-cms-media-field__remove {
   opacity: 1;
   pointer-events: auto;
+}
+
+// Touch devices have no hover: reveal the name overlay and the remove button
+// permanently, otherwise media can be seen but never removed on a phone.
+@media (hover: none) {
+  .lato-cms-media-field__overlay {
+    opacity: 1;
+  }
+
+  .lato-cms-media-field__remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 // Add tile: dashed placeholder, both the empty state and the "add more" affordance.
