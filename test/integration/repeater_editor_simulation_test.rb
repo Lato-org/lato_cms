@@ -181,6 +181,29 @@ class RepeaterEditorSimulationTest < ActionDispatch::IntegrationTest
     assert_equal [ secondary_image.id ], component_media("secondary_hero", "background_image")
   end
 
+  # Emptying an optional media field removes its tiles, and every hidden input
+  # lives inside a tile — so the field used to drop out of the payload
+  # entirely. The controller only writes the fields it receives, so the old
+  # media survived the save and the repaint put the image straight back.
+  test "emptying an optional image field clears it" do
+    image = create_media(:image)
+
+    document = editor_document
+    hero = component_form(document, "hero_section")
+    fill_text(hero, nil, "title", "Hero")
+    pick_media(document, nil, "background_image", image, scope: hero)
+    submit(hero)
+    assert_equal [ image.id ], component_media("hero_section", "background_image")
+
+    hero = component_form(editor_document, "hero_section")
+    fill_text(hero, nil, "title", "Hero")
+    remove_media(hero, nil, "background_image")
+    submit(hero)
+
+    assert_response :success
+    assert_equal [], component_media("hero_section", "background_image")
+  end
+
   private
 
   # --- the editor's DOM, as the browser receives it ------------------------
@@ -232,7 +255,7 @@ class RepeaterEditorSimulationTest < ActionDispatch::IntegrationTest
       hidden_name = listener["data-lato-cms-media-field-hidden-name-value"]
       # Single-value fields drop what they hold before taking the new pick.
       listener.css(".lato-cms-media-field__item").each(&:remove) unless listener["data-lato-cms-media-field-multiple-value"] == "true"
-      grid.prepend_child(%(<div class="lato-cms-media-field__item"><input type="hidden" name="#{hidden_name}" value="#{media.id}"></div>))
+      append_tile(grid, hidden_name, media.id)
     end
   end
 
@@ -268,9 +291,20 @@ class RepeaterEditorSimulationTest < ActionDispatch::IntegrationTest
       hidden_name = element["data-lato-cms-media-field-hidden-name-value"]
       element.css(".lato-cms-media-field__item").each(&:remove)
       field["attachments"].each do |attachment|
-        grid.prepend_child(%(<div class="lato-cms-media-field__item"><input type="hidden" name="#{hidden_name}" value="#{attachment["media_id"]}"></div>))
+        append_tile(grid, hidden_name, attachment["media_id"])
       end
     end
+  end
+
+  # lato_cms_media_field_controller#appendItem inserts every tile just before
+  # the "add" tile, i.e. after the grid's always-present empty hidden input.
+  # Position matters: that sentinel is what tells the server a single-value
+  # field was emptied, and Rails keeps the LAST value for a non-array param,
+  # so a tile prepended ahead of it would be silently discarded.
+  def append_tile(grid, hidden_name, media_id)
+    add_tile = grid.at_css("[data-lato-cms-media-field-target='addTile']")
+    assert add_tile, "media field grid has no add tile"
+    add_tile.add_previous_sibling(%(<div class="lato-cms-media-field__item"><input type="hidden" name="#{hidden_name}" value="#{media_id}"></div>))
   end
 
   # `item_id` nil addresses a plain (non-repeater) component field.

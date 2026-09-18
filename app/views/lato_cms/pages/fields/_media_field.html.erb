@@ -28,6 +28,14 @@
        data-lato-cms-media-field-target="grid"
        data-lato-cms-media-reorder-target="grid"
        <% if multiple %>data-action="dragover->lato-cms-media-reorder#onGridDragOver drop->lato-cms-media-reorder#onGridDrop"<% end %>>
+    <%# Always-submitted empty value: the per-item hidden inputs live inside
+        the tiles, so emptying the field removed every input and the param
+        vanished from the payload — the controller only saves fields it
+        receives, so the old media survived the save. This sentinel keeps the
+        key present (last value wins for the single-value name; blanks are
+        rejected for the multi-value one), so "emptied" reaches the server. %>
+    <input type="hidden" name="<%= hidden_name %>" value="">
+
     <% current_media.each do |m| %>
       <%= render partial: 'lato_cms/pages/fields/media_item', locals: { media: m, kind: kind, hidden_name: hidden_name, multiple: multiple } %>
     <% end %>
