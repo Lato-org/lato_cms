@@ -97,13 +97,13 @@ module LatoCms
       translated = self.class.parse_translated_field_values(content, targets.size)
       raise "The LLM response couldn't be parsed into #{targets.size} translated value(s)" if translated.blank?
 
-      targets.each_with_index { |field, index| field.update_column(:value, translated[index]) if translated[index].present? }
+      targets.each_with_index { |field, index| field.update!(value: translated[index]) if translated[index].present? }
     end
 
     def self.translate_fields_prompt(fields, target_locale)
       "Translate each string in this JSON array into #{target_locale} (language code). Preserve any HTML " \
       "tags exactly as-is, translate only the visible text. Respond with a JSON array of the same length " \
-      "and in the same order, translated strings only, no markdown, no explanation.\n\n#{fields.map(&:value).to_json}"
+      "and in the same order, translated strings only, no markdown, no explanation.\n\n#{fields.map(&:parsed_value).to_json}"
     end
 
     def self.parse_translated_field_values(content, expected_count)

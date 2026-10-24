@@ -6,6 +6,8 @@ module LatoCms
     has_many :media, through: :page_field_media, class_name: 'LatoCms::Media'
 
     ATTACHMENT_FIELD_TYPES = %w[file image video gallery].freeze
+    RICH_TEXT_TAGS = %w[a b blockquote br code div em h1 h2 h3 h4 h5 h6 hr i img li ol p pre s span strike strong u ul].freeze
+    RICH_TEXT_ATTRIBUTES = %w[href title style src alt width height].freeze
 
     # Field types that hold free-form text, used to decide what a
     # "clone & translate" (see PagesController#clone_component_fields) sends
@@ -29,6 +31,8 @@ module LatoCms
       return nil if value.blank?
 
       case field_type
+      when 'text'
+        self.class.sanitize_rich_text(value)
       when 'number'
         value.include?('.') ? value.to_f : value.to_i
       when 'boolean'
@@ -44,6 +48,10 @@ module LatoCms
       else
         value
       end
+    end
+
+    def self.sanitize_rich_text(value)
+      String.new(ActionController::Base.helpers.sanitize(value, tags: RICH_TEXT_TAGS, attributes: RICH_TEXT_ATTRIBUTES).to_s)
     end
 
     def field_config
@@ -173,6 +181,8 @@ module LatoCms
       return if value.blank?
 
       case field_type
+      when 'text'
+        self.value = self.class.sanitize_rich_text(value)
       when 'json'
         begin
           parsed = JSON.parse(value)

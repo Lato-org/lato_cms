@@ -89,8 +89,9 @@ export default class extends Controller {
 
     this.statusTarget.innerHTML = `
       <span class="d-inline-flex align-items-center gap-1 small ${color} lato-cms-component-form__status">
-        <i class="bi ${icon}"></i>${message}
+        <i class="bi ${icon}"></i>
       </span>`
+    this.statusTarget.firstElementChild.append(document.createTextNode(message))
 
     if (isSuccess) {
       this._statusTimeout = setTimeout(() => {

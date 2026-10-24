@@ -2,6 +2,45 @@ require "test_helper"
 
 module LatoCms
   class PageFieldTest < ActiveSupport::TestCase
+    test "rich text preserves formatting and removes executable HTML before storage" do
+      field = build_field("example_text")
+      field.update!(value: '<p style="text-align: center"><strong>Welcome</strong><img src="x" onerror="alert(1)"><a href="javascript:alert(1)" onclick="alert(1)">Link</a><script>alert(1)</script></p>')
+
+      html = Nokogiri::HTML.fragment(field.reload.value)
+      assert_equal "Welcome", html.at_css("strong").text
+      assert_match(/text-align:\s*center/, html.at_css("p")["style"])
+      assert_nil html.at_css("script")
+      assert_nil html.at_css("img")["onerror"]
+      assert_nil html.at_css("a")["href"]
+      assert_nil html.at_css("a")["onclick"]
+    end
+
+    test "legacy rich text is sanitized in parsed values and API serialization" do
+      field = build_field("example_text")
+      field.update_column(:value, '<p onclick="alert(1)">Legacy</p><iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"></iframe>')
+
+      [field.parsed_value, field.as_json[:value]].each do |value|
+        refute value.html_safe?
+        html = Nokogiri::HTML.fragment(value)
+        assert_equal "Legacy", html.at_css("p").text
+        assert_nil html.at_css("p")["onclick"]
+        assert_nil html.at_css("iframe")
+      end
+    end
+
+    test "LLM translations pass through rich text sanitization" do
+      field = build_field("example_text")
+      field.update!(value: "Original")
+      response = ['<p onmouseover="alert(1)"><b>Translated</b></p>'].to_json
+      original_chat = LatoCms::LlmClient.method(:chat)
+      LatoCms::LlmClient.define_singleton_method(:chat) { |**_| response }
+      build_page.translate_component_fields!("all_fields")
+
+      assert_equal "<p><b>Translated</b></p>", field.reload.value
+    ensure
+      LatoCms::LlmClient.define_singleton_method(:chat, &original_chat) if original_chat
+    end
+
     # ── replace_media! ───────────────────────────────────────────────────────
 
     test "replace_media! creates join rows in the given order" do

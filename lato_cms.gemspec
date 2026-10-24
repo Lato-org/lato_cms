@@ -22,9 +22,9 @@ Gem::Specification.new do |spec|
     Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
   end
 
-  spec.add_dependency "rails", ">= 7.1.1"
-  spec.add_dependency "lato"
-  spec.add_dependency "lato_spaces"
+  spec.add_dependency "rails", ">= 8.1.3.1", "< 8.2"
+  spec.add_dependency "lato", ">= 3.25.0"
+  spec.add_dependency "lato_spaces", ">= 3.2.0"
   spec.add_dependency "jbuilder"
   spec.add_dependency "image_processing", ">= 1.2"
   spec.add_dependency "ruby-vips", "~> 2.0"

@@ -63,11 +63,13 @@ export default class extends Controller {
 
     this.pending.set(item.id, item)
     this.updateSelectionUi()
-    this.uploadNoticeTarget.innerHTML = `<div class="alert alert-success">${item.name}</div>`
+    this.uploadNoticeTarget.innerHTML = '<div class="alert alert-success"></div>'
+    this.uploadNoticeTarget.firstElementChild.textContent = item.name
   }
 
   uploadFailed (event) {
-    this.uploadNoticeTarget.innerHTML = `<div class="alert alert-danger">${event.detail.message}</div>`
+    this.uploadNoticeTarget.innerHTML = '<div class="alert alert-danger"></div>'
+    this.uploadNoticeTarget.firstElementChild.textContent = event.detail.message
   }
 
   buildItemFromElement (element) {

@@ -68,7 +68,10 @@ export default class extends Controller {
     this.reset()
     const message = data ? Object.values(data).flat().join(', ') : ''
     this.element.dispatchEvent(new CustomEvent('lato-cms:upload-error', { bubbles: true, detail: { message } }))
-    if (this.hasNoticeTarget) this.noticeTarget.innerHTML = `<div class="alert alert-danger">${message}</div>`
+    if (this.hasNoticeTarget) {
+      this.noticeTarget.innerHTML = '<div class="alert alert-danger"></div>'
+      this.noticeTarget.firstElementChild.textContent = message
+    }
   }
 
   reset () {

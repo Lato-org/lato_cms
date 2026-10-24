@@ -77,7 +77,8 @@ export default class extends Controller {
     if (!this.hasStatusTarget) return
 
     const colorClass = type === 'success' ? 'text-success' : (type === 'danger' ? 'text-danger' : 'text-muted')
-    this.statusTarget.innerHTML = `<span class="small ${colorClass}">${message}</span>`
+    this.statusTarget.innerHTML = `<span class="small ${colorClass}"></span>`
+    this.statusTarget.firstElementChild.textContent = message
 
     if (type === 'success') {
       clearTimeout(this._statusTimeout)

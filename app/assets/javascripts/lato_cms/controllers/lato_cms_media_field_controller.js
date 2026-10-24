@@ -110,30 +110,46 @@ export default class extends Controller {
     }
 
     wrapper.innerHTML = `
-      ${this.previewMarkup(item)}
       <div class="lato-cms-media-field__overlay">
-        <span class="lato-cms-media-field__name">${item.name}</span>
+        <span class="lato-cms-media-field__name"></span>
       </div>
       <button type="button" class="lato-cms-media-field__remove" data-action="lato-cms-media-field#remove">
         <i class="bi bi-x-lg"></i>
       </button>
-      <input type="hidden" name="${this.hiddenNameValue}" value="${item.id}">`
+      <input type="hidden">`
+    wrapper.prepend(this.previewElement(item))
+    wrapper.querySelector('.lato-cms-media-field__name').textContent = item.name
+    const input = wrapper.querySelector('input')
+    input.name = this.hiddenNameValue
+    input.value = item.id
 
     this.gridTarget.insertBefore(wrapper, this.addTileTarget)
   }
 
-  previewMarkup (item) {
+  previewElement (item) {
     // Mirrors the server-rendered tile: with a poster nothing but that image is
     // fetched until the admin hits play (a freshly uploaded video has none yet,
     // its poster job runs in the background).
     if (this.kindValue === 'video') {
       const poster = item.posterUrl || ''
-      return `<video controls preload="${poster ? 'none' : 'metadata'}" poster="${poster}" class="lato-cms-media-field__player" src="${item.url}"></video>`
+      const video = document.createElement('video')
+      video.controls = true
+      video.preload = poster ? 'none' : 'metadata'
+      video.poster = poster
+      video.className = 'lato-cms-media-field__player'
+      video.src = item.url
+      return video
     }
     if (item.thumbnailUrl || item.url) {
-      return `<img src="${item.thumbnailUrl || item.url}" class="lato-cms-media-field__thumb">`
+      const image = document.createElement('img')
+      image.src = item.thumbnailUrl || item.url
+      image.className = 'lato-cms-media-field__thumb'
+      return image
     }
-    return '<div class="lato-cms-media-field__icon"><i class="bi bi-paperclip"></i></div>'
+    const icon = document.createElement('div')
+    icon.className = 'lato-cms-media-field__icon'
+    icon.innerHTML = '<i class="bi bi-paperclip"></i>'
+    return icon
   }
 
   itemTiles () {

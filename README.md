@@ -3,6 +3,8 @@
 Manage application content on Lato projects.
 
 ## Installation
+
+Requires Rails 8.1.3.1 or newer in the 8.1 series and Lato 3.25.0 or newer. Existing applications must install the new Lato session migration before deployment; previous sessions are invalidated.
 Add required dependencies to your application's Gemfile:
 
 ```ruby
@@ -42,6 +44,12 @@ import "lato_cms/application";
 
 // ....
 ```
+
+## Content security
+
+Rich text fields preserve common formatting, links, and images. HTML is sanitized on save and when rendered or returned through `parsed_value` and JSON, including existing content and AI translations. Scripts, event handlers, unsafe URL protocols, and unsupported elements or attributes are removed. Applications should consume `parsed_value` rather than render the raw database `value` as HTML.
+
+The read-only JSON API under `/api/pages` is public and requires no login. Its `group_id` parameter selects content; it is not an authorization token. Pages, translations, fields, and attachment URLs returned by this API must be suitable for public access. Applications with private content must restrict access to these endpoints in the host application or reverse proxy.
 
 ## Media URLs
 

@@ -1,6 +1,6 @@
 <% label = field_config['name'] || field_id.humanize %>
 <% required = field_config['required'] == true %>
-<% current_value = page_field&.value || '' %>
+<% current_value = LatoCms::PageField.sanitize_rich_text(page_field&.value || '') %>
 <% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
 <% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
@@ -8,7 +8,9 @@
   <%= label %><%= ' *' if required %>
 </label>
 
-<div data-controller="lato-cms-text-field">
+<div data-controller="lato-cms-text-field"
+     data-lato-cms-text-field-tags-value="<%= LatoCms::PageField::RICH_TEXT_TAGS.join(' ') %>"
+     data-lato-cms-text-field-attributes-value="<%= LatoCms::PageField::RICH_TEXT_ATTRIBUTES.join(' ') %>">
 
   <%# ── Toolbar ──────────────────────────────────────────────────────────── %>
   <div class="lato-cms-wysiwyg-toolbar border border-bottom-0 rounded-top bg-light px-2 py-1 d-flex flex-wrap gap-1 align-items-center"
@@ -78,5 +80,5 @@
           name="<%= input_name %>"
           id="<%= input_id %>"
          data-lato-cms-text-field-target="input"
-         value="<%= CGI.escapeHTML(current_value) %>">
+         value="<%= current_value %>">
 </div>
