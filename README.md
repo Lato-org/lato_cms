@@ -22,11 +22,11 @@ $ rails lato_cms:install:migrations
 $ rails db:migrate
 ```
 
-Mount lato users routes on the **config/routes.rb** file:
+Mount Lato CMS routes in **config/routes.rb**:
 
 ```ruby
 Rails.application.routes.draw do
-  mount LatoCms::Engine => "/lato-users"
+  mount LatoCms::Engine => "/lato-cms"
   # ....
 end
 ```
@@ -38,7 +38,7 @@ Import Lato Scss on **app/assets/stylesheets/application.scss** file:
 // ....
 ```
 
-Import Lato Users Js on **app/javascript/application.js** file:
+Import Lato CMS JavaScript in **app/javascript/application.js**:
 ```js
 import "lato_cms/application";
 
