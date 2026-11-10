@@ -5,21 +5,23 @@
        data-lato-cms-media-picker-multiple-value="<%= multiple %>"
        data-lato-cms-media-picker-selected-label-value="<%= t('lato_cms.media_picker_selected_label') %>">
 
-    <ul class="nav nav-tabs mb-3">
-      <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#lato-cms-media-picker-browse" type="button">
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#lato-cms-media-picker-browse" type="button"
+                role="tab" id="lato-cms-media-picker-browse-tab" aria-controls="lato-cms-media-picker-browse" aria-selected="true">
           <%= t('lato_cms.media_picker_tab_browse') %>
         </button>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#lato-cms-media-picker-upload" type="button">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#lato-cms-media-picker-upload" type="button"
+                role="tab" id="lato-cms-media-picker-upload-tab" aria-controls="lato-cms-media-picker-upload" aria-selected="false">
           <%= t('lato_cms.media_picker_tab_upload') %>
         </button>
       </li>
     </ul>
 
     <div class="tab-content">
-      <div class="tab-pane fade show active" id="lato-cms-media-picker-browse">
+      <div class="tab-pane fade show active" id="lato-cms-media-picker-browse" role="tabpanel" aria-labelledby="lato-cms-media-picker-browse-tab">
         <%= form_with url: lato_cms.media_picker_action_path, method: :get, data: { turbo_frame: params[:frame_id] } do %>
           <%= hidden_field_tag :frame_id, params[:frame_id] %>
           <%= hidden_field_tag :multiple, multiple %>
@@ -32,8 +34,9 @@
                   class: "btn btn-sm #{params[:type] == type ? 'btn-primary' : 'btn-outline-secondary'}", data: { turbo_frame: params[:frame_id] } %>
               <% end %>
             </div>
-            <%= text_field_tag :q, params[:q], class: 'form-control form-control-sm', placeholder: t('lato_cms.media_search_placeholder') %>
-            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
+            <%= search_field_tag :q, params[:q], class: 'form-control form-control-sm', placeholder: t('lato_cms.media_search_placeholder'),
+              'aria-label': t('lato_cms.media_search_label') %>
+            <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="<%= t('lato_cms.media_search_cta') %>"><i class="bi bi-search" aria-hidden="true"></i></button>
           </div>
         <% end %>
 
@@ -45,7 +48,11 @@
         <% else %>
           <div class="lato-cms-media-picker__grid mb-3" data-lato-cms-media-picker-target="grid">
             <% @media.each do |media| %>
-              <div class="lato-cms-media-picker__item"
+              <%# A button: reachable and operable from the keyboard. In
+                  multiple mode aria-pressed carries the selection state. %>
+              <button type="button" class="lato-cms-media-picker__item"
+                   aria-label="<%= t('lato_cms.media_field_select', name: media.name) %> (<%= t("lato_cms.media_type_#{media.media_type}", default: media.media_type) %>)"
+                   <% if multiple %>aria-pressed="false"<% end %>
                    data-media-id="<%= media.id %>"
                    data-media-name="<%= media.name %>"
                    data-media-thumb="<%= media.thumbnail_url %>"
@@ -55,8 +62,8 @@
                    data-action="click->lato-cms-media-picker#select"
                    data-lato-cms-media-picker-target="item">
                 <%= lato_cms_media_thumb(media, size: 100) %>
-                <span class="small text-truncate d-block"><%= media.name %></span>
-              </div>
+                <span class="small text-truncate d-block" aria-hidden="true"><%= media.name %></span>
+              </button>
             <% end %>
           </div>
 
@@ -65,7 +72,7 @@
 
         <% if multiple %>
           <div class="d-flex justify-content-between align-items-center mt-2">
-            <span data-lato-cms-media-picker-target="selectedCount">0 <%= t('lato_cms.media_picker_selected_label') %></span>
+            <span data-lato-cms-media-picker-target="selectedCount" role="status" aria-live="polite">0 <%= t('lato_cms.media_picker_selected_label') %></span>
             <button type="button" class="btn btn-primary" data-action="lato-cms-media-picker#confirm" data-lato-cms-media-picker-target="confirmButton" disabled>
               <%= t('lato_cms.media_picker_confirm') %>
             </button>
@@ -73,8 +80,8 @@
         <% end %>
       </div>
 
-      <div class="tab-pane fade" id="lato-cms-media-picker-upload">
-        <div data-lato-cms-media-picker-target="uploadNotice"></div>
+      <div class="tab-pane fade" id="lato-cms-media-picker-upload" role="tabpanel" aria-labelledby="lato-cms-media-picker-upload-tab">
+        <div data-lato-cms-media-picker-target="uploadNotice" role="status" aria-live="polite"></div>
         <%# Name/alt text are intentionally not collected here: they default
             to the filename on upload and are only ever edited afterwards
             from the Media library's own edit form.

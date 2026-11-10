@@ -4,7 +4,8 @@
 <% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
 <% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
-<label class="form-label" for="<%= input_id %>">
+<%# Names the editable area through aria-labelledby: `for` cannot target a contenteditable, and the hidden input is not focusable. %>
+<label class="form-label" id="<%= input_id %>_label">
   <%= label %><%= ' *' if required %>
 </label>
 
@@ -13,59 +14,66 @@
      data-lato-cms-text-field-attributes-value="<%= LatoCms::PageField::RICH_TEXT_ATTRIBUTES.join(' ') %>">
 
   <%# ── Toolbar ──────────────────────────────────────────────────────────── %>
-  <div class="lato-cms-wysiwyg-toolbar border border-bottom-0 rounded-top bg-light px-2 py-1 d-flex flex-wrap gap-1 align-items-center"
+  <div role="toolbar" aria-label="<%= t('lato_cms.field_text_toolbar_label') %>" aria-controls="<%= input_id %>_editor"
+       class="lato-cms-wysiwyg-toolbar border border-bottom-0 rounded-top bg-light px-2 py-1 d-flex flex-wrap gap-1 align-items-center"
        data-lato-cms-text-field-target="toolbar">
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_bold') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_bold') %>" aria-label="<%= t('lato_cms.field_text_toolbar_bold') %>"
             data-action="click->lato-cms-text-field#bold">
-      <i class="bi bi-type-bold"></i>
+      <i class="bi bi-type-bold" aria-hidden="true"></i>
     </button>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_italic') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_italic') %>" aria-label="<%= t('lato_cms.field_text_toolbar_italic') %>"
             data-action="click->lato-cms-text-field#italic">
-      <i class="bi bi-type-italic"></i>
+      <i class="bi bi-type-italic" aria-hidden="true"></i>
     </button>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_underline') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_underline') %>" aria-label="<%= t('lato_cms.field_text_toolbar_underline') %>"
             data-action="click->lato-cms-text-field#underline">
-      <i class="bi bi-type-underline"></i>
+      <i class="bi bi-type-underline" aria-hidden="true"></i>
     </button>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_strikethrough') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_strikethrough') %>" aria-label="<%= t('lato_cms.field_text_toolbar_strikethrough') %>"
             data-action="click->lato-cms-text-field#strikethrough">
-      <i class="bi bi-type-strikethrough"></i>
+      <i class="bi bi-type-strikethrough" aria-hidden="true"></i>
     </button>
     <span class="vr mx-1"></span>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_left') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_left') %>" aria-label="<%= t('lato_cms.field_text_toolbar_align_left') %>"
             data-action="click->lato-cms-text-field#alignLeft">
-      <i class="bi bi-text-left"></i>
+      <i class="bi bi-text-left" aria-hidden="true"></i>
     </button>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_center') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_center') %>" aria-label="<%= t('lato_cms.field_text_toolbar_align_center') %>"
             data-action="click->lato-cms-text-field#alignCenter">
-      <i class="bi bi-text-center"></i>
+      <i class="bi bi-text-center" aria-hidden="true"></i>
     </button>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_right') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_align_right') %>" aria-label="<%= t('lato_cms.field_text_toolbar_align_right') %>"
             data-action="click->lato-cms-text-field#alignRight">
-      <i class="bi bi-text-right"></i>
+      <i class="bi bi-text-right" aria-hidden="true"></i>
     </button>
     <span class="vr mx-1"></span>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_unordered_list') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_unordered_list') %>" aria-label="<%= t('lato_cms.field_text_toolbar_unordered_list') %>"
             data-action="click->lato-cms-text-field#insertUnorderedList">
-      <i class="bi bi-list-ul"></i>
+      <i class="bi bi-list-ul" aria-hidden="true"></i>
     </button>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_ordered_list') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_ordered_list') %>" aria-label="<%= t('lato_cms.field_text_toolbar_ordered_list') %>"
             data-action="click->lato-cms-text-field#insertOrderedList">
-      <i class="bi bi-list-ol"></i>
+      <i class="bi bi-list-ol" aria-hidden="true"></i>
     </button>
 
     <%# ── Source toggle ────────────────────────────────────────────────── %>
     <span class="vr mx-1 ms-auto"></span>
-    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_toggle_html_source') %>"
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1" title="<%= t('lato_cms.field_text_toolbar_toggle_html_source') %>" aria-label="<%= t('lato_cms.field_text_toolbar_toggle_html_source') %>"
             data-action="click->lato-cms-text-field#toggleSource"
+            aria-pressed="false"
             data-lato-cms-text-field-target="sourceBtn">
-      <i class="bi bi-code-slash"></i>
+      <i class="bi bi-code-slash" aria-hidden="true"></i>
     </button>
   </div>
 
   <%# ── Editable area (WYSIWYG) ─────────────────────────────────────────── %>
   <div class="form-control lato-cms-wysiwyg-editor rounded-0 rounded-bottom"
        contenteditable="true"
+       id="<%= input_id %>_editor"
+       role="textbox"
+       aria-multiline="true"
+       aria-labelledby="<%= input_id %>_label"
+       <%= 'aria-required="true"'.html_safe if required %>
        style="min-height: 150px; overflow-y: auto; line-height: 1.6;"
        data-lato-cms-text-field-target="editor"><%= current_value.html_safe %></div>
 
@@ -73,6 +81,7 @@
   <textarea class="form-control lato-cms-wysiwyg-source rounded-0 rounded-bottom font-monospace d-none"
             style="min-height: 150px; font-size: 0.8rem; resize: vertical; white-space: pre;"
             spellcheck="false"
+            aria-label="<%= label %> — <%= t('lato_cms.field_text_source_label') %>"
             data-lato-cms-text-field-target="source"></textarea>
 
   <%# ── Hidden input submitted with the form ───────────────────────────── %>

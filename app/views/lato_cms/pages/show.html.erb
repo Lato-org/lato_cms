@@ -1,19 +1,23 @@
-<%= lato_page_head @page.title, [
+<%# h(): the title is user content and lato_page_head renders it raw. %>
+<%= lato_page_head h(@page.title), [
   { label: t('lato_cms.pages_index_title'), path: lato_cms.pages_path },
   { label: @page.title }
 ] %>
 
-<div data-controller="lato-cms-advanced-editor" data-lato-cms-advanced-editor-list-path-value="<%= lato_cms.pages_path %>">
+<div data-controller="lato-cms-advanced-editor" data-lato-cms-advanced-editor-list-path-value="<%= lato_cms.pages_path %>"
+     data-lato-cms-advanced-editor-unsaved-message-value="<%= t('lato_cms.fields_unsaved_changes_confirm') %>">
   <div class="row align-items-stretch lato-cms-advanced-editor__row lato-cms-advanced-editor__row--active">
 
     <%# ── Preview column ─────────────────────────────────────────────────── %>
     <div class="col-12 col-lg-6 mb-4 lato-cms-advanced-editor__preview-col">
-      <% if @page.frontend_url.present? %>
+      <% if (preview_url = @page.safe_frontend_url) %>
         <div class="card h-100" style="overflow: hidden;" data-controller="lato-cms-page-preview">
           <div class="card-header d-flex justify-content-between align-items-center py-2 gap-2">
-            <div class="btn-group btn-group-sm" role="group">
+            <div class="btn-group btn-group-sm" role="group" aria-label="<%= t('lato_cms.show_preview_devices_label') %>">
               <button type="button" class="btn btn-outline-secondary active"
                       title="<%= t('lato_cms.show_preview_desktop_tooltip') %>"
+                      aria-label="<%= t('lato_cms.show_preview_desktop_tooltip') %>"
+                      aria-pressed="true"
                       data-controller="lato-tooltip"
                       data-action="click->lato-cms-page-preview#setDevice"
                       data-device="desktop"
@@ -22,6 +26,8 @@
               </button>
               <button type="button" class="btn btn-outline-secondary"
                       title="<%= t('lato_cms.show_preview_tablet_tooltip') %>"
+                      aria-label="<%= t('lato_cms.show_preview_tablet_tooltip') %>"
+                      aria-pressed="false"
                       data-controller="lato-tooltip"
                       data-action="click->lato-cms-page-preview#setDevice"
                       data-device="tablet"
@@ -30,6 +36,8 @@
               </button>
               <button type="button" class="btn btn-outline-secondary"
                       title="<%= t('lato_cms.show_preview_mobile_tooltip') %>"
+                      aria-label="<%= t('lato_cms.show_preview_mobile_tooltip') %>"
+                      aria-pressed="false"
                       data-controller="lato-tooltip"
                       data-action="click->lato-cms-page-preview#setDevice"
                       data-device="mobile"
@@ -40,6 +48,7 @@
             <div class="d-flex align-items-center gap-2">
               <div class="input-group input-group-sm" style="width: 130px;">
                 <input type="number" class="form-control" min="320" max="3840" step="1"
+                       aria-label="<%= t('lato_cms.show_preview_custom_width_tooltip') %>"
                        placeholder="<%= t('lato_cms.show_preview_custom_width_placeholder') %>"
                        title="<%= t('lato_cms.show_preview_custom_width_tooltip') %>"
                        data-controller="lato-tooltip"
@@ -51,7 +60,13 @@
             </div>
           </div>
           <div class="lato-cms-page-preview__viewport" data-lato-cms-page-preview-target="viewport">
-            <iframe src="<%= @page.frontend_url %>" data-lato-cms-page-preview-target="iframe"></iframe>
+            <%# sandbox keeps the frontend from navigating the panel or opening
+                dialogs on it; scripts/same-origin stay on so the site renders
+                and the preview can postMessage the open component. %>
+            <iframe src="<%= preview_url %>" title="<%= t('lato_cms.show_preview_title') %>"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    data-lato-cms-page-preview-target="iframe"></iframe>
           </div>
         </div>
       <% else %>
@@ -80,14 +95,15 @@
             <span class="vr"></span>
             <%= lato_cms_page_actions_dropdown(@page, show_edit: lato_cms_admin?, show_translations: lato_cms_admin?, show_delete: lato_cms_admin?, hide_show: true) %>
             <span class="vr"></span>
-            <button class="btn btn-sm btn-outline-primary"
+            <button type="button" class="btn btn-sm btn-outline-primary"
                     title="<%= t('lato_cms.show_hide_panel_tooltip') %>"
+                    aria-label="<%= t('lato_cms.show_hide_panel_tooltip') %>"
                     data-controller="lato-tooltip"
                     data-action="click->lato-cms-advanced-editor#toggleSidebar">
               <i class="bi bi-layout-sidebar-reverse"></i>
             </button>
             <%= link_to lato_cms.pages_path, class: 'btn btn-sm btn-outline-danger',
-              title: t('lato_cms.show_back_to_list_tooltip'), data: { controller: 'lato-tooltip' } do %>
+              title: t('lato_cms.show_back_to_list_tooltip'), 'aria-label': t('lato_cms.show_back_to_list_tooltip'), data: { controller: 'lato-tooltip' } do %>
               <i class="bi bi-box-arrow-left"></i>
             <% end %>
           </div>
@@ -106,7 +122,7 @@
           <% elsif !@page.template_available? %>
             <div class="alert alert-warning">
               <i class="bi bi-exclamation-triangle me-1"></i>
-              <%= t('lato_cms.show_template_unavailable', template_id: @page.template_id) %>
+              <%= t('lato_cms.show_template_unavailable_html', template_id: @page.template_id) %>
               <% if lato_cms_admin? %>
                 <%= link_to t('lato_cms.show_edit_settings_cta'), lato_cms.pages_update_path(@page), class: 'btn btn-sm btn-outline-warning ms-2',
                   data: { lato_action_target: 'trigger', turbo_frame: dom_id(@page, 'form'), action_title: t('lato_cms.page_update_title') } %>
@@ -137,9 +153,10 @@
   </div>
 
   <%# ── Re-open sidebar tab (visible only in advanced mode + sidebar closed) %>
-  <button class="lato-cms-advanced-editor__reopen-btn"
+  <button type="button" class="lato-cms-advanced-editor__reopen-btn"
           hidden
           title="<%= t('lato_cms.show_show_editor_panel_tooltip') %>"
+          aria-label="<%= t('lato_cms.show_show_editor_panel_tooltip') %>"
           data-controller="lato-tooltip"
           data-action="click->lato-cms-advanced-editor#toggleSidebar"
           data-lato-cms-advanced-editor-target="reopenBtn">

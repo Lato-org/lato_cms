@@ -5,7 +5,7 @@ module LatoCms
   class Config
     attr_accessor :locales, :templates_path, :admin_roles, :media_url_mode, :llm_api_url, :llm_model,
                   :llm_api_key, :llm_generate_alt_text, :llm_generate_title, :llm_alt_text_prompt,
-                  :llm_title_prompt
+                  :llm_title_prompt, :media_allowed_content_types, :media_max_file_size, :llm_max_image_size
 
     # How the URLs of media files are built (see LatoCms::Media#url).
     # - :redirect — Rails answers 302 with a signed URL that expires; on a
@@ -70,10 +70,35 @@ module LatoCms
       # LLM_PROMPT_VARIABLES placeholders.
       @llm_alt_text_prompt = nil
       @llm_title_prompt = nil
+
+      # Server-side upload limits for the media library (the picker `accept`
+      # attribute is only a hint to the browser). Set either to nil to lift it.
+      @media_allowed_content_types = DEFAULT_MEDIA_ALLOWED_CONTENT_TYPES.dup
+      @media_max_file_size = 100.megabytes
+
+      # Images larger than this are not sent to the LLM: the whole file is
+      # read in memory and base64-encoded into the request.
+      @llm_max_image_size = 20.megabytes
     end
+
+    # Media uploads accepted by default: images, audio, video, PDFs, plain
+    # text/CSV, office documents and zip archives. HTML and scripts are left
+    # out on purpose. A trailing `*` matches any subtype.
+    DEFAULT_MEDIA_ALLOWED_CONTENT_TYPES = %w[
+      image/* video/* audio/*
+      application/pdf text/plain text/csv application/zip
+      application/msword application/vnd.ms-excel application/vnd.ms-powerpoint
+      application/vnd.openxmlformats-officedocument.* application/vnd.oasis.opendocument.*
+    ].freeze
 
     def media_url_proxy?
       media_url_mode.to_sym == :proxy
+    end
+
+    def media_content_type_allowed?(content_type)
+      return true if media_allowed_content_types.nil?
+
+      Array(media_allowed_content_types).any? { |pattern| File.fnmatch?(pattern.to_s, content_type.to_s) }
     end
 
     def llm_configured?

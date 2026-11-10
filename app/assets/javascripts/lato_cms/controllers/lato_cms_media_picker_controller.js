@@ -23,13 +23,14 @@ export default class extends Controller {
       return
     }
 
-    if (this.pending.has(item.id)) {
-      this.pending.delete(item.id)
-      event.currentTarget.classList.remove('lato-cms-media-picker__item--selected')
-    } else {
+    const selected = !this.pending.has(item.id)
+    if (selected) {
       this.pending.set(item.id, item)
-      event.currentTarget.classList.add('lato-cms-media-picker__item--selected')
+    } else {
+      this.pending.delete(item.id)
     }
+    event.currentTarget.classList.toggle('lato-cms-media-picker__item--selected', selected)
+    event.currentTarget.setAttribute('aria-pressed', selected.toString())
 
     this.updateSelectionUi()
   }

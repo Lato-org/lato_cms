@@ -10,11 +10,11 @@ module LatoCms
       end
 
       def templates
-        load_yaml_files(templates_path)
+        cached_yaml_files(templates_path)
       end
 
       def components
-        load_yaml_files(components_path)
+        cached_yaml_files(components_path)
       end
 
       def find_template(template_id)
@@ -25,6 +25,15 @@ module LatoCms
       def find_component(component_id)
         return nil if component_id.blank?
         components.find { |c| c['id'] == component_id.to_s }
+      end
+
+      # The field definitions of a template component, resolved through the
+      # template (template -> template component -> component). This is the
+      # authoritative source for a field's type: the component id stored on a
+      # PageField, or sent by a client, is never trusted to pick it.
+      def find_template_component_fields(template_id, template_component_id)
+        component_id = find_template(template_id)&.dig('components', template_component_id.to_s, 'component_id')
+        find_component(component_id)&.dig('fields')
       end
 
       def template_options
@@ -49,12 +58,49 @@ module LatoCms
         end
       end
 
+      def reset_cache!
+        @cache = {}
+      end
+
       private
+
+      # Parsed YAML is kept per process: every field read (type, name,
+      # settings) goes through here, so re-reading the files each time cost
+      # hundreds of parses per request, on a public endpoint too. When code
+      # reloading is on (development) the cache is keyed by the files' mtimes,
+      # so edited templates show up without a restart. Entries are deep-frozen
+      # because they are shared by every caller.
+      def cached_yaml_files(path)
+        @cache ||= {}
+        fingerprint = reloading? ? yaml_fingerprint(path) : nil
+        entry = @cache[path.to_s]
+        return entry[:data] if entry && entry[:fingerprint] == fingerprint
+
+        data = deep_freeze(load_yaml_files(path))
+        @cache[path.to_s] = { fingerprint: fingerprint, data: data }
+        data
+      end
+
+      def reloading?
+        Rails.application.config.respond_to?(:enable_reloading) && Rails.application.config.enable_reloading
+      end
+
+      def yaml_fingerprint(path)
+        Dir.glob(File.join(path, '*.yml')).sort.map { |file| [file, File.mtime(file).to_f] }
+      end
+
+      def deep_freeze(object)
+        case object
+        when Hash then object.each_value { |value| deep_freeze(value) }
+        when Array then object.each { |value| deep_freeze(value) }
+        end
+        object.freeze
+      end
 
       def load_yaml_files(path)
         return [] unless Dir.exist?(path)
 
-        Dir.glob(File.join(path, '*.yml')).filter_map do |file|
+        Dir.glob(File.join(path, '*.yml')).sort.filter_map do |file|
           YAML.load_file(file)
         rescue Psych::SyntaxError => e
           Rails.logger.error("LatoCms: Failed to parse YAML file #{file}: #{e.message}")

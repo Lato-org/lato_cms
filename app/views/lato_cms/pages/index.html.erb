@@ -12,8 +12,9 @@
     <% end %>
 
     <div class="dropdown ms-auto" title="<%= t('lato_cms.cta_actions') %>" data-controller="lato-tooltip">
-      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-        <i class="bi bi-three-dots"></i>
+      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+              aria-label="<%= t('lato_cms.cta_actions') %>">
+        <i class="bi bi-three-dots" aria-hidden="true"></i>
       </button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li>

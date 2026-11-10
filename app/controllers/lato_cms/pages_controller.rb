@@ -11,6 +11,7 @@ module LatoCms
 
     before_action { active_sidebar(:lato_cms_pages) }
     before_action :authenticate_lato_cms_admin, only: ADMIN_ONLY_ACTIONS
+    rate_limit_expensive_actions :sitemap_export_action, :clone_component_action
 
     def index
       pages = query_pages
@@ -86,11 +87,24 @@ module LatoCms
     def save_fields_action
       @page = query_pages.find(params[:id])
 
-      template_component_id = params[:template_component_id]
-      component_id = params[:component_id]
+      template_component_id = params[:template_component_id].to_s
       fields_data = params[:fields] || {}
+      # Component and field types come from the page's template only:
+      # `params[:component_id]` is ignored, since a forged one used to change
+      # the type a field was saved (and sanitized) as.
+      template_component = @page.template_components.find { |tc| tc[:template_component_id] == template_component_id }
+      unknown_field_ids = fields_data.keys.map(&:to_s) - (template_component&.dig(:fields) || {}).keys.map(&:to_s)
 
-      component = LatoCms::TemplateManager.find_component(component_id)
+      if template_component.nil? || template_component[:component].nil? || unknown_field_ids.any?
+        respond_to do |format|
+          format.html { redirect_to lato_cms.pages_show_path(@page), alert: t('lato_cms.component_not_in_template') }
+          format.json { render json: { error: t('lato_cms.component_not_in_template') }, status: :unprocessable_entity }
+        end
+        return
+      end
+
+      component = template_component[:component]
+      component_id = template_component[:component_id]
       errors = []
 
       unless @page.component_effectively_enabled?(template_component_id)
@@ -101,9 +115,7 @@ module LatoCms
         return
       end
 
-      template_component = @page.template_components.find { |tc| tc[:template_component_id] == template_component_id.to_s }
-
-      if template_component&.dig(:repeater)
+      if template_component[:repeater]
         save_repeater_fields(template_component, component, params[:repeater_items] || {}, params[:repeater_order] || [], errors)
       else
         fields_data.each do |field_id, field_data|
@@ -121,7 +133,7 @@ module LatoCms
           # field adopt another component's media, and the next save stored it.
           format.json { render json: { message: t('lato_cms.fields_saved'), fields: @page.fields.reload.select { |field| field.template_component_id == template_component_id.to_s }.map(&:as_json) } }
         else
-          error_messages = errors.map { |e| "#{e[:field_id]}: #{e[:errors].join(', ')}" }.join('; ')
+          error_messages = errors.map { |e| "#{e[:field_name]}: #{e[:errors].join(', ')}" }.join('; ')
           format.html { redirect_to lato_cms.pages_show_path(@page), alert: error_messages }
           format.json { render json: { errors: errors }, status: :unprocessable_entity }
         end
@@ -132,6 +144,15 @@ module LatoCms
       @page = query_pages.find(params[:id])
       template_component_id = params[:template_component_id].to_s
       enabled = ActiveModel::Type::Boolean.new.cast(params[:enabled])
+
+      # component_states only holds keys of the template's own components.
+      unless @page.template_components.any? { |tc| tc[:template_component_id] == template_component_id }
+        respond_to do |format|
+          format.html { redirect_to lato_cms.pages_show_path(@page), alert: t('lato_cms.component_not_in_template') }
+          format.json { render json: { error: t('lato_cms.component_not_in_template') }, status: :unprocessable_entity }
+        end
+        return
+      end
 
       if @page.component_required?(template_component_id)
         respond_to do |format|
@@ -253,6 +274,9 @@ module LatoCms
       # Components are template-specific: only clone between pages using the same template.
       return false unless source.template_id == target.template_id
 
+      template_component = target.template_components.find { |tc| tc[:template_component_id] == template_component_id }
+      return false unless template_component
+
       source_fields = source.fields.select { |f| f.template_component_id == template_component_id }
       return false if source_fields.empty?
 
@@ -263,7 +287,7 @@ module LatoCms
           field = target.fields.create!(
             template_id: target.template_id,
             template_component_id: src.template_component_id,
-            component_id: src.component_id,
+            component_id: template_component[:component_id],
             field_id: src.field_id,
             value: src.value
           )
@@ -292,14 +316,11 @@ module LatoCms
         return
       end
 
-      order_field = @page.fields.find_or_initialize_by(
-        template_id: @page.template_id,
-        template_component_id: template_component_id,
-        component_id: component_id,
-        field_id: LatoCms::PageField::REPEATER_ORDER_FIELD_ID
-      )
+      order_field = find_or_build_field(template_component_id, component_id, LatoCms::PageField::REPEATER_ORDER_FIELD_ID)
       order_field.value = item_ids.to_json
-      errors << { field_id: order_field.field_id, errors: order_field.errors.full_messages } unless order_field.save
+      unless order_field.save
+        errors << { field_id: order_field.field_id, field_name: template_component[:name], errors: order_field.errors.full_messages }
+      end
 
       existing_item_ids = @page.fields.where(template_component_id: template_component_id).reject(&:repeater_order?).filter_map(&:repeater_item_id).uniq
       removed_item_ids = existing_item_ids - item_ids
@@ -319,13 +340,19 @@ module LatoCms
       end
     end
 
+    # Looked up by (template component, field id) only, the pair that is
+    # unique per page: a row left by an older template, or with a forged
+    # component id, is taken over and realigned to the current template
+    # instead of clashing with the uniqueness validation.
+    def find_or_build_field(template_component_id, component_id, persisted_field_id)
+      field = @page.fields.find_or_initialize_by(template_component_id: template_component_id, field_id: persisted_field_id)
+      field.template_id = @page.template_id
+      field.component_id = component_id
+      field
+    end
+
     def save_field(component, template_component_id, component_id, config_field_id, persisted_field_id, field_data, errors)
-      field = @page.fields.find_or_initialize_by(
-        template_id: @page.template_id,
-        template_component_id: template_component_id,
-        component_id: component_id,
-        field_id: persisted_field_id
-      )
+      field = find_or_build_field(template_component_id, component_id, persisted_field_id)
 
       field_config = component&.dig('fields', config_field_id)
       field_type = field_config&.dig('type') || 'string'
@@ -340,7 +367,9 @@ module LatoCms
         assign_scalar_field_value(field, field_type, field_data)
       end
 
-      errors << { field_id: persisted_field_id, errors: field.errors.full_messages } unless field.save
+      return if field.save
+
+      errors << { field_id: persisted_field_id, field_name: field.field_name, errors: field.errors.map(&:message) }
     end
 
     def assign_media_field_value(field, field_type, field_data)

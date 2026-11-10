@@ -4,9 +4,11 @@ module LatoCms
 
     before_action { active_sidebar(:lato_cms_media) }
     before_action :authenticate_lato_cms_admin, only: ADMIN_ONLY_ACTIONS
+    rate_limit_expensive_actions :regenerate_text_action
 
     def index
-      media = query_media
+      # Preloaded: the usages and actions cells both read the usage count.
+      media = query_media.includes(:page_field_media)
       # "Unused" = no page field references it at all: the only media that can
       # be deleted, so it's worth being able to list just those.
       media = media.where.missing(:page_field_media) if params[:usage] == 'unused'
@@ -27,7 +29,7 @@ module LatoCms
     def picker_action
       media = query_media
       media = media.of_type(params[:type]) if params[:type].present?
-      media = media.where('LOWER(lato_cms_media.name) LIKE :q', q: "%#{params[:q].to_s.downcase}%") if params[:q].present?
+      media = media.where('LOWER(lato_cms_media.name) LIKE :q', q: "%#{LatoCms::Media.sanitize_sql_like(params[:q].to_s.downcase)}%") if params[:q].present?
 
       @media = media.order(created_at: :desc).page(params[:page]).per(24)
     end

@@ -63,7 +63,7 @@ it:
     show_preview_custom_width_placeholder: Larghezza
     show_no_template_title: Nessun template assegnato
     show_no_template_description: Assegna un template per iniziare a modificare i campi.
-    show_template_unavailable: "Il template <strong>%{template_id}</strong> non e piu disponibile. Assegna un template diverso."
+    show_template_unavailable_html: "Il template <strong>%{template_id}</strong> non e piu disponibile. Assegna un template diverso."
     show_previously_saved_fields: "Campi salvati in precedenza:"
     fields_component_not_found_badge: Componente non trovato
     component_required_badge: Obbligatoria
@@ -162,3 +162,29 @@ it:
     field_text_toolbar_unordered_list: Elenco puntato
     field_text_toolbar_ordered_list: Elenco numerato
     field_text_toolbar_toggle_html_source: Mostra/nascondi sorgente HTML
+    field_text_toolbar_label: Formattazione testo
+    field_text_source_label: Sorgente HTML
+    field_color_clear: Rimuovi colore
+    field_color_empty: Nessun colore
+    field_json_valid: JSON valido
+    field_json_invalid: "JSON non valido: %{error}"
+    field_render_error: "Il campo \"%{field_id}\" non può essere mostrato. Controlla la sua configurazione."
+    fields_saving: Salvataggio...
+    fields_save_failed: Salvataggio dei campi non riuscito
+    fields_save_error: Si è verificato un errore durante il salvataggio
+    fields_unsaved_changes_confirm: Ci sono modifiche non salvate. Uscire dalla pagina e perderle?
+    component_not_in_template: Questo componente o uno dei suoi campi non fa parte del template della pagina
+    rate_limited: Troppe richieste, attendi un minuto e riprova.
+    cta_page_settings: Impostazioni pagina
+    show_preview_title: Anteprima del frontend
+    show_preview_devices_label: Dimensione anteprima
+    form_template_change_warning: Se cambi template, i campi salvati con quello attuale non vengono più mostrati.
+    media_delete_confirm: Sei sicuro di voler eliminare questo media?
+    media_content_type_not_allowed: "di tipo %{content_type} non è consentito"
+    media_file_too_large: "supera la dimensione massima (%{size})"
+    media_search_label: Cerca media
+    media_search_cta: Cerca
+    media_move_before: Sposta prima
+    media_move_after: Sposta dopo
+    media_field_select: "Seleziona %{name}"
+    translation_select_label: "Pagina da collegare per %{locale}"

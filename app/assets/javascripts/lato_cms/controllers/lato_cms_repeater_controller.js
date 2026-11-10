@@ -59,6 +59,7 @@ export default class extends Controller {
     // The new item is rendered expanded: enforce single-open accordion behavior.
     this.collapseOthers(this.itemTargets[this.itemTargets.length - 1])
     this.refresh()
+    this.notifyChange()
   }
 
   remove (event) {
@@ -70,6 +71,13 @@ export default class extends Controller {
 
     item.remove()
     this.refresh()
+    this.notifyChange()
+  }
+
+  // Lets the editor's unsaved-changes guard see structural edits, which fire
+  // no input event of their own.
+  notifyChange () {
+    this.element.dispatchEvent(new Event('change', { bubbles: true }))
   }
 
   refresh () {

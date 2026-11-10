@@ -1,20 +1,28 @@
 <% label = field_config['name'] || field_id.humanize %>
 <% required = field_config['required'] == true %>
-<% current_value = page_field&.value.presence || '#000000' %>
+<% current_value = page_field&.value.presence %>
 <% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
 <% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
 <label class="form-label" for="<%= input_id %>">
   <%= label %><%= ' *' if required %>
 </label>
-<div class="d-flex align-items-center gap-2" data-controller="lato-cms-color-field">
+<%# The submitted value lives in the hidden input: a native color input always
+    holds a color (#000000 when empty), so an untouched field used to be saved
+    as black. It stays empty until a color is picked, and can be cleared. %>
+<div class="d-flex align-items-center gap-2" data-controller="lato-cms-color-field"
+     data-lato-cms-color-field-empty-label-value="<%= t('lato_cms.field_color_empty') %>">
+  <input type="hidden" name="<%= input_name %>" value="<%= current_value %>" data-lato-cms-color-field-target="value">
   <input type="color"
     class="form-control form-control-color"
-    name="<%= input_name %>"
     id="<%= input_id %>"
-    value="<%= current_value %>"
+    value="<%= current_value || '#000000' %>"
     data-lato-cms-color-field-target="input"
     data-action="input->lato-cms-color-field#update"
-    <%= 'required' if required %>>
-  <code class="text-muted small" data-lato-cms-color-field-target="hex"><%= current_value.upcase %></code>
+    <%= 'aria-required="true"'.html_safe if required %>>
+  <code class="text-muted small" data-lato-cms-color-field-target="hex" aria-live="polite"><%= current_value&.upcase || t('lato_cms.field_color_empty') %></code>
+  <% unless required %>
+    <button type="button" class="btn btn-sm btn-link px-0" data-action="lato-cms-color-field#clear"
+            aria-label="<%= t('lato_cms.field_color_clear') %>: <%= label %>"><%= t('lato_cms.field_color_clear') %></button>
+  <% end %>
 </div>

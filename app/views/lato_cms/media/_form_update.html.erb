@@ -5,15 +5,17 @@
   <%# Two tabs: the metadata form, and the file swap — same media, but editing
       its name is a local change while replacing its file edits every page
       using it, so they don't share a submit button. %>
-  <ul class="nav nav-tabs mb-3">
-    <li class="nav-item">
-      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#<%= tab_id %>_details" type="button">
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#<%= tab_id %>_details" type="button"
+              role="tab" id="<%= tab_id %>_details_tab" aria-controls="<%= tab_id %>_details" aria-selected="true">
         <%= t('lato_cms.media_update_tab_details') %>
       </button>
     </li>
     <% if lato_cms_admin? %>
-      <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#<%= tab_id %>_replace" type="button">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#<%= tab_id %>_replace" type="button"
+                role="tab" id="<%= tab_id %>_replace_tab" aria-controls="<%= tab_id %>_replace" aria-selected="false">
           <%= t('lato_cms.media_replace_file_title') %>
         </button>
       </li>
@@ -21,7 +23,7 @@
   </ul>
 
   <div class="tab-content">
-    <div class="tab-pane fade show active" id="<%= tab_id %>_details">
+    <div class="tab-pane fade show active" id="<%= tab_id %>_details" role="tabpanel" aria-labelledby="<%= tab_id %>_details_tab">
       <%= form_with model: media, url: lato_cms.media_update_action_path(media), method: :patch, data: { turbo_frame: '_self', controller: 'lato-form lato-cms-reload-on-modal-close' } do |form| %>
         <%= lato_form_notices class: %w[mb-3] %>
         <%= lato_form_errors media, class: %w[mb-3] %>
@@ -64,7 +66,7 @@
     </div>
 
     <% if lato_cms_admin? %>
-      <div class="tab-pane fade" id="<%= tab_id %>_replace">
+      <div class="tab-pane fade" id="<%= tab_id %>_replace" role="tabpanel" aria-labelledby="<%= tab_id %>_replace_tab">
         <%= render 'lato_cms/media/form_replace_file', media: media %>
       </div>
     <% end %>

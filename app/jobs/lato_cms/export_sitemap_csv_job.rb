@@ -25,9 +25,16 @@ module LatoCms
       CSV.open(file_path, 'wb') do |csv|
         csv << %w[locale title permalink frontend_url]
         pages.find_each do |page|
-          csv << [page.locale, page.title, page.permalink, page.frontend_url]
+          csv << [page.locale, page.title, page.permalink, page.frontend_url].map { |value| self.class.neutralize_formula(value) }
         end
       end
+    end
+
+    # Spreadsheets run a cell starting with = + - @ (or a tab/CR before one)
+    # as a formula: a page titled =HYPERLINK(...) would execute when the
+    # export is opened. A leading apostrophe makes it plain text.
+    def self.neutralize_formula(value)
+      value.is_a?(String) && value.start_with?('=', '+', '-', '@', "\t", "\r") ? "'#{value}" : value
     end
   end
 end

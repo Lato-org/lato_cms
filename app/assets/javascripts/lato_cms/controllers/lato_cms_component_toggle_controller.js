@@ -10,6 +10,12 @@ export default class extends Controller {
     errorLabel: String
   }
 
+  // Checkbox change -> submit, handled by toggle below (no inline onchange,
+  // so the page works under a strict CSP).
+  submit (event) {
+    event.target.form?.requestSubmit()
+  }
+
   async toggle (event) {
     event.preventDefault()
 

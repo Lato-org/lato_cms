@@ -11,7 +11,9 @@
 <label class="form-label" for="<%= input_id %>">
   <%= label %><%= ' *' if required %>
 </label>
-<div data-controller="lato-cms-json-field">
+<div data-controller="lato-cms-json-field"
+     data-lato-cms-json-field-valid-label-value="<%= t('lato_cms.field_json_valid') %>"
+     data-lato-cms-json-field-invalid-label-value="<%= t('lato_cms.field_json_invalid', error: '%{error}') %>">
   <textarea
     class="form-control font-monospace"
     name="<%= input_name %>"
@@ -19,7 +21,8 @@
     rows="<%= settings['rows'] || 6 %>"
     data-lato-cms-json-field-target="input"
     data-action="input->lato-cms-json-field#validate"
+    aria-describedby="<%= input_id %>_status"
     <%= 'required' if required %>
     <% if settings['placeholder'] %>placeholder="<%= settings['placeholder'] %>"<% end %>><%= current_value %></textarea>
-  <div data-lato-cms-json-field-target="status" class="form-text"></div>
+  <div data-lato-cms-json-field-target="status" class="form-text" id="<%= input_id %>_status" role="status" aria-live="polite"></div>
 </div>

@@ -4,12 +4,14 @@
 <% label = t("lato_cms.media_#{attribute}") %>
 
 <div class="mb-3">
-  <label class="form-label"><%= label %></label>
+  <div class="form-label" id="<%= dom_id(media, "#{attribute}_label") %>"><%= label %></div>
 
-  <ul class="nav nav-tabs">
+  <ul class="nav nav-tabs" role="tablist" aria-labelledby="<%= dom_id(media, "#{attribute}_label") %>">
     <% LatoCms.config.locales.each_with_index do |locale, index| %>
-      <li class="nav-item">
+      <li class="nav-item" role="presentation">
         <button class="nav-link <%= 'active' if index.zero? %>" data-bs-toggle="tab"
+          role="tab" id="<%= dom_id(media, "#{attribute}_#{locale}_tab") %>" aria-selected="<%= index.zero? %>"
+          aria-controls="<%= dom_id(media, "#{attribute}_#{locale}_pane") %>"
           data-bs-target="#<%= dom_id(media, "#{attribute}_#{locale}_pane") %>" type="button">
           <%= locale_to_flag(locale) %> <%= locale.to_s.upcase %>
         </button>
@@ -19,8 +21,9 @@
 
   <div class="tab-content border border-top-0 rounded-bottom p-3">
     <% LatoCms.config.locales.each_with_index do |locale, index| %>
-      <div class="tab-pane fade <%= 'show active' if index.zero? %>" id="<%= dom_id(media, "#{attribute}_#{locale}_pane") %>">
-        <%= lato_form_item_input_text form, :"#{attribute}_#{locale}" %>
+      <div class="tab-pane fade <%= 'show active' if index.zero? %>" id="<%= dom_id(media, "#{attribute}_#{locale}_pane") %>"
+           role="tabpanel" aria-labelledby="<%= dom_id(media, "#{attribute}_#{locale}_tab") %>">
+        <%= lato_form_item_input_text form, :"#{attribute}_#{locale}", 'aria-label': "#{label} (#{locale.to_s.upcase})" %>
       </div>
     <% end %>
   </div>

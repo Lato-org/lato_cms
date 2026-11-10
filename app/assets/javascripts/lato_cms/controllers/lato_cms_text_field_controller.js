@@ -88,6 +88,7 @@ export default class extends Controller {
       this.sourceTarget.classList.remove("d-none")
       this.sourceTarget.style.height = this.editorTarget.offsetHeight + "px"
       this.sourceBtnTarget.classList.replace("btn-outline-secondary", "btn-secondary")
+      this.sourceBtnTarget.setAttribute("aria-pressed", "true")
     } else {
       // Apply edited source back to the editor
       this.editorTarget.innerHTML = this.sanitize(this.sourceTarget.value)
@@ -95,6 +96,7 @@ export default class extends Controller {
       this.sourceTarget.classList.add("d-none")
       this.editorTarget.classList.remove("d-none")
       this.sourceBtnTarget.classList.replace("btn-secondary", "btn-outline-secondary")
+      this.sourceBtnTarget.setAttribute("aria-pressed", "false")
     }
   }
 

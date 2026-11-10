@@ -333,6 +333,9 @@ class RepeaterEditorSimulationTest < ActionDispatch::IntegrationTest
       next if node["type"] == "checkbox" && !node["checked"]
       next if node["type"] == "submit"
 
+      # A browser refuses to submit an empty required input, and the server
+      # now rejects it too: fill it the way an editor would have to.
+      node["value"] = "Filled" if node["required"] && node["value"].blank? && node["name"].end_with?("[value]")
       assign_param(payload, node["name"], node["value"].to_s)
     end
 

@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["input", "status"]
+  static values = { validLabel: String, invalidLabel: String }
 
   connect() {
     this.validate()
@@ -17,10 +18,10 @@ export default class extends Controller {
 
     try {
       JSON.parse(value)
-      this.statusTarget.textContent = "Valid JSON"
+      this.statusTarget.textContent = this.validLabelValue
       this.statusTarget.className = "form-text text-success"
     } catch (e) {
-      this.statusTarget.textContent = "Invalid JSON: " + e.message
+      this.statusTarget.textContent = this.invalidLabelValue.replace("%{error}", e.message)
       this.statusTarget.className = "form-text text-danger"
     }
   }

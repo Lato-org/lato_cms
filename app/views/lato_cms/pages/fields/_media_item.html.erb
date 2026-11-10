@@ -16,7 +16,7 @@
     <video controls preload="<%= media.poster_url ? 'none' : 'metadata' %>" poster="<%= media.poster_url %>"
       class="lato-cms-media-field__player" src="<%= media.url %>"></video>
   <% elsif media.thumbnail_url %>
-    <img src="<%= media.thumbnail_url %>" class="lato-cms-media-field__thumb" alt="<%= media.alt_text %>">
+    <img src="<%= media.thumbnail_url %>" class="lato-cms-media-field__thumb" alt="<%= media.alt_text.presence || media.name %>">
   <% else %>
     <div class="lato-cms-media-field__icon"><i class="bi bi-paperclip"></i></div>
   <% end %>
@@ -25,9 +25,20 @@
     <span class="lato-cms-media-field__name"><%= media.name %></span>
   </div>
 
-  <button type="button" class="lato-cms-media-field__remove" title="<%= t('lato_cms.field_file_remove') %>" aria-label="<%= t('lato_cms.field_file_remove') %>" data-action="lato-cms-media-field#remove">
-    <i class="bi bi-x-lg"></i>
+  <button type="button" class="lato-cms-media-field__remove" title="<%= t('lato_cms.field_file_remove') %>" aria-label="<%= t('lato_cms.field_file_remove') %> <%= media.name %>" data-action="lato-cms-media-field#remove">
+    <i class="bi bi-x-lg" aria-hidden="true"></i>
   </button>
+  <% if multiple %>
+    <%# Keyboard alternative to drag & drop reordering. %>
+    <button type="button" class="lato-cms-media-field__move lato-cms-media-field__move--before" title="<%= t('lato_cms.media_move_before') %>"
+      aria-label="<%= t('lato_cms.media_move_before') %> <%= media.name %>" data-action="lato-cms-media-reorder#moveBefore">
+      <i class="bi bi-arrow-left" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="lato-cms-media-field__move lato-cms-media-field__move--after" title="<%= t('lato_cms.media_move_after') %>"
+      aria-label="<%= t('lato_cms.media_move_after') %> <%= media.name %>" data-action="lato-cms-media-reorder#moveAfter">
+      <i class="bi bi-arrow-right" aria-hidden="true"></i>
+    </button>
+  <% end %>
 
   <input type="hidden" name="<%= hidden_name %>" value="<%= media.id %>" data-lato-cms-media-field-target="hiddenInput">
 </div>

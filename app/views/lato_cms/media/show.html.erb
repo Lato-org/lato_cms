@@ -1,4 +1,5 @@
-<%= lato_page_head @media.name, [
+<%# h(): the name is user content and lato_page_head renders it raw. %>
+<%= lato_page_head h(@media.name), [
   { label: t('lato_cms.media_index_title'), path: lato_cms.media_path },
   { label: @media.name }
 ] %>

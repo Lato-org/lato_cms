@@ -62,7 +62,7 @@ module LatoCms
     def lato_cms_media_delete_action(media)
       usage_count = media.usage_count
       return link_to(t('lato_cms.cta_delete'), lato_cms.media_destroy_action_path(media), class: 'btn btn-danger',
-        data: { turbo_method: 'DELETE', turbo_confirm: t('lato_cms.cta_delete_confirm') }) if usage_count.zero?
+        data: { turbo_method: 'DELETE', turbo_confirm: t('lato_cms.media_delete_confirm') }) if usage_count.zero?
 
       content_tag(:span, t('lato_cms.cta_delete'), class: 'btn btn-danger disabled',
         title: t('lato_cms.media_delete_in_use', count: usage_count), data: { controller: 'lato-tooltip' })

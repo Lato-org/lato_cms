@@ -72,6 +72,7 @@ export default class extends Controller {
 
     this.deviceBtnTargets.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.device === device)
+      btn.setAttribute('aria-pressed', (btn.dataset.device === device).toString())
     })
 
     if (this.hasCustomWidthTarget) this.customWidthTarget.value = ''
@@ -83,7 +84,10 @@ export default class extends Controller {
 
     const width = parseInt(this.customWidthTarget.value, 10)
 
-    this.deviceBtnTargets.forEach(btn => btn.classList.remove('active'))
+    this.deviceBtnTargets.forEach(btn => {
+      btn.classList.remove('active')
+      btn.setAttribute('aria-pressed', 'false')
+    })
     this.viewportTarget.classList.remove(
       'lato-cms-page-preview__viewport--tablet',
       'lato-cms-page-preview__viewport--mobile'
@@ -98,6 +102,7 @@ export default class extends Controller {
       this.iframeTarget.style.maxWidth = ''
       this.deviceBtnTargets.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.device === 'desktop')
+        btn.setAttribute('aria-pressed', (btn.dataset.device === 'desktop').toString())
       })
     }
   }

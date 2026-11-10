@@ -2,7 +2,9 @@
     submit starts, then fed the real bytes-sent percentage. %>
 <div class="d-none my-3" data-lato-cms-upload-target="progress">
   <div class="progress" style="height: 6px;">
-    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%;" role="progressbar" data-lato-cms-upload-target="bar"></div>
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%;" role="progressbar"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="<%= progress_label_id = "lato-cms-upload-label-#{SecureRandom.hex(4)}" %>"
+         data-lato-cms-upload-target="bar"></div>
   </div>
-  <div class="small text-muted mt-1" data-lato-cms-upload-target="label">0%</div>
+  <div class="small text-muted mt-1" id="<%= progress_label_id %>" role="status" aria-live="polite" data-lato-cms-upload-target="label">0%</div>
 </div>

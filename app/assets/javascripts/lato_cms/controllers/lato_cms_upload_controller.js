@@ -42,7 +42,10 @@ export default class extends Controller {
   // processing them: the bar stays full and animated, the label says so.
   setProgress (percent) {
     const value = Math.round(percent)
-    if (this.hasBarTarget) this.barTarget.style.width = `${value}%`
+    if (this.hasBarTarget) {
+      this.barTarget.style.width = `${value}%`
+      this.barTarget.setAttribute('aria-valuenow', Math.min(value, 100).toString())
+    }
     if (this.hasLabelTarget) this.labelTarget.textContent = value >= 100 ? this.processingLabelValue : `${value}%`
   }
 

@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   mount Lato::Engine => "/lato"
   mount LatoSpaces::Engine => "/lato_spaces"
-  mount LatoCms::Engine => "/lato_cms"
+  mount LatoCms::Engine => "/lato-cms"
 
   root 'application#index'
 

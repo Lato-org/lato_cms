@@ -22,6 +22,7 @@ module LatoCms
     validates :field_id, presence: true
     validates :field_id, uniqueness: { scope: [:page_id, :template_component_id] }
     validate :media_present_if_required
+    validate :value_matches_field_type
 
     REPEATER_ORDER_FIELD_ID = "__repeater_order".freeze
 
@@ -50,16 +51,32 @@ module LatoCms
       end
     end
 
+    RICH_TEXT_ALIGNMENTS = %w[left center right justify].freeze
+    COLOR_FORMAT = /\A#(\h{3}|\h{6})\z/
+
+    # Same allowlist as the editor's client-side sanitizer: `style` is reduced
+    # to text-align, the only style the toolbar produces, so a value posted
+    # outside the editor cannot keep arbitrary CSS either.
     def self.sanitize_rich_text(value)
-      String.new(ActionController::Base.helpers.sanitize(value, tags: RICH_TEXT_TAGS, attributes: RICH_TEXT_ATTRIBUTES).to_s)
+      html = ActionController::Base.helpers.sanitize(value, tags: RICH_TEXT_TAGS, attributes: RICH_TEXT_ATTRIBUTES).to_s
+      return String.new(html) unless html.include?('style=')
+
+      fragment = Nokogiri::HTML::DocumentFragment.parse(html)
+      fragment.css('[style]').each do |element|
+        alignment = element['style'][/(?:\A|;)\s*text-align\s*:\s*([a-z]+)/i, 1].to_s.downcase
+        RICH_TEXT_ALIGNMENTS.include?(alignment) ? element['style'] = "text-align: #{alignment};" : element.remove_attribute('style')
+      end
+      String.new(fragment.to_html)
     end
 
+    # The field definition comes from the template this field was saved
+    # under, never from the stored component_id: that id used to be taken
+    # from the request, and a forged one turned a `text` field (sanitized)
+    # into a `string` one (not sanitized).
     def field_config
       return nil if repeater_order?
 
-      component = LatoCms::TemplateManager.find_component(component_id)
-      return nil unless component
-      component.dig('fields', base_field_id)
+      LatoCms::TemplateManager.find_template_component_fields(template_id, template_component_id)&.dig(base_field_id)
     end
 
     def repeater_order?
@@ -175,6 +192,49 @@ module LatoCms
       return unless ATTACHMENT_FIELD_TYPES.include?(field_type) && field_required?
 
       errors.add(:base, I18n.t('lato_cms.field_required_attachment_error')) if page_field_media.reload.empty?
+    end
+
+    # Server-side counterpart of the browser checks (`required`, option
+    # lists, number and color inputs): a request built by hand skips those,
+    # and the API hands the stored value to the frontend as-is.
+    def value_matches_field_type
+      return if repeater_order? || ATTACHMENT_FIELD_TYPES.include?(field_type)
+
+      if value_blank_for_type?
+        errors.add(:value, :blank) if field_required?
+        return
+      end
+
+      case field_type
+      when 'number'
+        errors.add(:value, :not_a_number) unless value.to_s.strip.match?(/\A-?\d+(\.\d+)?\z/)
+      when 'color'
+        errors.add(:value, :invalid) unless value.to_s.match?(COLOR_FORMAT)
+      when 'select'
+        errors.add(:value, :inclusion) if option_values.any? && !option_values.include?(value.to_s)
+      when 'multiselect'
+        errors.add(:value, :inclusion) if option_values.any? && (Array(parsed_value).map(&:to_s) - option_values).any?
+      when 'date', 'datetime'
+        errors.add(:value, :invalid) unless valid_date_value?
+      end
+    end
+
+    def value_blank_for_type?
+      return true if value.blank?
+
+      field_type == 'multiselect' && Array(parsed_value).compact_blank.empty?
+    end
+
+    def valid_date_value?
+      field_type == 'date' ? Date.iso8601(value.to_s) : DateTime.parse(value.to_s)
+      true
+    rescue ArgumentError, Date::Error
+      false
+    end
+
+    # `options` may list plain strings or `{ value:, label: }` hashes.
+    def option_values
+      Array(field_settings['options']).map { |option| (option.is_a?(Hash) ? option['value'] : option).to_s }
     end
 
     def parse_value

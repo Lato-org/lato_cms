@@ -24,7 +24,7 @@ module LatoCms
         content_tag(:div, class: 'btn-group btn-group-sm') do
           concat(link_to(t('lato_cms.cta_edit'), lato_cms.pages_show_path(page), class: 'btn btn-primary')) unless hide_show
           if show_edit
-            concat link_to(t('lato_cms.cta_edit'), lato_cms.pages_update_path(page), class: 'btn btn-secondary',
+            concat link_to(t('lato_cms.cta_page_settings'), lato_cms.pages_update_path(page), class: 'btn btn-secondary',
               data: { lato_action_target: 'trigger', turbo_frame: dom_id(page, 'form'), action_title: t('lato_cms.page_update_title') })
           end
           if show_delete
@@ -35,10 +35,10 @@ module LatoCms
       end
 
       content_tag(:div, class: 'd-flex align-items-center gap-2') do
-        if page.frontend_url.blank?
-          concat content_tag(:span, t('lato_cms.action_view_frontend'), class: 'btn btn-sm btn-link px-0 disabled text-muted')
+        if (frontend_url = page.safe_frontend_url)
+          concat link_to(t('lato_cms.action_view_frontend'), frontend_url, class: 'btn btn-sm btn-link px-0', target: '_blank', rel: 'noopener noreferrer')
         else
-          concat link_to(t('lato_cms.action_view_frontend'), page.frontend_url, class: 'btn btn-sm btn-link px-0', target: '_blank')
+          concat content_tag(:span, t('lato_cms.action_view_frontend'), class: 'btn btn-sm btn-link px-0 disabled text-muted')
         end
         concat btn_group
       end
@@ -72,12 +72,15 @@ module LatoCms
     # Show-page actions: single dropdown (view frontend, show, edit settings,
     # translations, delete).
     def lato_cms_page_actions_dropdown(page, show_edit: false, show_translations: false, show_delete: false, hide_show: false)
+      # Tooltip on the wrapper (Bootstrap's tooltip and dropdown do not share an
+      # element well); the button itself carries the accessible name.
       content_tag(:div, class: 'dropdown', title: t('lato_cms.cta_actions'), data: { controller: 'lato-tooltip' }) do
-        concat button_tag(tag.i(class: 'bi bi-three-dots-vertical'), type: 'button',
-          class: 'btn btn-sm btn-outline-primary', data: { bs_toggle: 'dropdown' })
+        concat button_tag(tag.i(class: 'bi bi-three-dots-vertical', 'aria-hidden': true), type: 'button',
+          class: 'btn btn-sm btn-outline-primary', 'aria-label': t('lato_cms.cta_actions'), 'aria-expanded': false,
+          data: { bs_toggle: 'dropdown' })
         concat(content_tag(:ul, class: 'dropdown-menu dropdown-menu-end') do
-          if page.frontend_url.present?
-            concat content_tag(:li, link_to(t('lato_cms.action_view_frontend'), page.frontend_url, class: 'dropdown-item', target: '_blank'))
+          if (frontend_url = page.safe_frontend_url)
+            concat content_tag(:li, link_to(t('lato_cms.action_view_frontend'), frontend_url, class: 'dropdown-item', target: '_blank', rel: 'noopener noreferrer'))
           else
             concat content_tag(:li, content_tag(:span, t('lato_cms.action_view_frontend'), class: 'dropdown-item disabled text-muted'))
           end
@@ -85,7 +88,7 @@ module LatoCms
             concat content_tag(:li, link_to(t('lato_cms.cta_edit'), lato_cms.pages_show_path(page), class: 'dropdown-item'))
           end
           if show_edit
-            concat content_tag(:li, link_to(t('lato_cms.cta_edit'), lato_cms.pages_update_path(page), class: 'dropdown-item',
+            concat content_tag(:li, link_to(t('lato_cms.cta_page_settings'), lato_cms.pages_update_path(page), class: 'dropdown-item',
               data: { lato_action_target: 'trigger', turbo_frame: dom_id(page, 'form'), action_title: t('lato_cms.page_update_title') }))
           end
           if show_translations
@@ -115,9 +118,9 @@ module LatoCms
         dom_id_prefix: dom_id_prefix,
         persisted_field_id: persisted_field_id.presence || field_id
     rescue ActionView::MissingTemplate => e
-      content_tag(:div, class: 'alert alert-danger mb-0') do
-        "Field '#{field_id}' render error: #{e.message}"
-      end
+      # The exception message (template lookup paths) goes to the log only.
+      Rails.logger.error("LatoCms: field #{field_id} render error: #{e.message}")
+      content_tag(:div, t('lato_cms.field_render_error', field_id: field_id), class: 'alert alert-danger mb-0')
     end
 
     def lato_cms_field_input_name(field_id, suffix = 'value', input_name_prefix: nil, multiple: false)

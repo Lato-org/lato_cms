@@ -24,6 +24,11 @@
       <% template_options = [[t('lato_cms.form_no_template_option'), '']] + LatoCms::TemplateManager.template_options %>
       <%= lato_form_item_label form, :template_id, t('lato_cms.form_template') %>
       <%= lato_form_item_input_select form, :template_id, template_options %>
+      <% if page.persisted? && page.fields.exists? %>
+        <div class="form-text">
+          <i class="bi bi-info-circle me-1" aria-hidden="true"></i><%= t('lato_cms.form_template_change_warning') %>
+        </div>
+      <% end %>
       <% if page.template_id.present? && !page.template_available? %>
         <div class="form-text text-danger">
           <i class="bi bi-exclamation-triangle me-1"></i>

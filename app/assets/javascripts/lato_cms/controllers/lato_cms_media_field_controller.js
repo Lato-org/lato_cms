@@ -8,7 +8,16 @@ import { Controller } from '@hotwired/stimulus'
 // event correlated by this field's own turbo-frame id.
 export default class extends Controller {
   static targets = ['grid', 'addTile', 'validationAnchor']
-  static values = { kind: String, multiple: Boolean, frameId: String, hiddenName: String, fieldId: String }
+  static values = {
+    kind: String,
+    multiple: Boolean,
+    frameId: String,
+    hiddenName: String,
+    fieldId: String,
+    removeLabel: String,
+    moveBeforeLabel: String,
+    moveAfterLabel: String
+  }
 
   connect () {
     this.onMediaSelected = this.onMediaSelected.bind(this)
@@ -65,11 +74,19 @@ export default class extends Controller {
     event.detail.items.forEach(item => this.appendItem(item))
 
     this.syncEmptyAndValidation()
+    this.notifyChange()
   }
 
   remove (event) {
     event.currentTarget.closest('.lato-cms-media-field__item')?.remove()
     this.syncEmptyAndValidation()
+    this.notifyChange()
+  }
+
+  // The selection lives in hidden inputs, which fire no input event: tell the
+  // editor's unsaved-changes guard explicitly.
+  notifyChange () {
+    this.element.dispatchEvent(new Event('change', { bubbles: true }))
   }
 
   afterSave (event) {
@@ -114,11 +131,20 @@ export default class extends Controller {
         <span class="lato-cms-media-field__name"></span>
       </div>
       <button type="button" class="lato-cms-media-field__remove" data-action="lato-cms-media-field#remove">
-        <i class="bi bi-x-lg"></i>
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
       </button>
       <input type="hidden">`
     wrapper.prepend(this.previewElement(item))
     wrapper.querySelector('.lato-cms-media-field__name').textContent = item.name
+    const removeButton = wrapper.querySelector('.lato-cms-media-field__remove')
+    removeButton.title = this.removeLabelValue
+    removeButton.setAttribute('aria-label', `${this.removeLabelValue} ${item.name}`)
+    if (this.multipleValue) {
+      removeButton.after(
+        this.moveButton('before', this.moveBeforeLabelValue, item.name),
+        this.moveButton('after', this.moveAfterLabelValue, item.name)
+      )
+    }
     const input = wrapper.querySelector('input')
     input.name = this.hiddenNameValue
     input.value = item.id
@@ -144,12 +170,24 @@ export default class extends Controller {
       const image = document.createElement('img')
       image.src = item.thumbnailUrl || item.url
       image.className = 'lato-cms-media-field__thumb'
+      image.alt = item.name || ''
       return image
     }
     const icon = document.createElement('div')
     icon.className = 'lato-cms-media-field__icon'
     icon.innerHTML = '<i class="bi bi-paperclip"></i>'
     return icon
+  }
+
+  moveButton (direction, label, name) {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = `lato-cms-media-field__move lato-cms-media-field__move--${direction}`
+    button.title = label
+    button.setAttribute('aria-label', `${label} ${name}`)
+    button.dataset.action = `lato-cms-media-reorder#move${direction === 'before' ? 'Before' : 'After'}`
+    button.innerHTML = `<i class="bi bi-arrow-${direction === 'before' ? 'left' : 'right'}" aria-hidden="true"></i>`
+    return button
   }
 
   itemTiles () {

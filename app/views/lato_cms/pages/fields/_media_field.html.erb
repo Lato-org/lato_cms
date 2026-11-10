@@ -12,11 +12,17 @@
 <% picker_type = kind == 'file' ? nil : kind %>
 <% wide = !multiple && %w[image video].include?(kind) %>
 
-<label class="form-label">
+<%# Not a <label>: there is no single input to point it at, so the field is
+    a group labelled by this element. %>
+<div class="form-label" id="<%= dom_id %>_label">
   <%= label %><%= ' *' if required %>
-</label>
+</div>
 
-<div data-controller="lato-cms-media-field<%= ' lato-cms-media-reorder' if multiple %>"
+<div role="group" aria-labelledby="<%= dom_id %>_label"
+     data-controller="lato-cms-media-field<%= ' lato-cms-media-reorder' if multiple %>"
+     data-lato-cms-media-field-remove-label-value="<%= t('lato_cms.field_file_remove') %>"
+     data-lato-cms-media-field-move-before-label-value="<%= t('lato_cms.media_move_before') %>"
+     data-lato-cms-media-field-move-after-label-value="<%= t('lato_cms.media_move_after') %>"
      data-lato-cms-media-field-kind-value="<%= kind %>"
      data-lato-cms-media-field-multiple-value="<%= multiple %>"
      data-lato-cms-media-field-frame-id-value="<%= frame_id %>"
@@ -57,7 +63,7 @@
             action: 'click->lato-cms-media-field#openPicker',
             action_title: t('lato_cms.media_picker_title'), action_size: 'lg'
           } do %>
-      <i class="bi bi-images"></i>
+      <i class="bi bi-images" aria-hidden="true"></i>
       <span><%= t('lato_cms.media_choose_from_library') %></span>
     <% end %>
   </div>
@@ -65,7 +71,8 @@
   <%# Real-but-hidden input anchors the browser's native required-validation
       bubble (a display:none required input fails silently as "not
       focusable"). Kept in sync with selection state by the Stimulus controller. %>
-  <input type="text" class="visually-hidden" value="<%= current_media.first&.id %>"
+  <input type="text" class="visually-hidden" value="<%= current_media.first&.id %>" tabindex="-1"
+    aria-labelledby="<%= dom_id %>_label"
     data-lato-cms-media-field-target="validationAnchor"
     <%= 'required' if required && current_media.empty? %>>
 </div>

@@ -28,7 +28,8 @@
               class: 'd-flex align-items-center gap-2 flex-grow-1 justify-content-end' do %>
               <%= select_tag :translation_page_id,
                 options_from_collection_for_select(candidates, :id, :title),
-                class: 'form-select form-select-sm', style: 'max-width: 260px;' %>
+                class: 'form-select form-select-sm', style: 'max-width: 260px;',
+                id: "translation_page_id_#{locale}", 'aria-label': t('lato_cms.translation_select_label', locale: locale.upcase) %>
               <%= submit_tag t('lato_cms.translation_link_cta'), class: 'btn btn-sm btn-outline-primary' %>
             <% end %>
           <% else %>

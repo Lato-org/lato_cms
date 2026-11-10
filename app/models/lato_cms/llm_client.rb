@@ -11,6 +11,7 @@ module LatoCms
 
     def self.chat(messages:)
       uri = URI.join("#{LatoCms.config.llm_api_url.chomp('/')}/", 'chat/completions')
+      warn_insecure_endpoint(uri)
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == 'https'
@@ -26,6 +27,16 @@ module LatoCms
       raise Error, "LLM request failed with status #{response.code}" unless response.is_a?(Net::HTTPSuccess)
 
       JSON.parse(response.body).dig('choices', 0, 'message', 'content')
+    end
+
+    LOCAL_HOSTS = %w[localhost 127.0.0.1 ::1].freeze
+
+    # Plain http sends the API key in clear text. Allowed (local models are a
+    # legit use) but logged, unless the endpoint is on this machine.
+    def self.warn_insecure_endpoint(uri)
+      return if uri.scheme == 'https' || LOCAL_HOSTS.include?(uri.host)
+
+      Rails.logger.warn("LatoCms: llm_api_url uses #{uri.scheme}, the API key travels unencrypted to #{uri.host}")
     end
   end
 end

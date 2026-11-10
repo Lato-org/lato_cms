@@ -5,7 +5,7 @@ namespace :lato_cms do
     desc 'Install Lato CMS engine and create example templates'
     # Usage: rails lato_cms:install:application
     task application: :environment do
-      base_path = Rails.root.join('config', 'lato_cms')
+      base_path = Rails.root.join(LatoCms.config.templates_path)
       templates_path = base_path.join('templates')
       components_path = base_path.join('components')
 
@@ -34,10 +34,8 @@ namespace :lato_cms do
                 placeholder: "Enter a subtitle"
             image:
               name: Background Image
-              type: file
+              type: image
               required: false
-              settings:
-                accept: "image/*"
         YAML
         puts "Created #{component_file}"
       else
@@ -105,17 +103,22 @@ namespace :lato_cms do
 
       abort "Component file already exists: #{file}" if File.exist?(file)
 
-      valid_types = %w[string textarea file number date datetime boolean select multiselect color json text]
+      # `custom` is left out: it needs a `render` partial path, which a
+      # field_id:type pair cannot carry (see the custom_field task).
+      valid_types = LatoCms::PagesHelper::BUILTIN_FIELD_TYPES
 
-      # Parse field pairs from extra args
+      # Parse field pairs from extra args. An unknown type aborts instead of
+      # silently becoming a string field.
       fields = {}
       (args.extras || []).each do |arg|
         parts = arg.split(':')
-        next unless parts.length == 2
+        abort "Invalid field definition \"#{arg}\": use field_id:type" unless parts.length == 2
 
         field_id = parts[0].parameterize(separator: '_')
         field_type = parts[1]
-        field_type = 'string' unless valid_types.include?(field_type)
+        unless valid_types.include?(field_type)
+          abort "Unsupported field type \"#{field_type}\" for #{field_id}. Supported: #{valid_types.join(', ')}"
+        end
 
         fields[field_id] = {
           'name' => field_id.humanize,
@@ -155,20 +158,24 @@ namespace :lato_cms do
       file = views_path.join("_#{field_id}.html.erb")
       abort "Custom field partial already exists: #{file}" if File.exist?(file)
 
+      # Names and ids come from the engine helpers so the field also works
+      # inside a repeater (where both carry the item prefix).
       File.write(file, <<~ERB)
         <% label = field_config['name'] || field_id.humanize %>
         <% required = field_config['required'] == true %>
         <% settings = field_config['settings'] || {} %>
         <% current_value = page_field&.value.to_s %>
+        <% input_name = lato_cms_field_input_name(field_id, input_name_prefix: local_assigns[:input_name_prefix]) %>
+        <% input_id = lato_cms_field_dom_id(field_id, dom_id_prefix: local_assigns[:dom_id_prefix]) %>
 
-        <label class="form-label" for="fields_<%= field_id %>_value">
+        <label class="form-label" for="<%= input_id %>">
           <%= label %><%= ' *' if required %>
         </label>
 
         <input type="text"
           class="form-control"
-          name="fields[<%= field_id %>][value]"
-          id="fields_<%= field_id %>_value"
+          name="<%= input_name %>"
+          id="<%= input_id %>"
           value="<%= current_value %>"
           <%= 'required' if required %>
           placeholder="<%= settings['placeholder'] %>">

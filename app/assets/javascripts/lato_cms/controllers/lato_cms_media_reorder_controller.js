@@ -34,4 +34,29 @@ export default class extends Controller {
   onGridDrop (event) {
     event.preventDefault()
   }
+
+  // Keyboard equivalents of a drag: swap with the previous/next tile and keep
+  // focus on the pressed button so it can be pressed again.
+  moveBefore (event) {
+    const item = event.currentTarget.closest('.lato-cms-media-field__item')
+    const previous = item?.previousElementSibling
+    if (!previous?.classList.contains('lato-cms-media-field__item')) return
+
+    this.gridTarget.insertBefore(item, previous)
+    this.afterMove(event.currentTarget)
+  }
+
+  moveAfter (event) {
+    const item = event.currentTarget.closest('.lato-cms-media-field__item')
+    const next = item?.nextElementSibling
+    if (!next?.classList.contains('lato-cms-media-field__item')) return
+
+    this.gridTarget.insertBefore(next, item)
+    this.afterMove(event.currentTarget)
+  }
+
+  afterMove (button) {
+    button.focus()
+    this.element.dispatchEvent(new Event('change', { bubbles: true }))
+  }
 }
