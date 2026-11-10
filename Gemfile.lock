@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    lato_cms (3.4.1)
+    lato_cms (3.5.0)
       image_processing (>= 1.2)
       lato (>= 3.25.0)
       lato_spaces (>= 3.2.0)
