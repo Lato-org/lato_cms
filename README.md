@@ -4,7 +4,7 @@ Manage application content on Lato projects.
 
 ## Installation
 
-Requires Rails 8.1.3.1 or newer in the 8.1 series and Lato 3.25.0 or newer. Existing applications must install the new Lato session migration before deployment; previous sessions are invalidated.
+Requires Rails 8.1.3.1 or newer in the 8.1 series and Lato 3.25.0 or newer.
 Add required dependencies to your application's Gemfile:
 
 ```ruby
@@ -209,6 +209,16 @@ supported", and below it the app loads tens of MB into memory per request. With 
 
 Both modes ask for an `inline` disposition: a media of the library is content to show, and
 the default for a video would otherwise turn opening its address into a download.
+
+## Upgrading
+
+```bash
+bundle update lato_cms
+rails lato_cms:install:migrations
+rails db:migrate
+```
+
+Read [UPGRADING.md](UPGRADING.md) for the changes and extra steps required by each version.
 
 ## Development
 
